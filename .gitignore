@@ -1,0 +1,9 @@
+# Ignore local utility tools
+/tools/
+__pycache__/
+.git/
+Tron/
+*.py
+*.yaml
+*.bat
+*.sh

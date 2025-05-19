@@ -1,0 +1,66 @@
+# docker-compose.yml for local development and testing
+
+version: '3.8'
+
+services:
+  main-runner:
+    build: .
+    command: python main_runner.py
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/autotrade.json
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - gpt-runner-network
+
+  stock-trader:
+    build: .
+    command: python stock_trading/stock_runner.py
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/autotrade.json
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - gpt-runner-network
+    depends_on:
+      - main-runner
+
+  options-trader:
+    build: .
+    command: python options_trading/options_runner.py
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/autotrade.json
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - gpt-runner-network
+    depends_on:
+      - main-runner
+
+  futures-trader:
+    build: .
+    command: python futures_trading/futures_runner.py
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/autotrade.json
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    networks:
+      - gpt-runner-network
+    depends_on:
+      - main-runner
+
+networks:
+  gpt-runner-network:
+    driver: bridge
