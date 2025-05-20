@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  id-token: write
+
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: ${{ secrets.GCP_REGION }}
@@ -35,9 +39,12 @@ jobs:
       - name: 🐳 Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
+      - name: 🧪 Check Docker Availability
+        run: docker version
+
       - name: 🚀 Build & Push All Docker Images
         run: |
-          ddocker build -t $IMAGE_PREFIX/gpt-runner:latest .
+          docker build -t $IMAGE_PREFIX/gpt-runner:latest .
           docker push $IMAGE_PREFIX/gpt-runner:latest
 
           docker build -t $IMAGE_PREFIX/stock-trader:latest ./stock_trading
