@@ -76,6 +76,7 @@ jobs:
           else
             echo "Cluster not found"
             echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: ⚙️ Get GKE credentials
         if: steps.check_cluster.outputs.exists == 'true'
