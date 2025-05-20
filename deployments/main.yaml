@@ -1,0 +1,33 @@
+# Updated YAML files for all bots + main runner + GPT runner
+# Each has resource limits, proper env vars, and market-hour control logic via CMDs or future cron
+
+---
+# main.yaml (Orchestrator - main_runner.py)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: main-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: main-runner
+  template:
+    metadata:
+      labels:
+        app: main-runner
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: main-runner
+        image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+        env:
+        - name: PAPER_MODE
+          value: "true"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

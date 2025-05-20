@@ -1,8 +1,12 @@
-# Ignore local utility tools
+# Ignore cache
 __pycache__/
-.git/
-*.py
-*.yaml
-*.bat
+*.pyc
+
+# Ignore shell and batch scripts
 *.sh
-/logs/
+*.bat
+
+# Ignore logs (keep folder structure optional)
+logs/
+!logs/.keep
+/temp-app/

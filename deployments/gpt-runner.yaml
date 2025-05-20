@@ -1,0 +1,29 @@
+# gpt-runner.yaml (GPT Reflection Engine - runs after market hours)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpt-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpt-runner
+  template:
+    metadata:
+      labels:
+        app: gpt-runner
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: gpt-runner
+        image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+        env:
+        - name: PAPER_MODE
+          value: "true"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
