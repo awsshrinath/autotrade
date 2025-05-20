@@ -28,7 +28,6 @@ jobs:
           python-version: '3.10'
 
       - name: 📦 Install Python dependencies
-        working-directory: ./TRON
         run: pip install -r requirements.txt
 
       - name: 🔐 Authenticate to Google Cloud
@@ -43,7 +42,6 @@ jobs:
         run: docker version
 
       - name: 🚀 Build & Push All Docker Images
-        working-directory: ./TRON
         run: |
           docker build -t $IMAGE_PREFIX/gpt-runner:latest .
           docker push $IMAGE_PREFIX/gpt-runner:latest
@@ -92,7 +90,6 @@ jobs:
 
       - name: 📦 Apply Kubernetes Manifests
         if: steps.check_cluster.outputs.exists == 'true'
-        working-directory: ./TRON
         run: kubectl apply -f deployments/
 
       - name: 🔄 Restart Bot Deployments
