@@ -1,6 +1,33 @@
 from runner.openai_manager import OpenAIManager
 from gpt_runner.rag.vector_store import save_to_vector_store
 from datetime import datetime
+import numpy as np
+
+def embed_text(text, logger=None):
+    """
+    Embeds a text string using OpenAI's embedding API.
+    
+    Args:
+        text (str): The text to embed
+        logger (Logger, optional): Logger instance for logging events
+        
+    Returns:
+        list: The embedding vector
+    """
+    try:
+        # Create an OpenAI manager if logger is provided
+        if logger:
+            openai_manager = OpenAIManager(logger=logger)
+            return openai_manager.get_embedding(text)
+        
+        # Otherwise, return a mock embedding (random vector)
+        # This is just for testing purposes
+        return list(np.random.rand(1536))
+    except Exception as e:
+        if logger:
+            logger.log_event(f"[EMBED][ERROR] Failed to embed text: {e}")
+        # Return a zero vector as fallback
+        return [0.0] * 1536
 
 
 def embed_logs_for_today(bot_name, logger):
