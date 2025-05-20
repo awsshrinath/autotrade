@@ -1,0 +1,16 @@
+
+google-cloud-firestore
+openai
+python-dotenv
+kiteconnect
+google-cloud-secret-manager
+google-cloud-firestore==2.11.0
+google-cloud-firestore
+openai
+python-dotenv
+
+# RAG support
+sentence-transformers==2.2.2
+faiss-cpu==1.7.4
+
+

@@ -2,6 +2,7 @@
 /tools/
 __pycache__/
 .git/
+Tron/
 *.py
 *.yaml
 *.bat

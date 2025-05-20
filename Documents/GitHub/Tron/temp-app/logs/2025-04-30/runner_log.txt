@@ -1,0 +1,64 @@
+[2025-04-30 10:02:03] GPT Runner+ Started Successfully.
+[2025-04-30 10:02:05] OpenAI API client initialized successfully.
+[2025-04-30 10:02:08] Access token set successfully for KiteConnect session.
+[2025-04-30 10:02:08] Fetching Real Pre-Market Data...
+[2025-04-30 10:02:09] Fetched SGX Nifty Change: 0.2%
+[2025-04-30 10:02:09] Fetched Dow Futures Change: -0.23%
+[2025-04-30 10:02:11] Failed to fetch VIX page, fallback to 15.
+[2025-04-30 10:02:11] Starting Pre-Market Monitoring...
+[2025-04-30 10:02:11] Strategy Selected Based on Market Data: Range_Reversal
+[2025-04-30 10:02:11] Selected Strategy for Today: Range_Reversal
+[2025-04-30 10:02:11] Strategy 'Range_Reversal' loaded successfully.
+[2025-04-30 10:02:11] Starting Live Trading Session...
+[2025-04-30 10:02:11] Live Trading Started using Strategy: Range_Reversal
+[2025-04-30 10:02:11] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:02:11] No candle data fetched for NIFTY
+[2025-04-30 10:02:11] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:02:11] No candle data fetched for BANKNIFTY
+[2025-04-30 10:03:11] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:03:11] No candle data fetched for NIFTY
+[2025-04-30 10:03:11] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:03:11] No candle data fetched for BANKNIFTY
+[2025-04-30 10:03:19] GPT Runner+ Started Successfully.
+[2025-04-30 10:03:20] OpenAI API client initialized successfully.
+[2025-04-30 10:03:23] Access token set successfully for KiteConnect session.
+[2025-04-30 10:03:23] Fetching Real Pre-Market Data...
+[2025-04-30 10:03:24] Fetched SGX Nifty Change: 0.21%
+[2025-04-30 10:03:24] Fetched Dow Futures Change: -0.24%
+[2025-04-30 10:03:25] Failed to fetch VIX page, fallback to 15.
+[2025-04-30 10:03:25] Starting Pre-Market Monitoring...
+[2025-04-30 10:03:25] Strategy Selected Based on Market Data: Range_Reversal
+[2025-04-30 10:03:25] Selected Strategy for Today: Range_Reversal
+[2025-04-30 10:03:25] Strategy 'Range_Reversal' loaded successfully.
+[2025-04-30 10:03:25] Starting Live Trading Session...
+[2025-04-30 10:03:25] Live Trading Started using Strategy: Range_Reversal
+[2025-04-30 10:03:25] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:03:25] No candle data fetched for NIFTY
+[2025-04-30 10:03:25] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:03:25] No candle data fetched for BANKNIFTY
+[2025-04-30 10:04:25] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:04:25] No candle data fetched for NIFTY
+[2025-04-30 10:04:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:04:26] No candle data fetched for BANKNIFTY
+[2025-04-30 10:05:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:05:26] No candle data fetched for NIFTY
+[2025-04-30 10:05:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:05:26] No candle data fetched for BANKNIFTY
+[2025-04-30 10:06:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:06:26] No candle data fetched for NIFTY
+[2025-04-30 10:06:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:06:26] No candle data fetched for BANKNIFTY
+[2025-04-30 10:07:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:07:26] No candle data fetched for NIFTY
+[2025-04-30 10:07:26] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:07:26] No candle data fetched for BANKNIFTY
+[2025-04-30 10:08:27] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:08:27] No candle data fetched for NIFTY
+[2025-04-30 10:08:27] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:08:27] No candle data fetched for BANKNIFTY
+[2025-04-30 10:09:27] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:09:27] No candle data fetched for NIFTY
+[2025-04-30 10:09:27] Error fetching latest candle: Incorrect `api_key` or `access_token`.
+[2025-04-30 10:09:27] No candle data fetched for BANKNIFTY
+[2025-04-30 12:14:10] GPT Runner+ Started Successfully.
+[2025-04-30 12:18:13] GPT Runner+ Started Successfully.
