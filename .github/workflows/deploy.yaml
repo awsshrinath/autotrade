@@ -39,15 +39,19 @@ jobs:
 
       - name: Build & Push All Docker Images
         run: |
+          echo "🛠️ Building and pushing gpt-runner"
           docker build -t $IMAGE_NAME:latest .
           docker push $IMAGE_NAME:latest
 
+          echo "📦 Building and pushing stock-trader"
           docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/stock-trader:latest ./stock_trading
           docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/stock-trader:latest
 
+          echo "📦 Building and pushing options-trader"
           docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/options-trader:latest ./options_trading
           docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/options-trader:latest
 
+          echo "📦 Building and pushing futures-trader"
           docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/futures-trader:latest ./futures_trading
           docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/futures-trader:latest
 
