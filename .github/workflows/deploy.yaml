@@ -8,77 +8,73 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: ${{ secrets.GCP_REGION }}
-  REPO_NAME: gpt-runner
-  IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/gpt-runner
+  IMAGE_PREFIX: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo
 
 jobs:
   test-and-build:
-    name: 🧪 Test and Build Image
+    name: 🧪 Test & Build & Push Images
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: ⚙️ Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+      - name: 📦 Install Python dependencies
+        run: pip install -r requirements.txt
 
-      - name: Set up Google Cloud
+      - name: 🔐 Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev
+      - name: 🐳 Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
-      - name: Build & Push All Docker Images
+      - name: 🚀 Build & Push All Docker Images
         run: |
-          echo "🛠️ Building and pushing gpt-runner"
-          docker build -t $IMAGE_NAME:latest .
-          docker push $IMAGE_NAME:latest
+          docker build -t $IMAGE_PREFIX/gpt-runner:latest .
+          docker push $IMAGE_PREFIX/gpt-runner:latest
 
-          echo "📦 Building and pushing stock-trader"
-          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/stock-trader:latest ./stock_trading
-          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/stock-trader:latest
+          docker build -t $IMAGE_PREFIX/stock-trader:latest ./stock_trading
+          docker push $IMAGE_PREFIX/stock-trader:latest
 
-          echo "📦 Building and pushing options-trader"
-          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/options-trader:latest ./options_trading
-          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/options-trader:latest
+          docker build -t $IMAGE_PREFIX/options-trader:latest ./options_trading
+          docker push $IMAGE_PREFIX/options-trader:latest
 
-          echo "📦 Building and pushing futures-trader"
-          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/futures-trader:latest ./futures_trading
-          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/futures-trader:latest
+          docker build -t $IMAGE_PREFIX/futures-trader:latest ./futures_trading
+          docker push $IMAGE_PREFIX/futures-trader:latest
 
   deploy-to-prod:
-    name: 🚀 Deploy to GKE (if cluster exists)
+    name: 🚀 Deploy to GKE
     needs: test-and-build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Authenticate to Google Cloud
+      - name: 🔐 Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Check if GKE cluster exists
+      - name: 🔎 Check if GKE Cluster Exists
         id: check_cluster
         run: |
-          if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_ZONE }} --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
+          if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
+            --region ${{ secrets.GKE_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
-            echo "Cluster not found — skipping deploy"
+            echo "Cluster not found"
             echo "exists=false" >> $GITHUB_OUTPUT
 
-      - name: Set up kubectl
+      - name: ⚙️ Get GKE credentials
         if: steps.check_cluster.outputs.exists == 'true'
         uses: google-github-actions/get-gke-credentials@v1
         with:
@@ -86,12 +82,11 @@ jobs:
           location: ${{ secrets.GKE_ZONE }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Apply Kubernetes Manifests
+      - name: 📦 Apply Kubernetes Manifests
         if: steps.check_cluster.outputs.exists == 'true'
-        run: |
-          kubectl apply -f deployments/
+        run: kubectl apply -f deployments/
 
-      - name: Restart all trading pods
+      - name: 🔄 Restart Bot Deployments
         if: steps.check_cluster.outputs.exists == 'true'
         run: |
           kubectl rollout restart deployment stock-trader -n gpt
