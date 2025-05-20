@@ -1,0 +1,29 @@
+# options-trader.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: options-trader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: options-trader
+  template:
+    metadata:
+      labels:
+        app: options-trader
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: options-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+        env:
+        - name: PAPER_MODE
+          value: "true"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
