@@ -1,3 +1,0 @@
-flask
-kiteconnect
-google-cloud-secret-manager
