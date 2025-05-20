@@ -29,10 +29,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-#      - name: Run tests
-#        run: |
- #         pytest || exit 1
-
       - name: Set up Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -41,13 +37,19 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${REGION}-docker.pkg.dev
 
-      - name: Build Docker image (dev tag)
+      - name: Build & Push All Docker Images
         run: |
-          docker build -t $IMAGE_NAME:dev-latest .
+          docker build -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:latest
 
-      - name: Push Docker image (dev tag)
-        run: |
-          docker push $IMAGE_NAME:dev-latest
+          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/stock-trader:latest ./stock_trading
+          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/stock-trader:latest
+
+          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/options-trader:latest ./options_trading
+          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/options-trader:latest
+
+          docker build -t asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/futures-trader:latest ./futures_trading
+          docker push asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo/futures-trader:latest
 
   deploy-to-prod:
     name: 🚀 Deploy to GKE (if cluster exists)
@@ -79,12 +81,6 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
           location: ${{ secrets.GKE_ZONE }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Build and Push Production Image
-        if: steps.check_cluster.outputs.exists == 'true'
-        run: |
-          docker build -t $IMAGE_NAME:latest .
-          docker push $IMAGE_NAME:latest
 
       - name: Apply Kubernetes Manifests
         if: steps.check_cluster.outputs.exists == 'true'
