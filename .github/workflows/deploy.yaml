@@ -37,16 +37,16 @@ jobs:
 
       - name: 🚀 Build & Push All Docker Images
         run: |
-          docker build -t $IMAGE_PREFIX/gpt-runner:latest .
+          docker build -t $IMAGE_PREFIX/gpt-runner:latest ./TRON
           docker push $IMAGE_PREFIX/gpt-runner:latest
 
-          docker build -t $IMAGE_PREFIX/stock-trader:latest ./stock_trading
+          docker build -t $IMAGE_PREFIX/stock-trader:latest ./TRON/stock_trading
           docker push $IMAGE_PREFIX/stock-trader:latest
 
-          docker build -t $IMAGE_PREFIX/options-trader:latest ./options_trading
+          docker build -t $IMAGE_PREFIX/options-trader:latest ./TRON/options_trading
           docker push $IMAGE_PREFIX/options-trader:latest
 
-          docker build -t $IMAGE_PREFIX/futures-trader:latest ./futures_trading
+          ddocker build -t $IMAGE_PREFIX/futures-trader:latest ./TRON/futures_trading
           docker push $IMAGE_PREFIX/futures-trader:latest
 
   deploy-to-prod:
