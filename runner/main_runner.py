@@ -47,7 +47,7 @@ def main():
     
     initialize_memory()
     monitor = MarketMonitor()
-    sentiment = monitor.get_sentiment()
+    sentiment = monitor.get_market_sentiment()
 
     print(f"📊 Market Sentiment: {sentiment}")
 

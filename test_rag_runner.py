@@ -20,7 +20,7 @@ def test_add_and_retrieve():
     ]
 
     for sample in samples:
-        add_to_memory(sample["text"], sample["metadata"])
+        add_to_memory(sample["text"], sample["metadata"], bot_name="test-bot")
         try:
             add_firestore_record(sample["text"], sample["metadata"])
         except Exception as e:

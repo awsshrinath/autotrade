@@ -64,3 +64,27 @@ class GPTSelfImprovementMonitor:
         if token_count > 1500:
             return "gpt-4o"
         return "gpt-3.5-turbo"
+        
+def run_gpt_reflection(bot_name=None):
+    """
+    Run the GPT self-improvement reflection process for a specific bot.
+    
+    Args:
+        bot_name (str): The name of the bot to run reflection for. If None, runs for all bots.
+    """
+    from runner.logger import Logger
+    from runner.firestore_client import FirestoreClient
+    from runner.openai_manager import OpenAIManager
+    
+    logger = Logger(today_date=datetime.now().strftime("%Y-%m-%d"))
+    firestore = FirestoreClient(logger=logger)
+    gpt = OpenAIManager(logger=logger)
+    
+    monitor = GPTSelfImprovementMonitor(logger=logger, firestore_client=firestore, gpt_client=gpt)
+    
+    if bot_name:
+        monitor.analyze_errors(bot_names=[bot_name])
+    else:
+        monitor.analyze_errors()
+        
+    logger.log_event(f"[GPT Reflection] Completed reflection for {bot_name or 'all bots'}")

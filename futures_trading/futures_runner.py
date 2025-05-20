@@ -100,11 +100,11 @@ def run_futures_trading_bot():
             time.sleep(60)
 
         logger.log_event("[CLOSE] Market closed. Sleeping to prevent CrashLoop.")
-        time.sleep(3600)
+        sys.exit(0)
 
     except Exception as e:
         logger.log_event(f"[FATAL] Bot crashed: {e}")
-        time.sleep(3600)
+        sys.exit(1) 
 
 if __name__ == "__main__":
     run_futures_trading_bot()

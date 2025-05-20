@@ -1,5 +1,3 @@
-# main_runner.py
-
 import os
 import datetime
 import time
@@ -41,6 +39,11 @@ def main():
     strategy_selector = StrategySelector(logger)
     market_monitor = MarketMonitor(logger)
 
+    # Market Sentiment using live LTP
+    sentiment_data = market_monitor.get_market_sentiment(kite)
+    logger.log_event(f"📈 Market Sentiment Data: {sentiment_data}")
+
+    # Pre-market data used for strategy selection
     pre_market_data = market_monitor.fetch_premarket_data()
     logger.log_event("📊 Pre-Market Data Fetched")
 

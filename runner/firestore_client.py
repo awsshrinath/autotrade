@@ -93,3 +93,36 @@ class FirestoreClient:
             if self.logger:
                 self.logger.log_event(f"[Firestore Error] fetch_reflection failed: {e}")
             return ""
+            
+def fetch_recent_trades(bot_name, limit=5):
+    """
+    Fetches the most recent trades for a specific bot.
+    
+    Args:
+        bot_name (str): The name of the bot
+        limit (int): Maximum number of trades to return
+        
+    Returns:
+        list: List of recent trades
+    """
+    try:
+        client = get_firestore_client()
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        # Try to get today's trades first
+        collection_ref = client.collection("gpt_runner_trades").document(bot_name).collection(today)
+        docs = collection_ref.order_by("entry_time", direction=firestore.Query.DESCENDING).limit(limit).stream()
+        trades = [doc.to_dict() for doc in docs]
+        
+        # If we don't have enough trades from today, get some from yesterday
+        if len(trades) < limit:
+            remaining = limit - len(trades)
+            collection_ref = client.collection("gpt_runner_trades").document(bot_name).collection(yesterday)
+            docs = collection_ref.order_by("entry_time", direction=firestore.Query.DESCENDING).limit(remaining).stream()
+            trades.extend([doc.to_dict() for doc in docs])
+            
+        return trades
+    except Exception as e:
+        print(f"[Firestore Error] fetch_recent_trades failed: {e}")
+        return []
