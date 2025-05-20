@@ -1,5 +1,4 @@
 # Ignore local utility tools
-/tools/
 __pycache__/
 .git/
 *.py
