@@ -1,8 +1,8 @@
-# stock-trader.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stock-trader
+  namespace: gpt
 spec:
   replicas: 1
   selector:
@@ -13,18 +13,10 @@ spec:
       labels:
         app: stock-trader
     spec:
-      serviceAccountName: gpt-runner-sa
-      automountServiceAccountToken: true
       containers:
-      - name: stock-trader
-        image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
-        env:
-        - name: PAPER_MODE
-          value: "true"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: " 512Mi"
-            cpu: "500m"
+        - name: stock-trader
+          image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/stock-trader:latest
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
