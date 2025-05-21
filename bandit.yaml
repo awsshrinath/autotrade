@@ -1,0 +1,23 @@
+exclude:
+  - .venv
+  - venv
+  - __pycache__
+  - node_modules
+  - tests
+  - tools
+  - .git
+
+skips:
+  - B101  # assert
+  - B104  # bind to all interfaces
+  - B105  # hardcoded passwords (for test-only cases)
+  - B106  # hardcoded funcarg passwords
+  - B108  # hardcoded tmp dir
+  - B110  # try-except-pass
+  - B112  # try-except-continue
+  - B301  # pickle.loads()
+  - B307  # eval()
+  - B403  # import pickle
+  - B404  # import subprocess
+  - B604  # shell=True
+  - B610  # .extra() usage in Django

@@ -20,7 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install flake8 bandit pytest
+          pip install flake8 bandit pytest numpy<2.0
+          pip install -r requirements.txt
 
       - name: Lint with flake8 (respects .flake8 config)
         run: |
@@ -28,7 +29,7 @@ jobs:
           flake8 .
 
       - name: Security check with Bandit
-        run: bandit -r .
+        run: bandit -r . -c bandit.yaml
 
       - name: Run Tests
         run: pytest -q
