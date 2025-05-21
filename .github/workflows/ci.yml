@@ -34,13 +34,30 @@ jobs:
             pydantic \
             six \
             regex
+      
       - name: Lint with flake8
         run: flake8 .
 
+      # Fix the bandit check to correctly respect the config
       - name: Security check with Bandit
         run: |
+          # Debug - show bandit version and config file
+          bandit --version
+          cat bandit.yaml
+          
+          # Run Bandit with custom config and ensure proper path to report
           bandit -r . -c bandit.yaml -f json -o bandit_report.json || true
-          python3 scripts/bandit_fail_on_high.py || echo "🔔 Bandit script exited non-zero, but continuing..."
+          
+          # Check report content for debugging
+          if [ -f bandit_report.json ]; then
+            echo "Bandit report summary:"
+            grep -c "\"issue_severity\": \"HIGH\"" bandit_report.json || true
+            grep -c "\"issue_severity\": \"MEDIUM\"" bandit_report.json || true
+            grep -c "\"issue_severity\": \"LOW\"" bandit_report.json || true
+          fi
+          
+          # Run the fail-on-high script with proper error handling
+          python3 bandit_fail_on_high.py
 
       - name: Run tests (skip faiss tests via pytest.ini)
         run: pytest
