@@ -1,6 +1,5 @@
 import datetime
 import os
-import subprocess
 import time
 
 from gpt_runner.gpt_runner import run_gpt_runner

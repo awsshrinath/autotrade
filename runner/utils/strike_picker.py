@@ -2,8 +2,6 @@ import datetime
 from runner.logger import Logger
 from kiteconnect import KiteConnect
 
-# --- Auto Expiry + Strike Picker for Options Bot ---
-
 
 def pick_strike(
     kite: KiteConnect,
@@ -55,7 +53,7 @@ def pick_strike(
             if premium_range[0] <= ltp <= premium_range[1]:
                 candidates.append((symbol, strike, selected_expiry, ltp))
         except Exception as e:
-            logger.warning(f"Skipping '{symbol}' due to error: {e}")
+            Logger().warning(f"Skipping '{symbol}' due to error: {e}")
             continue
 
     if not candidates:

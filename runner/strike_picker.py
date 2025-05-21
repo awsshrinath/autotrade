@@ -10,7 +10,6 @@ def get_strike_symbol(kite, index_symbol="BANKNIFTY", direction="bullish"):
             return datetime.strptime(ins["expiry"], "%Y-%m-%d")
         except:
             return None
-
     filtered = [
         ins
         for ins in instruments
@@ -23,11 +22,9 @@ def get_strike_symbol(kite, index_symbol="BANKNIFTY", direction="bullish"):
         80 <= ins["last_price"] <= 120 and
         ins["volume"] > 50000
     ]
-
     if not filtered:
         print("[STRIKE PICKER] No instrument matched.")
         return None
-
     nearest = min(filtered, key=lambda x: parse_expiry(x))
     return {
         "symbol": nearest["tradingsymbol"],
