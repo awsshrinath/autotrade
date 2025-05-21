@@ -16,19 +16,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
           pip install "numpy<2.0.0"
           pip install flake8 bandit pytest
-          pip install -r requirements.txt
+          pip install -r requirements.txt --no-deps  # Skip faiss
 
-      - name: Lint with flake8 (respects .flake8 config)
+      - name: Lint with flake8
         run: flake8 .
 
       - name: Security check with Bandit
         run: bandit -r . -c bandit.yaml
 
-      - name: Run Tests
-        run: pytest --ignore=test_gpt_monitor.py --ignore=test_rag_runner.py
+      - name: Run tests (skip faiss tests via pytest.ini)
+        run: pytest
