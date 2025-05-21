@@ -75,14 +75,45 @@ class FirestoreClient:
     def store_daily_plan(self, plan):
         try:
             date_str = plan.get("date", datetime.datetime.now().strftime("%Y-%m-%d"))
-            bot = plan.get("bot", "unknown")
-            doc_ref = self.db.collection("gpt_runner_plans").document(bot).collection("days").document(date_str)
+            doc_ref = self.db.collection("gpt_runner_daily_plan").document(date_str)
             doc_ref.set(plan)
             if self.logger:
-                self.logger.log_event(f"[Firestore] Stored strategy plan for {bot} on {date_str}")
+                self.logger.log_event(f"[Firestore] Stored daily strategy plan for {date_str}")
         except Exception as e:
             if self.logger:
                 self.logger.log_event(f"[Firestore Error] store_daily_plan failed: {e}")
+                
+    def fetch_daily_plan(self, date_str=None):
+        """
+        Fetch the daily trading plan from Firestore
+        
+        Args:
+            date_str (str): The date to fetch the plan for. If None, uses today's date.
+            
+        Returns:
+            dict: The daily plan or an empty dict if not found
+        """
+        try:
+            if date_str is None:
+                date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+                
+            doc_ref = self.db.collection("gpt_runner_daily_plan").document(date_str)
+            doc = doc_ref.get()
+            
+            if doc.exists:
+                plan = doc.to_dict()
+                if self.logger:
+                    self.logger.log_event(f"[Firestore] Fetched daily plan for {date_str}")
+                return plan
+            else:
+                if self.logger:
+                    self.logger.log_event(f"[Firestore] No daily plan found for {date_str}")
+                return {}
+                
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] fetch_daily_plan failed: {e}")
+            return {}
 
     def fetch_reflection(self, bot_name, date_str):
         try:

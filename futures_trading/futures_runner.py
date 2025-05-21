@@ -1,7 +1,7 @@
 
 import os
 import sys
-from datetime import datetime, timedelta, time, timezone
+from datetime import datetime, timedelta, time as dtime
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -17,13 +17,32 @@ from datetime import datetime, time as dtime
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.kiteconnect_manager import KiteConnectManager
+import pytz
+IST = pytz.timezone("Asia/Kolkata")
+
+def is_market_open():
+    now = datetime.now().astimezone(IST)
+    weekday = now.weekday()
+    if weekday >= 5:
+        print("[INFO] Weekend. Market is closed.")
+        return False
+    return dtime(9, 15) <= now.time() <= dtime(15, 15)
+
+def wait_until_market_opens(logger):
+    logger.log_event("[WAIT] Waiting for market to open...")
+    while True:
+        now = datetime.now().astimezone(IST).time()
+        if dtime(9, 15) <= now <= dtime(15, 15):
+            logger.log_event("[START] Market is open. Continuing.")
+            break
+        time.sleep(30)
 
 # Strategy Map
 STRATEGY_MAP = {
     "orb": "futures_trading.strategies.orb_strategy"
 }
 
-IST = timezone(timedelta(hours=5, minutes=30))
+
 
 def is_market_open():
     now = datetime.now(IST)
@@ -76,12 +95,37 @@ def get_realtime_futures_data(kite):
     return None
 
 def run_futures_trading_bot():
-    logger = Logger(datetime.now().strftime("%Y-%m-%d"))
+    today_date = datetime.now().strftime("%Y-%m-%d")
+    logger = Logger(today_date)
     logger.log_event("[BOOT] Starting Futures Trading Bot...")
+    
+    # Initialize Firestore client to fetch daily plan
+    firestore_client = FirestoreClient(logger)
+    
+    # Fetch today's trading plan from Firestore
+    daily_plan = firestore_client.fetch_daily_plan(today_date)
+    if not daily_plan:
+        logger.log_event("[ERROR] No daily plan found in Firestore. Using default strategy.")
+        strategy_name = "orb"  # Default fallback
+    else:
+        # Extract the futures strategy from the plan
+        strategy_name = daily_plan.get("futures", "orb")
+        logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
+        
+        # Log market sentiment from the plan
+        sentiment = daily_plan.get("market_sentiment", {})
+        if sentiment:
+            logger.log_event(f"[SENTIMENT] Market sentiment from plan: {sentiment}")
+    
+    wait_until_market_opens(logger)
 
     try:
         kite = KiteConnectManager(logger).get_kite_client()
-        strategy = load_strategy("orb", kite, logger)
+        strategy = load_strategy(strategy_name, kite, logger)
+        
+        if not strategy:
+            logger.log_event(f"[ERROR] Failed to load strategy: {strategy_name}. Falling back to orb.")
+            strategy = load_strategy("orb", kite, logger)
 
         while is_market_open():
             logger.log_event("[ACTIVE] Market open, scanning for trades...")
@@ -90,7 +134,9 @@ def run_futures_trading_bot():
                     trade_signal = strategy.analyze()
                     if trade_signal:
                         logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
-                        # Trade execution call here (mocked)
+                        # Trade execution call here
+                        # For production, uncomment:
+                        # execute_trade(trade_signal, kite, logger)
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
                 else:

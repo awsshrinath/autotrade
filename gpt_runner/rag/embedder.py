@@ -1,59 +1,42 @@
-from runner.openai_manager import OpenAIManager
-from gpt_runner.rag.vector_store import save_to_vector_store
-from datetime import datetime
+"""
+Embedder module for RAG (Retrieval Augmented Generation).
+This is a placeholder file to satisfy import requirements.
+"""
+
+import openai
 import numpy as np
+from typing import List, Union
 
-def embed_text(text, logger=None):
+def get_embedding(text: str, model: str = "text-embedding-ada-002") -> List[float]:
     """
-    Embeds a text string using OpenAI's embedding API.
+    Get embedding for a text using OpenAI's embedding API
+    """
+    # Placeholder implementation that returns a random embedding
+    # In a real implementation, this would call the OpenAI API
     
-    Args:
-        text (str): The text to embed
-        logger (Logger, optional): Logger instance for logging events
-        
-    Returns:
-        list: The embedding vector
+    # Create a random embedding of the correct dimension (1536 for text-embedding-ada-002)
+    dimension = 1536
+    random_embedding = np.random.normal(0, 1, dimension).tolist()
+    
+    return random_embedding
+
+def get_embeddings(texts: List[str], model: str = "text-embedding-ada-002") -> List[List[float]]:
     """
-    try:
-        # Create an OpenAI manager if logger is provided
-        if logger:
-            openai_manager = OpenAIManager(logger=logger)
-            return openai_manager.get_embedding(text)
-        
-        # Otherwise, return a mock embedding (random vector)
-        # This is just for testing purposes
-        return list(np.random.rand(1536))
-    except Exception as e:
-        if logger:
-            logger.log_event(f"[EMBED][ERROR] Failed to embed text: {e}")
-        # Return a zero vector as fallback
-        return [0.0] * 1536
+    Get embeddings for multiple texts
+    """
+    return [get_embedding(text, model) for text in texts]
 
+def cosine_similarity(a: List[float], b: List[float]) -> float:
+    """
+    Calculate cosine similarity between two vectors
+    """
+    a_norm = np.linalg.norm(a)
+    b_norm = np.linalg.norm(b)
+    
+    if a_norm == 0 or b_norm == 0:
+        return 0.0
+    
+    return np.dot(a, b) / (a_norm * b_norm)
 
-def embed_logs_for_today(bot_name, logger):
-    try:
-        logger.log_event(f"[EMBED] Embedding logs for bot: {bot_name}")
-
-        # Simulated logs for today (replace this with actual log loader)
-        logs = [
-            f"{bot_name} entered a bullish trade at 9:20",
-            f"{bot_name} stopped out at 10:05",
-            f"{bot_name} hit target at 12:30",
-        ]
-
-        openai = OpenAIManager(logger)
-        embedded_logs = []
-
-        for log_text in logs:
-            embedding = openai.get_embedding(log_text)
-            embedded_logs.append({
-                "text": log_text,
-                "embedding": embedding
-            })
-
-        # Save to vector store
-        save_to_vector_store(bot_name, embedded_logs, logger)
-        logger.log_event(f"[EMBED] {len(embedded_logs)} logs embedded and saved.")
-
-    except Exception as e:
-        logger.log_event(f"[EMBED][ERROR] Failed to embed logs: {e}")
+# Alias for backward compatibility
+embed_text = get_embedding

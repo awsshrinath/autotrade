@@ -1,7 +1,7 @@
 import os
 import time
 import datetime
-import subprocess
+import logging
 
 from runner.logger import Logger
 from runner.common_utils import create_daily_folders
@@ -12,35 +12,20 @@ from runner.market_monitor import MarketMonitor
 from runner.strategy_selector import StrategySelector
 from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
 from gpt_runner.rag.rag_worker import embed_logs_for_today
-from gpt_runner.gpt_runner import run_gpt_runner
-from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
+from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor, run_gpt_reflection
 
 # Load trading mode (PAPER or LIVE)
 PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
 
-# Note: PROCESS_MAP is deprecated in Kubernetes mode
-PROCESS_MAP = {}
-
 def initialize_memory(logger):
+    """Initialize RAG memory by syncing FAISS with Firestore and embedding today's logs"""
     logger.log_event("[RAG] Syncing FAISS with Firestore...")
     sync_firestore_to_faiss()
     logger.log_event("[RAG] Embedding today's logs...")
     embed_logs_for_today()
 
-def start_bot(bot_type, logger):
-    logger.log_event(f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}")
-    try:
-        subprocess.run([
-            "kubectl", "rollout", "restart", f"deployment/{bot_type}-trader", "-n", "gpt"
-        ], check=True)
-        logger.log_event(f"✅ Restart triggered for {bot_type}-trader deployment")
-    except subprocess.CalledProcessError as e:
-        logger.log_event(f"❌ Failed to restart {bot_type}-trader: {e}")
-
-def stop_bot(bot_type, logger):
-    logger.log_event(f"⚠️ Note: stop_bot() not supported for Kubernetes-managed pods. Skipping stop for {bot_type}.")
-
 def main():
+    """Main orchestrator function that coordinates all trading activities"""
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")
     logger = Logger(today_date)
     create_daily_folders(today_date)
@@ -49,27 +34,29 @@ def main():
     # Init memory + RAG sync
     initialize_memory(logger)
 
-    # GPT + Firestore + Kite
+    # Initialize clients
     firestore_client = FirestoreClient(logger)
     openai_manager = OpenAIManager(logger)
     kite_manager = KiteConnectManager(logger)
     kite_manager.set_access_token()
     kite = kite_manager.get_kite_client()
 
-    # Market Context
+    # Get market context
     market_monitor = MarketMonitor(logger)
     sentiment_data = market_monitor.get_market_sentiment(kite)
     logger.log_event(f"📈 Market Sentiment Data: {sentiment_data}")
 
-    # Strategy Plan
+    # Create and store daily strategy plan
     plan = {
+        "date": today_date,
         "stocks": StrategySelector(logger).choose_strategy("stock", market_sentiment=sentiment_data),
         "options": StrategySelector(logger).choose_strategy("options", market_sentiment=sentiment_data),
         "futures": StrategySelector(logger).choose_strategy("futures", market_sentiment=sentiment_data),
         "mode": "paper" if PAPER_TRADE else "live",
-        "timestamp": datetime.datetime.now().isoformat()
+        "timestamp": datetime.datetime.now().isoformat(),
+        "market_sentiment": sentiment_data
     }
-    firestore_client.db.collection("gpt_runner_daily_plan").document(today_date).set(plan)
+    firestore_client.store_daily_plan(plan)
     logger.log_event(f"✅ Strategy Plan Saved: {plan}")
 
     # Wait until market opens at 9:15 AM IST
@@ -80,32 +67,27 @@ def main():
         logger.log_event(f"⏳ Waiting {wait_minutes} minutes until market opens at 9:15 AM IST...")
         time.sleep((market_open - now).total_seconds())
 
-    # Launch all bots
-    for bot in ["stocks", "options", "futures"]:
-        start_bot(bot, logger)
+    # Note: In Kubernetes, we don't need to start bots manually
+    # The bots are deployed separately and will read the plan from Firestore
+    logger.log_event("🚀 Trading bots are running in separate pods and will read the plan from Firestore")
 
     try:
+        # Monitor the market until close
         while True:
             time.sleep(60)
             now = time.strftime("%H:%M")
             if now >= "15:30":
-                logger.log_event("🔔 Market closed. Stopping bots...")
-                for bot in list(PROCESS_MAP.keys()):
-                    stop_bot(bot, logger)
-
+                logger.log_event("🔔 Market closed. Trading day complete.")
+                
+                # Run GPT self-improvement analysis
                 logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
-                run_gpt_runner()
+                run_gpt_reflection()  # Run reflection for all bots
                 break
 
-            logger.log_event("⚠️ Skipping bot crash detection in Kubernetes mode. Pods are self-healing via K8s.")
-
     except KeyboardInterrupt:
-        logger.log_event("🛑 Interrupted manually. Stopping all bots...")
-        for bot in list(PROCESS_MAP.keys()):
-            stop_bot(bot, logger)
-
+        logger.log_event("🛑 Interrupted manually. Stopping monitoring.")
         logger.log_event("🧠 Running GPT Reflection after manual stop...")
-        run_gpt_runner()
+        run_gpt_reflection()
 
 if __name__ == "__main__":
     main()
