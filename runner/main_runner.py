@@ -34,7 +34,6 @@ def start_bot(bot_type, logger):
     if bot_type not in allowed_bot_types:
         logger.log_event(f"❌ Invalid bot type: {bot_type}. Must be one of {allowed_bot_types}")
         return
-        
     logger.log_event(
         f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}"
     )
