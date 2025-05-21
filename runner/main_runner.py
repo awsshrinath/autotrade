@@ -1,5 +1,6 @@
 import datetime
 import os
+import subprocess
 import time
 
 from gpt_runner.gpt_runner import run_gpt_runner
@@ -28,19 +29,27 @@ def initialize_memory(logger):
 
 
 def start_bot(bot_type, logger):
+    # Validate bot_type to prevent command injection
+    allowed_bot_types = ["stocks", "options", "futures"]
+    if bot_type not in allowed_bot_types:
+        logger.log_event(f"❌ Invalid bot type: {bot_type}. Must be one of {allowed_bot_types}")
+        return
+        
     logger.log_event(
         f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}"
     )
     try:
-        # Use os.system instead of subprocess.run for better security
-        cmd = f"kubectl rollout restart deployment/{bot_type}-trader -n gpt"
-        exit_code = os.system(cmd)
-        if exit_code == 0:
+        # Use subprocess.run with shell=False for better security
+        cmd = ["kubectl", "rollout", "restart", f"deployment/{bot_type}-trader", "-n", "gpt"]
+        result = subprocess.run(cmd, shell=False, check=False, capture_output=True, text=True)
+        if result.returncode == 0:
             logger.log_event(
                 f"✅ Restart triggered for {bot_type}-trader deployment"
             )
         else:
-            logger.log_event(f"❌ Failed to restart {bot_type}-trader: exit code {exit_code}")
+            logger.log_event(f"❌ Failed to restart {bot_type}-trader: exit code {result.returncode}")
+            if result.stderr:
+                logger.log_event(f"Error details: {result.stderr}")
     except Exception as e:
         logger.log_event(f"❌ Failed to restart {bot_type}-trader: {e}")
 
