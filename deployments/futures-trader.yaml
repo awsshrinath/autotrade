@@ -1,5 +1,5 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: futures-trader
   namespace: gpt
@@ -13,6 +13,7 @@ spec:
       labels:
         app: futures-trader
     spec:
+      serviceAccountName: gpt-runner-sa@autotrade-453303.iam.gserviceaccount.com
       containers:
         - name: futures-trader
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/futures-trader:latest

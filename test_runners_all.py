@@ -15,6 +15,6 @@ safe_run("stock_runner.py", "stock_trading.stock_runner")
 safe_run("options_runner.py", "options_trading.options_runner")
 safe_run("futures_runner.py", "futures_trading.futures_runner")
 safe_run("main_runner.py", "runner.main_runner")
-safe_run("main.py", "main")
+safe_run("runner/main_runner.py", "runner.main_runner")
 
 print("\n🎯 Runner Test Complete.")
