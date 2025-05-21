@@ -3,12 +3,13 @@ from futures_trading.strategies.orb_strategy import ORBStrategy
 from options_trading.strategies.scalp_strategy import ScalpStrategy
 from stock_trading.strategies.range_reversal import RangeReversalStrategy
 
+
 def load_strategy(strategy_name, kite, logger):
     STRATEGY_MAP = {
         "vwap": VWAPStrategy,
         "orb": ORBStrategy,
         "scalp": ScalpStrategy,
-        "range_reversal": RangeReversalStrategy
+        "range_reversal": RangeReversalStrategy,
     }
 
     strategy_cls = STRATEGY_MAP.get(strategy_name.lower())

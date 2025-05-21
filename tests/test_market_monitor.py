@@ -1,10 +1,10 @@
-
-import pytest
 from runner.market_monitor import MarketMonitor
+
 
 class MockLogger:
     def log_event(self, msg):
         print(f"[MOCK LOG] {msg}")
+
 
 def test_get_market_sentiment_structure():
     monitor = MarketMonitor(logger=MockLogger())

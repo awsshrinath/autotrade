@@ -4,10 +4,12 @@ import os
 
 app = Flask(__name__)
 
+
 @app.route("/login_url", methods=["GET"])
 def login_url():
     url = get_kite_login_url()
     return jsonify({"login_url": url})
+
 
 @app.route("/upload_token", methods=["POST"])
 def upload_token():
@@ -20,7 +22,10 @@ def upload_token():
     access_token = generate_access_token(request_token)
     store_secret("ZERODHA_ACCESS_TOKEN", access_token)
 
-    return jsonify({"message": "Access token stored successfully", "token": access_token})
+    return jsonify(
+        {"message": "Access token stored successfully", "token": access_token}
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

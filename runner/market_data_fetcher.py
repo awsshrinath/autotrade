@@ -2,6 +2,7 @@
 
 import datetime
 
+
 class MarketDataFetcher:
     def __init__(self, kite, logger):
         self.kite = kite
@@ -19,7 +20,7 @@ class MarketDataFetcher:
                 to_time,
                 interval,
                 continuous=False,
-                oi=True
+                oi=True,
             )
 
             if candles:
@@ -30,7 +31,7 @@ class MarketDataFetcher:
                     "high": latest_candle["high"],
                     "low": latest_candle["low"],
                     "close": latest_candle["close"],
-                    "volume": latest_candle["volume"]
+                    "volume": latest_candle["volume"],
                 }
             else:
                 self.logger.log_event(f"No candle data returned for {instrument_token}")

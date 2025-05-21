@@ -4,7 +4,7 @@ import datetime
 
 if __name__ == "__main__":
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    logger = Logger(today_date)   # <--- FIXED
+    logger = Logger(today_date)  # <--- FIXED
 
     kite_manager = KiteConnectManager(logger)
 

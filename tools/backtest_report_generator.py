@@ -3,6 +3,7 @@ from datetime import datetime
 from runner.openai_manager import OpenAIManager
 import json
 
+
 def generate_equity_curve(trades, output_path):
     equity = 0
     curve = []
@@ -22,12 +23,17 @@ def generate_equity_curve(trades, output_path):
     plt.savefig(f"{output_path}/equity_curve.png")
     plt.close()
 
+
 def summarize_backtest_with_gpt(trades):
-    logs = [f"{t['timestamp']} {t['symbol']} {t['status']} PnL: {t.get('pnl', 0)}" for t in trades]
+    logs = [
+        f"{t['timestamp']} {t['symbol']} {t['status']} PnL: {t.get('pnl', 0)}"
+        for t in trades
+    ]
     context = "\n".join(logs)
     prompt = f"Summarize this trading bot's performance:\n{context}"
     gpt = OpenAIManager()
     return gpt.summarize_text(prompt)
+
 
 def run_backtest_report(path_to_log_json):
     with open(path_to_log_json, "r") as f:

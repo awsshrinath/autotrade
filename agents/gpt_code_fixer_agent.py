@@ -20,13 +20,13 @@ def extract_error_trace(log_path):
         error_lines = [line.strip() for line in f if "[ERROR]" in line]
 
     for line in reversed(error_lines):
-        match = re.search(r'File \"(.+\.py)\", line (\d+), in (\w+)', line)
+        match = re.search(r"File \"(.+\.py)\", line (\d+), in (\w+)", line)
         if match:
             return {
                 "file": match.group(1),
                 "line": int(match.group(2)),
                 "function": match.group(3),
-                "error": line
+                "error": line,
             }
     return None
 
@@ -46,9 +46,10 @@ def extract_function_block(filepath, function_name):
             indent_level = len(line) - len(line.lstrip())
         if inside:
             func_block.append(line)
-            if (line.strip() == "" or
-                (len(line) - len(line.lstrip()) <= indent_level and
-                 not line.strip().startswith("def"))):
+            if line.strip() == "" or (
+                len(line) - len(line.lstrip()) <= indent_level
+                and not line.strip().startswith("def")
+            ):
                 break
     return "".join(func_block)
 
@@ -68,23 +69,22 @@ def run_code_fixer(log_path="logs/gpt_runner.log"):
         logger.log_event("[FixAgent] No valid error trace found.")
         return
 
-    code_file_path = os.path.join("Tron", trace['file']) \
-        if not trace['file'].startswith('/') \
-        else trace['file']
-    code_block = extract_function_block(
-        code_file_path, trace["function"])
+    code_file_path = (
+        os.path.join("Tron", trace["file"])
+        if not trace["file"].startswith("/")
+        else trace["file"]
+    )
+    code_block = extract_function_block(code_file_path, trace["function"])
     if not code_block:
         logger.log_event(
             f"[FixAgent] Could not extract function: "
             f"{trace['function']} from "
-            f"{trace['file']}")
+            f"{trace['file']}"
+        )
         return
 
-    similar_context = retrieve_similar_context(
-        trace["error"])
-    rag_notes = "\n".join([
-        "- " + d.get("text", "")
-        for d, _ in similar_context])
+    similar_context = retrieve_similar_context(trace["error"])
+    rag_notes = "\n".join(["- " + d.get("text", "") for d, _ in similar_context])
 
     prompt = f"""
 You're an AI developer assistant. Analyze the following Python function which
@@ -111,9 +111,8 @@ caused an error:
 
     model = pick_model(prompt)
     suggestion = ask_gpt(
-        system_prompt="You're an AI developer.",
-        user_prompt=prompt,
-        model=model)
+        system_prompt="You're an AI developer.", user_prompt=prompt, model=model
+    )
 
     if suggestion:
         firestore.log_reflection(
@@ -123,8 +122,9 @@ caused an error:
                 "trace": trace,
                 "code_block": code_block,
                 "model": model,
-                "suggestion": suggestion
-            })
+                "suggestion": suggestion,
+            },
+        )
         logger.log_event("[FixAgent] Suggestion logged to Firestore.")
     else:
         logger.log_event("[FixAgent] GPT returned no suggestion.")

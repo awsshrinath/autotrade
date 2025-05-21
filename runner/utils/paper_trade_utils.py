@@ -1,12 +1,13 @@
 from datetime import datetime, time
 
+
 def simulate_exit(trade, future_candles):
-    entry_price = trade["entry_price"]
+    trade["entry_price"]
     stop_loss = trade["stop_loss"]
     target = trade["target"]
     direction = trade["direction"]
     entry_time = datetime.fromisoformat(trade["timestamp"])
-    symbol = trade["symbol"]
+    trade["symbol"]
 
     for candle in future_candles:
         candle_time = candle["timestamp"]
@@ -23,7 +24,7 @@ def simulate_exit(trade, future_candles):
                 "exit_price": target,
                 "exit_reason": "target_hit",
                 "status": "closed",
-                "hold_duration": (candle_time - entry_time).seconds
+                "hold_duration": (candle_time - entry_time).seconds,
             }
         elif direction == "bearish" and low <= target:
             return {
@@ -31,7 +32,7 @@ def simulate_exit(trade, future_candles):
                 "exit_price": target,
                 "exit_reason": "target_hit",
                 "status": "closed",
-                "hold_duration": (candle_time - entry_time).seconds
+                "hold_duration": (candle_time - entry_time).seconds,
             }
 
         # Stop loss hit
@@ -41,7 +42,7 @@ def simulate_exit(trade, future_candles):
                 "exit_price": stop_loss,
                 "exit_reason": "stop_loss_hit",
                 "status": "closed",
-                "hold_duration": (candle_time - entry_time).seconds
+                "hold_duration": (candle_time - entry_time).seconds,
             }
         elif direction == "bearish" and high >= stop_loss:
             return {
@@ -49,7 +50,7 @@ def simulate_exit(trade, future_candles):
                 "exit_price": stop_loss,
                 "exit_reason": "stop_loss_hit",
                 "status": "closed",
-                "hold_duration": (candle_time - entry_time).seconds
+                "hold_duration": (candle_time - entry_time).seconds,
             }
 
         # Market close fallback
@@ -59,7 +60,7 @@ def simulate_exit(trade, future_candles):
                 "exit_price": candle["close"],
                 "exit_reason": "auto_exit_3_18",
                 "status": "closed",
-                "hold_duration": (candle_time - entry_time).seconds
+                "hold_duration": (candle_time - entry_time).seconds,
             }
 
     # If still open after all candles
@@ -68,5 +69,5 @@ def simulate_exit(trade, future_candles):
         "exit_price": future_candles[-1]["close"],
         "exit_reason": "auto_exit_eod",
         "status": "closed",
-        "hold_duration": (future_candles[-1]["timestamp"] - entry_time).seconds
+        "hold_duration": (future_candles[-1]["timestamp"] - entry_time).seconds,
     }

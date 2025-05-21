@@ -7,7 +7,7 @@ class StrategySelector:
         # Optional override using live market sentiment
         if market_sentiment:
             vix = market_sentiment.get("INDIA VIX", 0)
-            nifty = market_sentiment.get("NIFTY 50", 0)
+            market_sentiment.get("NIFTY 50", 0)
 
             if vix > 18:
                 return "range_reversal"
@@ -29,7 +29,11 @@ class StrategySelector:
 
 # ✅ Externally used function
 
+
 def select_best_strategy(bot_name="stock-trader", market_sentiment=None):
-    bot_type = "stock" if "stock" in bot_name else (
-               "futures" if "futures" in bot_name else "options")
+    bot_type = (
+        "stock"
+        if "stock" in bot_name
+        else ("futures" if "futures" in bot_name else "options")
+    )
     return StrategySelector.choose_strategy(bot_type, market_sentiment=market_sentiment)

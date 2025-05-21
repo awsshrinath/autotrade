@@ -5,10 +5,11 @@ from runner.secret_manager_client import access_secret
 
 PROJECT_ID = "autotrade-453303"  # Your GCP Project ID
 
+
 class KiteConnectManager:
     def __init__(self, logger):
         self.logger = logger
-        
+
         # Fetch API credentials from Secret Manager
         self.api_key = access_secret("ZERODHA_API_KEY", PROJECT_ID)
         self.api_secret = access_secret("ZERODHA_API_SECRET", PROJECT_ID)

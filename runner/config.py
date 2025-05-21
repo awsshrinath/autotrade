@@ -14,5 +14,5 @@ SCALP_CONFIG = {
     "max_price": 120,
     "sl_buffer": 30,
     "target_buffer": 60,
-    "quantity": 75
+    "quantity": 75,
 }

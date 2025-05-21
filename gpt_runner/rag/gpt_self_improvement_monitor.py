@@ -15,6 +15,7 @@ gpt_response = ask_gpt(system, user)
 parsed = parse_gpt_response(gpt_response)
 print("Parsed GPT Action:", parsed)
 
+
 def run_reflection(bot_name):
     logger = Logger(datetime.now().strftime("%Y-%m-%d"))
     logger.log_event(f"[GPT] Starting self-reflection for bot: {bot_name}")
@@ -22,7 +23,9 @@ def run_reflection(bot_name):
     try:
         embed_logs_for_today(bot_name, logger)
 
-        context = retrieve_similar_context(bot_name, query="analyze today's performance")
+        context = retrieve_similar_context(
+            bot_name, query="analyze today's performance"
+        )
         prompt = f"""You are an AI trading analyst. Based on this context:
 {context}
 

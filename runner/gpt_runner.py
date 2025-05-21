@@ -1,4 +1,3 @@
-
 import os
 import json
 from datetime import datetime
@@ -6,6 +5,7 @@ from gpt_runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
 from runner.firestore_client import FirestoreClient
 from runner.openai_manager import OpenAIManager
 from runner.logger import Logger
+
 
 def analyze_trades():
     log_dir = "logs"
@@ -22,18 +22,19 @@ def analyze_trades():
                     continue
                 wins = sum(1 for t in trades if t["target"] > t["entry_price"])
                 losses = total - wins
-                summary.append({
-                    "strategy": fname.replace("trade_log_", "").replace(".jsonl", ""),
-                    "total_trades": total,
-                    "profitable_trades": wins,
-                    "loss_trades": losses
-                })
+                summary.append(
+                    {
+                        "strategy": fname.replace("trade_log_", "").replace(
+                            ".jsonl", ""
+                        ),
+                        "total_trades": total,
+                        "profitable_trades": wins,
+                        "loss_trades": losses,
+                    }
+                )
 
     now = datetime.now().isoformat()
-    reflection = {
-        "timestamp": now,
-        "summary": summary
-    }
+    reflection = {"timestamp": now, "summary": summary}
 
     with open(reflection_log, "a") as f:
         f.write(json.dumps(reflection) + "\n")
@@ -42,7 +43,8 @@ def analyze_trades():
     gpt_client = OpenAIManager()
     logger = Logger("gpt_runner")
     monitor = GPTSelfImprovementMonitor(logger, firestore_client, gpt_client)
-    monitor.analyze_errors(log_path="logs/gpt_runner.log", bot_name="stock-trader") 
+    monitor.analyze_errors(log_path="logs/gpt_runner.log", bot_name="stock-trader")
+
 
 if __name__ == "__main__":
     analyze_trades()

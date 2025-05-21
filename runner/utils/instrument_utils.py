@@ -3,12 +3,15 @@ from kiteconnect import KiteConnect
 
 _cached_instruments = None
 
+
 def get_kite_client():
     from runner.secret_manager_client import access_secret
     from runner.kiteconnect_manager import PROJECT_ID
+
     kite = KiteConnect(api_key=access_secret("ZERODHA_API_KEY", PROJECT_ID))
     kite.set_access_token(access_secret("ZERODHA_ACCESS_TOKEN", PROJECT_ID))
     return kite
+
 
 def load_instruments():
     global _cached_instruments
@@ -17,15 +20,21 @@ def load_instruments():
         _cached_instruments = kite.instruments("NFO")
     return _cached_instruments
 
+
 def get_futures_token(symbol, expiry_date_str=None):
     instruments = load_instruments()
     if expiry_date_str is None:
         expiry_date_str = get_nearest_expiry("FUT")
 
     for inst in instruments:
-        if inst["instrument_type"] == "FUT" and inst["name"] == symbol and inst["expiry"] == expiry_date_str:
+        if (
+            inst["instrument_type"] == "FUT"
+            and inst["name"] == symbol
+            and inst["expiry"] == expiry_date_str
+        ):
             return inst["instrument_token"]
     return None
+
 
 def get_options_token(symbol, strike_price, option_type, expiry_date_str=None):
     instruments = load_instruments()
@@ -43,16 +52,22 @@ def get_options_token(symbol, strike_price, option_type, expiry_date_str=None):
             return inst["instrument_token"]
     return None
 
+
 def get_nearest_expiry(inst_type):
     today = datetime.date.today()
     instruments = load_instruments()
-    expiries = sorted(set(
-        inst["expiry"] for inst in instruments if inst["instrument_type"] == inst_type
-    ))
+    expiries = sorted(
+        set(
+            inst["expiry"]
+            for inst in instruments
+            if inst["instrument_type"] == inst_type
+        )
+    )
     for date in expiries:
         if date >= today:
             return date.isoformat()
     return None
+
 
 def get_instrument_tokens(symbols):
     instruments = load_instruments()

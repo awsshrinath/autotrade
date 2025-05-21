@@ -1,25 +1,23 @@
-
 import os
 import sys
-from datetime import datetime, timedelta, time as dtime
+from datetime import datetime, time as dtime
 import pytz
 import sys
 
 # Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from runner.utils.instrument_utils import get_kite_client
-from runner.trade_manager import execute_trade, simulate_exit
+from runner.trade_manager import simulate_exit
 from runner.firestore_client import FirestoreClient
-from runner.capital_manager import CapitalManager
 from runner.config import PAPER_TRADE
-from runner.strategy_selector import select_best_strategy
 import time
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.kiteconnect_manager import KiteConnectManager
 import pytz
+
 IST = pytz.timezone("Asia/Kolkata")
+
 
 def is_market_open():
     now = datetime.now().astimezone(IST)
@@ -29,6 +27,7 @@ def is_market_open():
         return False
     return dtime(9, 15) <= now.time() <= dtime(15, 15)
 
+
 def wait_until_market_opens(logger):
     logger.log_event("[WAIT] Waiting for market to open...")
     while True:
@@ -37,6 +36,7 @@ def wait_until_market_opens(logger):
             logger.log_event("[START] Market is open. Continuing.")
             break
         time.sleep(30)
+
 
 # --- Static token mapping for NSE stocks ---
 STATIC_TOKENS = {
@@ -50,7 +50,7 @@ STATIC_TOKENS = {
 STRATEGY_MAP = {
     "vwap": "stock_trading.strategies.vwap_strategy",
     "orb": "stock_trading.strategies.orb_strategy",
-    "range_reversal": "stock_trading.strategies.range_reversal"
+    "range_reversal": "stock_trading.strategies.range_reversal",
 }
 
 
@@ -63,6 +63,7 @@ def is_market_open():
     start_time = time(9, 15)
     end_time = time(15, 15)
     return start_time <= now.time() <= end_time
+
 
 def graceful_exit_if_off_hours(kite):
     if is_market_open():
@@ -86,10 +87,7 @@ def graceful_exit_if_off_hours(kite):
             if PAPER_TRADE:
                 print(f"[EXIT-PAPER] Simulating exit for {symbol}")
                 exit_candles = kite.historical_data(
-                    token,
-                    trade["entry_time"],
-                    datetime.now(),
-                    interval="5minute"
+                    token, trade["entry_time"], datetime.now(), interval="5minute"
                 )
                 simulate_exit(trade, exit_candles)
             else:
@@ -106,6 +104,7 @@ def graceful_exit_if_off_hours(kite):
     print("[INFO] Exit process completed. Bot will stop.")
     exit(0)
 
+
 def get_realtime_stock_data(symbols):
     data_list = []
     for symbol in symbols:
@@ -116,37 +115,42 @@ def get_realtime_stock_data(symbols):
         data_list.append({"symbol": symbol, "token": token})
     return data_list
 
+
 def run_stock_trading_bot():
     today_date = datetime.now().strftime("%Y-%m-%d")
     logger = Logger(today_date)
     logger.log_event("[BOOT] Starting Stock Trading Bot...")
-    
+
     # Initialize Firestore client to fetch daily plan
     firestore_client = FirestoreClient(logger)
-    
+
     # Fetch today's trading plan from Firestore
     daily_plan = firestore_client.fetch_daily_plan(today_date)
     if not daily_plan:
-        logger.log_event("[ERROR] No daily plan found in Firestore. Using default strategy.")
+        logger.log_event(
+            "[ERROR] No daily plan found in Firestore. Using default strategy."
+        )
         strategy_name = "vwap"  # Default fallback
     else:
         # Extract the stock strategy from the plan
         strategy_name = daily_plan.get("stocks", "vwap")
         logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
-        
+
         # Log market sentiment from the plan
         sentiment = daily_plan.get("market_sentiment", {})
         if sentiment:
             logger.log_event(f"[SENTIMENT] Market sentiment from plan: {sentiment}")
-    
+
     wait_until_market_opens(logger)
 
     try:
         kite = KiteConnectManager(logger).get_kite_client()
         strategy = load_strategy(strategy_name, kite, logger)
-        
+
         if not strategy:
-            logger.log_event(f"[ERROR] Failed to load strategy: {strategy_name}. Falling back to vwap.")
+            logger.log_event(
+                f"[ERROR] Failed to load strategy: {strategy_name}. Falling back to vwap."
+            )
             strategy = load_strategy("vwap", kite, logger)
 
         while is_market_open():
@@ -172,7 +176,8 @@ def run_stock_trading_bot():
 
     except Exception as e:
         logger.log_event(f"[FATAL] Bot crashed: {e}")
-        sys.exit(1) 
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     run_stock_trading_bot()

@@ -5,17 +5,27 @@ from kiteconnect import KiteConnect
 # --- Auto Expiry + Strike Picker for Options Bot ---
 
 
-def pick_strike(kite: KiteConnect, direction="bullish", instrument_type="NIFTY", premium_range=(100, 120)):
+def pick_strike(
+    kite: KiteConnect,
+    direction="bullish",
+    instrument_type="NIFTY",
+    premium_range=(100, 120),
+):
     """
     Returns a tuple (tradingsymbol, strike_price, expiry_date) for ITM/ATM CE or PE based on market direction
     """
     today = datetime.date.today()
     instruments = kite.instruments(exchange="NFO")
 
-    weekly_expiries = sorted({
-        inst["expiry"] for inst in instruments
-        if inst["name"] == instrument_type and inst["segment"] == "NFO-OPT" and inst["expiry"] >= today
-    })
+    weekly_expiries = sorted(
+        {
+            inst["expiry"]
+            for inst in instruments
+            if inst["name"] == instrument_type
+            and inst["segment"] == "NFO-OPT"
+            and inst["expiry"] >= today
+        }
+    )
 
     if not weekly_expiries:
         raise Exception("No valid expiries found")
@@ -23,11 +33,15 @@ def pick_strike(kite: KiteConnect, direction="bullish", instrument_type="NIFTY",
     selected_expiry = weekly_expiries[0]  # Pick the nearest expiry
 
     # Fetch LTP of index
-    index_ltp = kite.ltp(f"NSE:{instrument_type}")[f"NSE:{instrument_type}"]["last_price"]
+    index_ltp = kite.ltp(f"NSE:{instrument_type}")[f"NSE:{instrument_type}"][
+        "last_price"
+    ]
     strike_diff = 50 if instrument_type == "BANKNIFTY" else 100
     base_strike = int(round(index_ltp / strike_diff)) * strike_diff
 
-    strike_prices = range(base_strike - 10 * strike_diff, base_strike + 10 * strike_diff, strike_diff)
+    strike_prices = range(
+        base_strike - 10 * strike_diff, base_strike + 10 * strike_diff, strike_diff
+    )
     direction = direction.lower()
     option_type = "CE" if direction == "bullish" else "PE"
 
