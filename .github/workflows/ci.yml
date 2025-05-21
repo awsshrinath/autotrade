@@ -20,8 +20,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install flake8 bandit pytest "numpy<2.0"
-          pip install -r requirements.txt
+            pip install "numpy<2.0.0"
+            pip install faiss-cpu==1.7.4  
+            pip install -r requirements.txt
 
       - name: Lint with flake8 (respects .flake8 config)
         run: |
