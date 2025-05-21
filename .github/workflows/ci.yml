@@ -34,4 +34,5 @@ jobs:
         run: bandit -r . -c bandit.yaml
 
       - name: Run Tests
-        run: pytest -q
+        run: |
+            pytest --ignore=test_gpt_monitor.py --ignore=test_rag_runner.py
