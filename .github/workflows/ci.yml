@@ -29,7 +29,6 @@ jobs:
             google-cloud-secret-manager \
             google-api-core \
             proto-plus \
-            proto \
             kiteconnect \
             openai \
             pydantic \
