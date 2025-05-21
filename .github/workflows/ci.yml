@@ -24,7 +24,16 @@ jobs:
           pip install faiss-cpu==1.7.4
           pip install flake8 bandit pytest
           pip install -r requirements.txt --no-deps  # Skip faiss
-
+          pip install \
+            google-cloud-firestore \
+            google-cloud-secret-manager \
+            google-api-core \
+            proto-plus \
+            proto \
+            kiteconnect \
+            openai \
+            pydantic \
+            six
       - name: Lint with flake8
         run: flake8 .
 
