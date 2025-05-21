@@ -34,7 +34,7 @@ jobs:
         
     - name: Check for security vulnerabilities with bandit
       run: |
-        bandit -r . -x ./tests,./venv -f txt > ./reports/security_scan.txt || true
+        bandit -r . -x ./tests,./.venv -f txt > ./reports/security_scan.txt || true
         
     - name: Check for vulnerable dependencies with safety
       run: |

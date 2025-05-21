@@ -30,4 +30,7 @@ def upload_token():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    # Use localhost instead of binding to all interfaces for better security
+    # In production, this should be configured via environment variables
+    host = os.environ.get("HOST", "127.0.0.1")
+    app.run(host=host, port=port)

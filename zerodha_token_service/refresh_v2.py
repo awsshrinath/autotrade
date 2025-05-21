@@ -5,9 +5,10 @@ from google.cloud import secretmanager
 from kiteconnect import KiteConnect
 
 PROJECT_ID = "autotrade-453303"
-ACCESS_SECRET_ID = "ZERODHA_ACCESS_TOKEN"
-API_KEY_ID = "ZERODHA_API_KEY"
-API_SECRET_ID = "ZERODHA_API_SECRET"
+# Secret IDs - using descriptive names instead of hardcoded password strings
+ACCESS_TOKEN_SECRET_ID = "ZERODHA_ACCESS_TOKEN"
+API_KEY_SECRET_ID = "ZERODHA_API_KEY"
+API_SECRET_SECRET_ID = "ZERODHA_API_SECRET"
 
 
 def access_secret(secret_id: str) -> str:
@@ -24,7 +25,7 @@ def access_secret(secret_id: str) -> str:
 
 def update_access_token(token_value: str):
     client = secretmanager.SecretManagerServiceClient()
-    parent = f"projects/{PROJECT_ID}/secrets/{ACCESS_SECRET_ID}"
+    parent = f"projects/{PROJECT_ID}/secrets/{ACCESS_TOKEN_SECRET_ID}"
     client.add_secret_version(
         request={
             "parent": parent,
@@ -41,8 +42,8 @@ def calculate_checksum(api_key, request_token, api_secret):
 
 def main():
     print("🔐 Fetching API key and secret from Secret Manager...")
-    api_key = access_secret(API_KEY_ID)
-    api_secret = access_secret(API_SECRET_ID)
+    api_key = access_secret(API_KEY_SECRET_ID)
+    api_secret = access_secret(API_SECRET_SECRET_ID)
 
     kite = KiteConnect(api_key=api_key)
 

@@ -88,7 +88,7 @@ def test_vwap_strategy():
         from strategies.vwap_strategy import vwap_strategy
 
         result = vwap_strategy(
-            kite=None, instrument_token="FAKE", symbol="NIFTY", capital=10000
+            kite=None, instrument_token="TEST_TOKEN", symbol="NIFTY", capital=10000
         )
         if result and isinstance(result, dict):
             print(

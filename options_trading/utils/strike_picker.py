@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from runner.logger import Logger
 
 # Pick strike and expiry for option trading based on premium and direction
 def pick_strike(kite, symbol, direction, target_premium=100):
@@ -48,7 +48,9 @@ def pick_strike(kite, symbol, direction, target_premium=100):
                     "expiry": next_expiry,
                     "ltp": ltp,
                 }
-        except Exception:
-            continue
+        except Exception as e:
+            # Log the specific error with the symbol for better debugging
+            logger.warning(f"Skipping '{tradingsymbol}' due to error: {e}")
+            # Continue to the next strike price
 
     return None

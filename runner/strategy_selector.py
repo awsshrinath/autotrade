@@ -10,7 +10,7 @@ class StrategySelector:
         direction = "neutral"
         if sentiment:
             sgx_trend = sentiment.get("sgx_nifty", "neutral")
-            dow_trend = sentiment.get("dow", "neutral")    
+            dow_trend = sentiment.get("dow", "neutral")
             # Simple logic to determine overall direction
             if sgx_trend == "bullish" and dow_trend != "bearish":
                 direction = "bullish"

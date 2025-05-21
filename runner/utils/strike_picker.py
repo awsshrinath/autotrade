@@ -1,5 +1,5 @@
 import datetime
-
+from runner.logger import Logger
 from kiteconnect import KiteConnect
 
 # --- Auto Expiry + Strike Picker for Options Bot ---
@@ -54,7 +54,8 @@ def pick_strike(
             ltp = kite.ltp(f"NFO:{symbol}")[f"NFO:{symbol}"]["last_price"]
             if premium_range[0] <= ltp <= premium_range[1]:
                 candidates.append((symbol, strike, selected_expiry, ltp))
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Skipping '{symbol}' due to error: {e}")
             continue
 
     if not candidates:

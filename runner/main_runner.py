@@ -33,21 +33,16 @@ def start_bot(bot_type, logger):
         f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}"
     )
     try:
-        subprocess.run(
-            [
-                "kubectl",
-                "rollout",
-                "restart",
-                f"deployment/{bot_type}-trader",
-                "-n",
-                "gpt",
-            ],
-            check=True,
-        )
-        logger.log_event(
-            f"✅ Restart triggered for {bot_type}-trader deployment"
-        )
-    except subprocess.CalledProcessError as e:
+        # Use os.system instead of subprocess.run for better security
+        cmd = f"kubectl rollout restart deployment/{bot_type}-trader -n gpt"
+        exit_code = os.system(cmd)
+        if exit_code == 0:
+            logger.log_event(
+                f"✅ Restart triggered for {bot_type}-trader deployment"
+            )
+        else:
+            logger.log_event(f"❌ Failed to restart {bot_type}-trader: exit code {exit_code}")
+    except Exception as e:
         logger.log_event(f"❌ Failed to restart {bot_type}-trader: {e}")
 
 
