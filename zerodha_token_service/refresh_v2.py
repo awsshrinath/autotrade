@@ -6,9 +6,9 @@ from kiteconnect import KiteConnect
 
 PROJECT_ID = "autotrade-453303"
 # Secret IDs - using descriptive names instead of hardcoded password strings
-ACCESS_TOKEN_SECRET_ID = "ZERODHA_ACCESS_TOKEN" # nosec
-API_KEY_SECRET_ID = "ZERODHA_API_KEY" # nosec
-API_SECRET_SECRET_ID = "ZERODHA_API_SECRET" # nosec
+ACCESS_TOKEN_SECRET_ID = "ZERODHA_ACCESS_TOKEN"  # nosec
+API_KEY_SECRET_ID = "ZERODHA_API_KEY"  # nosec
+API_SECRET_SECRET_ID = "ZERODHA_API_SECRET"  # nosec
 
 
 def access_secret(secret_id: str) -> str:
