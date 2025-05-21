@@ -1,6 +1,3 @@
-
-from datetime import datetime
-
 def opening_range_strategy(stock_data, capital, open_range):
     """
     ORB strategy:
@@ -23,7 +20,7 @@ def opening_range_strategy(stock_data, capital, open_range):
             "stop_loss": sl,
             "target": target,
             "quantity": quantity,
-            "strategy": "ORB"
+            "strategy": "ORB",
         }
 
     return None

@@ -1,6 +1,8 @@
 # Parses and validates GPT's structured output
 import json
+
 from .allowed_actions import ALLOWED_ACTIONS
+
 
 def parse_gpt_response(response: str) -> dict:
     try:

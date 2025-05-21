@@ -39,7 +39,7 @@ jobs:
     - name: Check for security vulnerabilities
       run: |
         pip install bandit
-        bandit -r . -x ./tests,./venv
+        bandit -r . -x ./tests,./.venv
         
     - name: Generate error report
       if: always()
@@ -50,7 +50,7 @@ jobs:
         echo "## Test Results" >> error-report.md
         pytest -v >> error-report.md 2>&1 || true
         echo "## Security Scan Results" >> error-report.md
-        bandit -r . -x ./tests,./venv -f txt >> error-report.md 2>&1 || true
+        bandit -r . -x ./tests,./.venv -f txt >> error-report.md 2>&1 || true
         
     - name: Upload error report
       if: always()

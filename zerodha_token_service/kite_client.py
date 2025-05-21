@@ -1,7 +1,8 @@
-from kiteconnect import KiteConnect
 from google.cloud import secretmanager
+from kiteconnect import KiteConnect
 
 PROJECT_ID = "autotrade-453303"
+
 
 def access_secret(secret_id: str) -> str:
     client = secretmanager.SecretManagerServiceClient()
@@ -9,15 +10,20 @@ def access_secret(secret_id: str) -> str:
     response = client.access_secret_version(name=name)
     return response.payload.data.decode("UTF-8")
 
+
 def store_secret(secret_id: str, value: str):
     client = secretmanager.SecretManagerServiceClient()
     parent = f"projects/{PROJECT_ID}/secrets/{secret_id}"
-    client.add_secret_version(parent=parent, payload={"data": value.encode("UTF-8")})
+    client.add_secret_version(
+        parent=parent, payload={"data": value.encode("UTF-8")}
+    )
+
 
 def get_kite_login_url():
     api_key = access_secret("ZERODHA_API_KEY")
     kite = KiteConnect(api_key=api_key)
     return kite.login_url()
+
 
 def generate_access_token(request_token: str) -> str:
     api_key = access_secret("ZERODHA_API_KEY")

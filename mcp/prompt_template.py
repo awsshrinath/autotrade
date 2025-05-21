@@ -1,6 +1,7 @@
 # Formats the MCP context into GPT-ready prompt
 import json
 
+
 def build_prompts(context: dict) -> tuple:
     system_prompt = (
         "You are an AI agent managing an automated trading bot. "

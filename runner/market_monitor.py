@@ -7,15 +7,15 @@ class MarketMonitor:
         Get the latest market context including sentiment, volatility, and trend
         """
         sentiment = self.get_market_sentiment(kite_client)
-        
+
         # Add additional market context
         context = {
             "sentiment": sentiment,
             "volatility": "medium",  # Placeholder
-            "trend": "neutral",      # Placeholder
-            "timestamp": "2023-01-01T00:00:00Z"  # Placeholder
+            "trend": "neutral",  # Placeholder
+            "timestamp": "2023-01-01T00:00:00Z",  # Placeholder
         }
-        
+
         return context
 
     def get_market_sentiment(self, kite_client):
@@ -23,14 +23,25 @@ class MarketMonitor:
             indices = {
                 "NIFTY 50": 256265,
                 "BANKNIFTY": 260105,
-                "INDIA VIX": 264969
+                "INDIA VIX": 264969,
             }
 
-            ltp = kite_client.ltp([f"NSE:{symbol}" for symbol in indices.keys()])
+            ltp = kite_client.ltp(
+                [f"NSE:{symbol}" for symbol in indices.keys()]
+            )
 
-            sentiment = {}
+            # Get raw price data
+            raw_data = {}
             for symbol, data in ltp.items():
-                sentiment[symbol.split(":")[1]] = data["last_price"]
+                raw_data[symbol.split(":")[1]] = data["last_price"]
+
+            # Convert to sentiment indicators
+            sentiment = {
+                "sgx_nifty": "bullish" if raw_data.get("NIFTY 50", 0) > 17500 else "bearish" if raw_data.get("NIFTY 50", 0) < 17000 else "neutral",
+                "dow": "neutral",  # Placeholder as we don't have Dow data
+                "vix": "low" if raw_data.get("INDIA VIX", 0) < 14 else "high" if raw_data.get("INDIA VIX", 0) > 18 else "moderate",
+                "nifty_trend": "bullish" if raw_data.get("NIFTY 50", 0) > raw_data.get("BANKNIFTY", 0) / 2.2 else "bearish" if raw_data.get("NIFTY 50", 0) < raw_data.get("BANKNIFTY", 0) / 2.3 else "neutral"
+            }
 
             if self.logger:
                 self.logger.log_event("Fetched market sentiment successfully")
@@ -39,8 +50,11 @@ class MarketMonitor:
 
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[ERROR] get_market_sentiment failed: {e}")
+                self.logger.log_event(
+                    f"[ERROR] get_market_sentiment failed: {e}"
+                )
             return {}
+
 
 # Standalone function for backward compatibility
 def get_latest_market_context(kite_client=None, logger=None):

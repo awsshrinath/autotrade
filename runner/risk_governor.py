@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 class RiskGovernor:
     def __init__(self, max_daily_loss, max_trades, cutoff_time="15:00"):
         self.max_daily_loss = max_daily_loss
@@ -15,13 +16,17 @@ class RiskGovernor:
     def can_trade(self):
         now = datetime.now().strftime("%H:%M")
         if self.total_loss <= -self.max_daily_loss:
-            print(f"❌ RiskGovernor: Max daily loss reached ({self.total_loss}). No more trades.")
+            print(
+                f"❌ RiskGovernor: Max daily loss reached ({self.total_loss}). No more trades."
+            )
             return False
         if self.trade_count >= self.max_trades:
             print(f"❌ RiskGovernor: Max trades reached ({self.trade_count}).")
             return False
         if now >= self.cutoff_time:
-            print(f"⏰ RiskGovernor: Time cutoff reached ({now} ≥ {self.cutoff_time}).")
+            print(
+                f"⏰ RiskGovernor: Time cutoff reached ({now} ≥ {self.cutoff_time})."
+            )
             return False
         return True
 

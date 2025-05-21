@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from strategies.base_strategy import BaseStrategy
-from datetime import datetime, timedelta
+
 
 class ORBStrategy(BaseStrategy):
     def __init__(self, kite, logger):
@@ -7,20 +9,28 @@ class ORBStrategy(BaseStrategy):
         self.logger = logger
 
     def analyze(self):
-        symbols = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK']
+        symbols = ["RELIANCE", "TCS", "INFY", "HDFCBANK"]
         try:
             now = datetime.now()
-            market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
+            market_open = now.replace(
+                hour=9, minute=15, second=0, microsecond=0
+            )
             orb_end = now.replace(hour=9, minute=30, second=0, microsecond=0)
 
             if now < orb_end:
-                self.logger.log_event("[ORB] Waiting for 9:30 AM to evaluate opening range.")
+                self.logger.log_event(
+                    "[ORB] Waiting for 9:30 AM to evaluate opening range."
+                )
                 return None
 
             for symbol in symbols:
                 try:
-                    token = self.kite.ltp([f"NSE:{symbol}"])[f"NSE:{symbol}"]["instrument_token"]
-                    candles = self.kite.historical_data(token, market_open, orb_end, "5minute")
+                    token = self.kite.ltp([f"NSE:{symbol}"])[f"NSE:{symbol}"][
+                        "instrument_token"
+                    ]
+                    candles = self.kite.historical_data(
+                        token, market_open, orb_end, "5minute"
+                    )
                     if not candles or len(candles) < 3:
                         continue
 
@@ -48,7 +58,7 @@ class ORBStrategy(BaseStrategy):
                         "target": target,
                         "quantity": 10,
                         "direction": direction,
-                        "strategy": "orb"
+                        "strategy": "orb",
                     }
                     self.logger.log_event(f"[ORB] Signal: {trade}")
                     return trade

@@ -1,5 +1,6 @@
 from strategies.base_strategy import BaseStrategy
 
+
 class RangeReversalStrategy(BaseStrategy):
     def __init__(self, kite, logger):
         super().__init__(kite, logger)
@@ -20,7 +21,7 @@ class RangeReversalStrategy(BaseStrategy):
                 "stop_loss": 68.5,
                 "target": 112.5,
                 "strategy": "Range_Reversal",
-                "type": "OPTIONS"
+                "type": "OPTIONS",
             }
             trades.append(trade)
             self.traded_symbols.add("NIFTY")

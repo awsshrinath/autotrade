@@ -1,8 +1,10 @@
 import os
-from google.cloud import secretmanager
+
 from google.auth import default
+from google.cloud import secretmanager
 from google.oauth2 import service_account
 from kiteconnect import KiteConnect
+
 
 def create_secret_manager_client():
     """
@@ -11,13 +13,18 @@ def create_secret_manager_client():
     otherwise uses default credentials (GCP VM, Cloud Run, etc.).
     """
     # Try local Service Account key first
-    key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or "./keys/autotrade.json"
+    key_path = (
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or "./keys/autotrade.json"
+    )
     if key_path and os.path.isfile(key_path):
-        credentials = service_account.Credentials.from_service_account_file(key_path)
+        credentials = service_account.Credentials.from_service_account_file(
+            key_path
+        )
     else:
         # Fallback to default credentials
         credentials, _ = default()
     return secretmanager.SecretManagerServiceClient(credentials=credentials)
+
 
 def access_secret(secret_id, project_id):
     """
@@ -27,6 +34,7 @@ def access_secret(secret_id, project_id):
     name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
     response = client.access_secret_version(name=name)
     return response.payload.data.decode("UTF-8")
+
 
 def get_kite_client(project_id):
     api_key = access_secret("ZERODHA_API_KEY", project_id)

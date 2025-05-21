@@ -5,5 +5,5 @@ ALLOWED_ACTIONS = [
     "update_sl",
     "log_reflection",
     "adjust_capital",
-    "pause_trading"
+    "pause_trading",
 ]

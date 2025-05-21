@@ -1,8 +1,9 @@
 # test_openai_manager.py
 
-from runner.openai_manager import OpenAIManager
-from runner.logger import Logger
 import datetime
+
+from runner.logger import Logger
+from runner.openai_manager import OpenAIManager
 
 if __name__ == "__main__":
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")

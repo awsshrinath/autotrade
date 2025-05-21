@@ -10,4 +10,3 @@ __pycache__/
 logs/
 !logs/.keep
 /temp-app/
-ci.yml
