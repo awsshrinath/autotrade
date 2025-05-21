@@ -1,6 +1,7 @@
-from strategies.base_strategy import BaseStrategy
-from runner.utils.technical_indicators import calculate_vwap
 from datetime import datetime, timedelta
+
+from runner.utils.technical_indicators import calculate_vwap
+from strategies.base_strategy import BaseStrategy
 
 
 class VWAPStrategy(BaseStrategy):

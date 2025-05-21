@@ -1,8 +1,11 @@
-from google.cloud import firestore
-from .vector_store import save_to_vector_store
-from .embedder import embed_text
-from runner.logger import Logger
 import datetime
+
+from google.cloud import firestore
+
+from runner.logger import Logger
+
+from .embedder import embed_text
+from .vector_store import save_to_vector_store
 
 # Create a logger for this module
 logger = Logger(today_date=datetime.datetime.now().strftime("%Y-%m-%d"))
@@ -40,7 +43,9 @@ def sync_firestore_to_faiss(collection_name="rag_memory", bot_name="default"):
                     embedding = data["embedding"]
 
                 # Add to vector data
-                vector_data.append({"text": data["text"], "embedding": embedding})
+                vector_data.append(
+                    {"text": data["text"], "embedding": embedding}
+                )
 
         # Save to vector store
         if vector_data:

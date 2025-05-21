@@ -1,6 +1,6 @@
 import datetime
-from kiteconnect import KiteConnect
 
+from kiteconnect import KiteConnect
 
 # --- Auto Expiry + Strike Picker for Options Bot ---
 
@@ -40,7 +40,9 @@ def pick_strike(
     base_strike = int(round(index_ltp / strike_diff)) * strike_diff
 
     strike_prices = range(
-        base_strike - 10 * strike_diff, base_strike + 10 * strike_diff, strike_diff
+        base_strike - 10 * strike_diff,
+        base_strike + 10 * strike_diff,
+        strike_diff,
     )
     direction = direction.lower()
     option_type = "CE" if direction == "bullish" else "PE"

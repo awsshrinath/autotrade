@@ -1,7 +1,7 @@
 # runner/logger.py
 
-import os
 import datetime
+import os
 
 
 class Logger:

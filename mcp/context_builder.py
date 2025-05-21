@@ -1,7 +1,7 @@
 # Builds the structured context for GPT using MCP format
+from runner.capital_manager import get_current_capital
 from runner.firestore_client import fetch_recent_trades
 from runner.market_monitor import get_latest_market_context
-from runner.capital_manager import get_current_capital
 
 
 def build_mcp_context(bot_name: str) -> dict:

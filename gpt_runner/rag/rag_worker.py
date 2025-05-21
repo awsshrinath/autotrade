@@ -2,13 +2,14 @@
 RAG Worker module for embedding logs and other data for retrieval.
 """
 
-import os
 import logging
+import os
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from runner.logger import Logger
 from runner.firestore_client import FirestoreClient, fetch_recent_trades
+from runner.logger import Logger
+
 from .embedder import embed_text
 from .vector_store import save_to_vector_store
 
@@ -17,7 +18,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def embed_logs_for_today(bot_names: Optional[List[str]] = None) -> Dict[str, Any]:
+def embed_logs_for_today(
+    bot_names: Optional[List[str]] = None,
+) -> Dict[str, Any]:
     """
     Embed today's logs for the specified bots and save to vector store.
 
@@ -103,7 +106,9 @@ Notes: {trade.get('notes', '')}
                     "type": "trade",
                     "bot": bot_name,
                     "symbol": trade.get("symbol", "unknown"),
-                    "timestamp": trade.get("entry_time", datetime.now().isoformat()),
+                    "timestamp": trade.get(
+                        "entry_time", datetime.now().isoformat()
+                    ),
                 },
             }
         )
@@ -113,7 +118,9 @@ Notes: {trade.get('notes', '')}
         save_to_vector_store(bot_name, vector_data)
 
 
-def embed_log_file(bot_name: str, log_path: str, chunk_size: int = 1000) -> None:
+def embed_log_file(
+    bot_name: str, log_path: str, chunk_size: int = 1000
+) -> None:
     """
     Embed log file content and save to vector store.
 
@@ -203,7 +210,9 @@ Reflection: {reflection}
         save_to_vector_store(bot_name, vector_data)
 
     except Exception as e:
-        logger.error(f"Error embedding reflection for {bot_name} on {date_str}: {e}")
+        logger.error(
+            f"Error embedding reflection for {bot_name} on {date_str}: {e}"
+        )
 
 
 if __name__ == "__main__":

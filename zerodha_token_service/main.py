@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
-from kite_client import get_kite_login_url, generate_access_token, store_secret
 import os
+
+from flask import Flask, jsonify, request
+from kite_client import generate_access_token, get_kite_login_url, store_secret
 
 app = Flask(__name__)
 

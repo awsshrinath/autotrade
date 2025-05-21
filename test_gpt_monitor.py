@@ -1,8 +1,9 @@
-from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
-from runner.logger import Logger
-from runner.firestore_client import FirestoreClient
 import datetime
 from unittest.mock import MagicMock, patch
+
+from runner.firestore_client import FirestoreClient
+from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
+from runner.logger import Logger
 
 # 🔧 Mock dependencies to avoid Google Cloud authentication issues
 logger = Logger(today_date=datetime.datetime.now().strftime("%Y-%m-%d"))

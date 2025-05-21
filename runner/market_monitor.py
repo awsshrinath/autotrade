@@ -20,9 +20,15 @@ class MarketMonitor:
 
     def get_market_sentiment(self, kite_client):
         try:
-            indices = {"NIFTY 50": 256265, "BANKNIFTY": 260105, "INDIA VIX": 264969}
+            indices = {
+                "NIFTY 50": 256265,
+                "BANKNIFTY": 260105,
+                "INDIA VIX": 264969,
+            }
 
-            ltp = kite_client.ltp([f"NSE:{symbol}" for symbol in indices.keys()])
+            ltp = kite_client.ltp(
+                [f"NSE:{symbol}" for symbol in indices.keys()]
+            )
 
             sentiment = {}
             for symbol, data in ltp.items():
@@ -35,7 +41,9 @@ class MarketMonitor:
 
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[ERROR] get_market_sentiment failed: {e}")
+                self.logger.log_event(
+                    f"[ERROR] get_market_sentiment failed: {e}"
+                )
             return {}
 
 

@@ -1,9 +1,11 @@
 # runner/openai_manager.py
 
-import openai
-from runner.secret_manager_client import access_secret
 import datetime
+
+import openai
+
 from runner.logger import Logger
+from runner.secret_manager_client import access_secret
 
 logger = Logger(datetime.date.today().isoformat())
 
@@ -24,7 +26,10 @@ class OpenAIManager:
             response = openai.ChatCompletion.create(
                 model="gpt-4",  # You can also use "gpt-3.5-turbo" if needed
                 messages=[
-                    {"role": "system", "content": "You are a smart trading assistant."},
+                    {
+                        "role": "system",
+                        "content": "You are a smart trading assistant.",
+                    },
                     {"role": "user", "content": prompt_text},
                 ],
                 temperature=0.3,
@@ -51,7 +56,10 @@ class OpenAIManager:
             completion = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are a trading analyst."},
+                    {
+                        "role": "system",
+                        "content": "You are a trading analyst.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,

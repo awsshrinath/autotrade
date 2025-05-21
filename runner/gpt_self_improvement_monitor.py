@@ -1,17 +1,22 @@
 import os
 from datetime import datetime
-from runner.firestore_client import FirestoreClient
-from runner.openai_manager import OpenAIManager
+
 import tiktoken
+
 from gpt_runner.rag.retriever import retrieve_similar_context
 from mcp.context_builder import build_mcp_context
 from mcp.prompt_template import build_prompts
 from mcp.response_parser import parse_gpt_response
+from runner.firestore_client import FirestoreClient
+from runner.openai_manager import OpenAIManager
 
 
 class GPTSelfImprovementMonitor:
     def __init__(
-        self, logger, firestore_client: FirestoreClient, gpt_client: OpenAIManager
+        self,
+        logger,
+        firestore_client: FirestoreClient,
+        gpt_client: OpenAIManager,
     ):
         self.logger = logger
         self.firestore_client = firestore_client
@@ -19,7 +24,9 @@ class GPTSelfImprovementMonitor:
 
     def analyze_errors(self, log_path="logs/gpt_runner.log", bot_names=None):
         if not os.path.exists(log_path):
-            self.logger.log_event(f"[GPT SelfFix] Log file not found: {log_path}")
+            self.logger.log_event(
+                f"[GPT SelfFix] Log file not found: {log_path}"
+            )
             return
 
         if bot_names is None:
@@ -81,8 +88,8 @@ def run_gpt_reflection(bot_name=None):
     Args:
         bot_name (str): The name of the bot to run reflection for. If None, runs for all bots.
     """
-    from runner.logger import Logger
     from runner.firestore_client import FirestoreClient
+    from runner.logger import Logger
     from runner.openai_manager import OpenAIManager
 
     logger = Logger(today_date=datetime.now().strftime("%Y-%m-%d"))

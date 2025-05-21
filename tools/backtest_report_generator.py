@@ -1,7 +1,9 @@
-import matplotlib.pyplot as plt
-from datetime import datetime
-from runner.openai_manager import OpenAIManager
 import json
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+
+from runner.openai_manager import OpenAIManager
 
 
 def generate_equity_curve(trades, output_path):

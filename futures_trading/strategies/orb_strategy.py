@@ -4,7 +4,6 @@ This is a placeholder file to satisfy import requirements.
 """
 
 
-
 class ORBStrategy:
     """
     Opening Range Breakout (ORB) Strategy implementation

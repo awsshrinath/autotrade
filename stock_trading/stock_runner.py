@@ -1,20 +1,23 @@
 import os
 import sys
-from datetime import datetime, time as dtime
+from datetime import datetime
+from datetime import time as dtime
+
 import pytz
-import sys
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from runner.trade_manager import simulate_exit
-from runner.firestore_client import FirestoreClient
-from runner.config import PAPER_TRADE
 import time
+
+import pytz
+
+from runner.config import PAPER_TRADE
+from runner.firestore_client import FirestoreClient
+from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
-from runner.kiteconnect_manager import KiteConnectManager
-import pytz
+from runner.trade_manager import simulate_exit
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -87,7 +90,10 @@ def graceful_exit_if_off_hours(kite):
             if PAPER_TRADE:
                 print(f"[EXIT-PAPER] Simulating exit for {symbol}")
                 exit_candles = kite.historical_data(
-                    token, trade["entry_time"], datetime.now(), interval="5minute"
+                    token,
+                    trade["entry_time"],
+                    datetime.now(),
+                    interval="5minute",
                 )
                 simulate_exit(trade, exit_candles)
             else:
@@ -134,12 +140,16 @@ def run_stock_trading_bot():
     else:
         # Extract the stock strategy from the plan
         strategy_name = daily_plan.get("stocks", "vwap")
-        logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
+        logger.log_event(
+            f"[PLAN] Using strategy from daily plan: {strategy_name}"
+        )
 
         # Log market sentiment from the plan
         sentiment = daily_plan.get("market_sentiment", {})
         if sentiment:
-            logger.log_event(f"[SENTIMENT] Market sentiment from plan: {sentiment}")
+            logger.log_event(
+                f"[SENTIMENT] Market sentiment from plan: {sentiment}"
+            )
 
     wait_until_market_opens(logger)
 
@@ -159,7 +169,9 @@ def run_stock_trading_bot():
                 if strategy:
                     trade_signal = strategy.analyze()
                     if trade_signal:
-                        logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
+                        logger.log_event(
+                            f"[TRADE] Executing trade: {trade_signal}"
+                        )
                         # Trade execution call here
                         # For production, uncomment:
                         # execute_trade(trade_signal, kite, logger)
@@ -171,7 +183,9 @@ def run_stock_trading_bot():
                 logger.log_event(f"[ERROR] Strategy loop exception: {e}")
             time.sleep(60)
 
-        logger.log_event("[CLOSE] Market closed. Sleeping to prevent CrashLoop.")
+        logger.log_event(
+            "[CLOSE] Market closed. Sleeping to prevent CrashLoop."
+        )
         sys.exit(0)
 
     except Exception as e:

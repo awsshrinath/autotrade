@@ -34,7 +34,9 @@ class MarketDataFetcher:
                     "volume": latest_candle["volume"],
                 }
             else:
-                self.logger.log_event(f"No candle data returned for {instrument_token}")
+                self.logger.log_event(
+                    f"No candle data returned for {instrument_token}"
+                )
                 return None
 
         except Exception as e:

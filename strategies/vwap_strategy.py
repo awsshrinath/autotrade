@@ -32,10 +32,14 @@ def vwap_strategy(symbol, candles, capital):
         "symbol": symbol,
         "entry_price": latest_close,
         "stop_loss": (
-            latest_close - atr if direction == "bullish" else latest_close + atr
+            latest_close - atr
+            if direction == "bullish"
+            else latest_close + atr
         ),
         "target": (
-            latest_close + 2 * atr if direction == "bullish" else latest_close - 2 * atr
+            latest_close + 2 * atr
+            if direction == "bullish"
+            else latest_close - 2 * atr
         ),
         "quantity": quantity,
         "direction": direction,

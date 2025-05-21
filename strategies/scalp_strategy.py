@@ -1,6 +1,6 @@
 from options_trading.utils.strike_picker import pick_strike
-from runner.utils.strategy_helpers import calculate_atr, calculate_quantity
 from runner.market_monitor import get_nifty_trend
+from runner.utils.strategy_helpers import calculate_atr, calculate_quantity
 
 
 def scalp_strategy(index_name, option_chain, capital):
@@ -19,7 +19,9 @@ def scalp_strategy(index_name, option_chain, capital):
 
     symbol = strike_info["symbol"]
     ltp = strike_info["ltp"]
-    candles = strike_info["candles"]  # list of dicts with 'high', 'low', 'close'
+    candles = strike_info[
+        "candles"
+    ]  # list of dicts with 'high', 'low', 'close'
 
     calculate_atr(candles)
     quantity = calculate_quantity(capital, ltp)

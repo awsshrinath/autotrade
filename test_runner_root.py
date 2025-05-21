@@ -16,8 +16,9 @@ fake_candles = [
 trade = vwap_strategy(symbol="NIFTY", candles=fake_candles, capital=10000)
 print("✅ vwap_strategy output:", trade)
 
-from options_trading.utils.strike_picker import pick_strike
 from unittest.mock import patch
+
+from options_trading.utils.strike_picker import pick_strike
 from runner.logger import Logger
 
 

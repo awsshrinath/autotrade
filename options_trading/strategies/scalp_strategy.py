@@ -4,7 +4,6 @@ This is a placeholder file to satisfy import requirements.
 """
 
 
-
 class ScalpStrategy:
     """
     Scalping strategy for options trading

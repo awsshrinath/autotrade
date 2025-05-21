@@ -1,6 +1,7 @@
 import os
-from google.cloud import secretmanager
+
 from google.auth import default
+from google.cloud import secretmanager
 from google.oauth2 import service_account
 from kiteconnect import KiteConnect
 
@@ -12,9 +13,13 @@ def create_secret_manager_client():
     otherwise uses default credentials (GCP VM, Cloud Run, etc.).
     """
     # Try local Service Account key first
-    key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or "./keys/autotrade.json"
+    key_path = (
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or "./keys/autotrade.json"
+    )
     if key_path and os.path.isfile(key_path):
-        credentials = service_account.Credentials.from_service_account_file(key_path)
+        credentials = service_account.Credentials.from_service_account_file(
+            key_path
+        )
     else:
         # Fallback to default credentials
         credentials, _ = default()

@@ -1,10 +1,11 @@
-import os
 import json
+import os
 from datetime import datetime
+
 from gpt_runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
 from runner.firestore_client import FirestoreClient
-from runner.openai_manager import OpenAIManager
 from runner.logger import Logger
+from runner.openai_manager import OpenAIManager
 
 
 def analyze_trades():
@@ -43,7 +44,9 @@ def analyze_trades():
     gpt_client = OpenAIManager()
     logger = Logger("gpt_runner")
     monitor = GPTSelfImprovementMonitor(logger, firestore_client, gpt_client)
-    monitor.analyze_errors(log_path="logs/gpt_runner.log", bot_name="stock-trader")
+    monitor.analyze_errors(
+        log_path="logs/gpt_runner.log", bot_name="stock-trader"
+    )
 
 
 if __name__ == "__main__":

@@ -63,7 +63,9 @@ def get_next_expiry_and_atm_option(symbol, spot_price):
     # Placeholder implementation
     from datetime import datetime, timedelta
 
-    next_thursday = datetime.now() + timedelta((3 - datetime.now().weekday()) % 7)
+    next_thursday = datetime.now() + timedelta(
+        (3 - datetime.now().weekday()) % 7
+    )
     expiry_date = next_thursday.strftime("%Y-%m-%d")
 
     # Round spot price to nearest 100 for ATM strike

@@ -3,11 +3,12 @@ Vector Store implementation for RAG (Retrieval Augmented Generation).
 This is a placeholder file to satisfy import requirements.
 """
 
+import json
 import os
+from datetime import datetime
+
 import faiss
 import numpy as np
-import json
-from datetime import datetime
 
 
 class VectorStore:
@@ -44,7 +45,9 @@ class VectorStore:
         Add embeddings to the vector store
         """
         if metadata_list is None:
-            metadata_list = [{"timestamp": datetime.now().isoformat()} for _ in texts]
+            metadata_list = [
+                {"timestamp": datetime.now().isoformat()} for _ in texts
+            ]
 
         # Convert embeddings to numpy array
         embeddings_np = np.array(embeddings).astype("float32")
@@ -94,7 +97,9 @@ class VectorStore:
 
 
 # Standalone functions for backward compatibility
-def save_to_vector_store(embeddings, texts, metadata_list=None, index_name="bot_index"):
+def save_to_vector_store(
+    embeddings, texts, metadata_list=None, index_name="bot_index"
+):
     """
     Save embeddings to vector store
     """

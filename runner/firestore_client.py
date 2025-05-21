@@ -1,7 +1,8 @@
 # runner/firestore_client.py
 
-from google.cloud import firestore
 import datetime
+
+from google.cloud import firestore
 
 _firestore_client = None
 
@@ -35,7 +36,9 @@ class FirestoreClient:
                 )
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] log_trade failed: {e}")
+                self.logger.log_event(
+                    f"[Firestore Error] log_trade failed: {e}"
+                )
 
     def fetch_trades(self, bot_name, date_str):
         try:
@@ -48,7 +51,9 @@ class FirestoreClient:
             return [doc.to_dict() for doc in docs]
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] fetch_trades failed: {e}")
+                self.logger.log_event(
+                    f"[Firestore Error] fetch_trades failed: {e}"
+                )
             return []
 
     # --- TRADE EXIT LOGGING ---
@@ -78,7 +83,9 @@ class FirestoreClient:
                 print(f"[FIRESTORE] ✅ Exit updated for {symbol}")
                 return
 
-            print(f"[FIRESTORE] ⚠️ No open trade found for {symbol} to update exit.")
+            print(
+                f"[FIRESTORE] ⚠️ No open trade found for {symbol} to update exit."
+            )
         except Exception as e:
             print(f"[FIRESTORE] ❌ Failed to update exit for {symbol}: {e}")
 
@@ -94,15 +101,23 @@ class FirestoreClient:
             )
             doc_ref.set({"reflection": reflection_text})
             if self.logger:
-                self.logger.log_event(f"Reflection logged for {bot_name} on {date_str}")
+                self.logger.log_event(
+                    f"Reflection logged for {bot_name} on {date_str}"
+                )
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] log_reflection failed: {e}")
+                self.logger.log_event(
+                    f"[Firestore Error] log_reflection failed: {e}"
+                )
 
     def store_daily_plan(self, plan):
         try:
-            date_str = plan.get("date", datetime.datetime.now().strftime("%Y-%m-%d"))
-            doc_ref = self.db.collection("gpt_runner_daily_plan").document(date_str)
+            date_str = plan.get(
+                "date", datetime.datetime.now().strftime("%Y-%m-%d")
+            )
+            doc_ref = self.db.collection("gpt_runner_daily_plan").document(
+                date_str
+            )
             doc_ref.set(plan)
             if self.logger:
                 self.logger.log_event(
@@ -110,7 +125,9 @@ class FirestoreClient:
                 )
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] store_daily_plan failed: {e}")
+                self.logger.log_event(
+                    f"[Firestore Error] store_daily_plan failed: {e}"
+                )
 
     def fetch_daily_plan(self, date_str=None):
         """
@@ -126,7 +143,9 @@ class FirestoreClient:
             if date_str is None:
                 date_str = datetime.datetime.now().strftime("%Y-%m-%d")
 
-            doc_ref = self.db.collection("gpt_runner_daily_plan").document(date_str)
+            doc_ref = self.db.collection("gpt_runner_daily_plan").document(
+                date_str
+            )
             doc = doc_ref.get()
 
             if doc.exists:
@@ -145,7 +164,9 @@ class FirestoreClient:
 
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] fetch_daily_plan failed: {e}")
+                self.logger.log_event(
+                    f"[Firestore Error] fetch_daily_plan failed: {e}"
+                )
             return {}
 
     def fetch_reflection(self, bot_name, date_str):
@@ -160,7 +181,9 @@ class FirestoreClient:
             return doc.to_dict().get("reflection", "") if doc.exists else ""
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] fetch_reflection failed: {e}")
+                self.logger.log_event(
+                    f"[Firestore Error] fetch_reflection failed: {e}"
+                )
             return ""
 
 
@@ -178,16 +201,20 @@ def fetch_recent_trades(bot_name, limit=5):
     try:
         client = get_firestore_client()
         today = datetime.datetime.now().strftime("%Y-%m-%d")
-        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime(
-            "%Y-%m-%d"
-        )
+        yesterday = (
+            datetime.datetime.now() - datetime.timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         # Try to get today's trades first
         collection_ref = (
-            client.collection("gpt_runner_trades").document(bot_name).collection(today)
+            client.collection("gpt_runner_trades")
+            .document(bot_name)
+            .collection(today)
         )
         docs = (
-            collection_ref.order_by("entry_time", direction=firestore.Query.DESCENDING)
+            collection_ref.order_by(
+                "entry_time", direction=firestore.Query.DESCENDING
+            )
             .limit(limit)
             .stream()
         )

@@ -1,12 +1,13 @@
 import datetime
+
 from kiteconnect import KiteConnect
 
 _cached_instruments = None
 
 
 def get_kite_client():
-    from runner.secret_manager_client import access_secret
     from runner.kiteconnect_manager import PROJECT_ID
+    from runner.secret_manager_client import access_secret
 
     kite = KiteConnect(api_key=access_secret("ZERODHA_API_KEY", PROJECT_ID))
     kite.set_access_token(access_secret("ZERODHA_ACCESS_TOKEN", PROJECT_ID))

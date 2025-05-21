@@ -1,18 +1,18 @@
-import os
-import time
 import datetime
+import os
 import subprocess
+import time
 
-from runner.logger import Logger
-from runner.common_utils import create_daily_folders
-from runner.firestore_client import FirestoreClient
-from runner.openai_manager import OpenAIManager
-from runner.kiteconnect_manager import KiteConnectManager
-from runner.market_monitor import MarketMonitor
-from runner.strategy_selector import StrategySelector
+from gpt_runner.gpt_runner import run_gpt_runner
 from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
 from gpt_runner.rag.rag_worker import embed_logs_for_today
-from gpt_runner.gpt_runner import run_gpt_runner
+from runner.common_utils import create_daily_folders
+from runner.firestore_client import FirestoreClient
+from runner.kiteconnect_manager import KiteConnectManager
+from runner.logger import Logger
+from runner.market_monitor import MarketMonitor
+from runner.openai_manager import OpenAIManager
+from runner.strategy_selector import StrategySelector
 
 # Load trading mode (PAPER or LIVE)
 PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
@@ -29,7 +29,9 @@ def initialize_memory(logger):
 
 
 def start_bot(bot_type, logger):
-    logger.log_event(f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}")
+    logger.log_event(
+        f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}"
+    )
     try:
         subprocess.run(
             [
@@ -42,7 +44,9 @@ def start_bot(bot_type, logger):
             ],
             check=True,
         )
-        logger.log_event(f"✅ Restart triggered for {bot_type}-trader deployment")
+        logger.log_event(
+            f"✅ Restart triggered for {bot_type}-trader deployment"
+        )
     except subprocess.CalledProcessError as e:
         logger.log_event(f"❌ Failed to restart {bot_type}-trader: {e}")
 
@@ -88,9 +92,9 @@ def main():
         "mode": "paper" if PAPER_TRADE else "live",
         "timestamp": datetime.datetime.now().isoformat(),
     }
-    firestore_client.db.collection("gpt_runner_daily_plan").document(today_date).set(
-        plan
-    )
+    firestore_client.db.collection("gpt_runner_daily_plan").document(
+        today_date
+    ).set(plan)
     logger.log_event(f"✅ Strategy Plan Saved: {plan}")
 
     # Wait until market opens at 9:15 AM IST
@@ -116,7 +120,9 @@ def main():
                 for bot in list(PROCESS_MAP.keys()):
                     stop_bot(bot, logger)
 
-                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
+                logger.log_event(
+                    "🧠 Starting GPT Self-Improvement Analysis..."
+                )
                 run_gpt_runner()
                 break
 

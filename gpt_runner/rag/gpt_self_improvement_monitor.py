@@ -1,13 +1,13 @@
 from datetime import datetime
-from runner.logger import Logger
-from runner.firestore_client import FirestoreClient
+
 from gpt_runner.rag.embedder import embed_logs_for_today
 from gpt_runner.rag.retriever import retrieve_similar_context
-from runner.openai_manager import OpenAIManager
 from mcp.context_builder import build_mcp_context
 from mcp.prompt_template import build_prompts
 from mcp.response_parser import parse_gpt_response
-from runner.openai_manager import ask_gpt
+from runner.firestore_client import FirestoreClient
+from runner.logger import Logger
+from runner.openai_manager import OpenAIManager, ask_gpt
 
 context = build_mcp_context(bot_name="options-trader")
 system, user = build_prompts(context)
@@ -40,7 +40,9 @@ def run_reflection(bot_name):
 
         # Store to Firestore for memory
         client = FirestoreClient(logger)
-        client.log_reflection(bot_name, datetime.now().strftime("%Y-%m-%d"), suggestion)
+        client.log_reflection(
+            bot_name, datetime.now().strftime("%Y-%m-%d"), suggestion
+        )
 
     except Exception as e:
         logger.log_event(f"[GPT][ERROR] Self-reflection failed: {e}")

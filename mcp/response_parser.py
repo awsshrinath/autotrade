@@ -1,5 +1,6 @@
 # Parses and validates GPT's structured output
 import json
+
 from .allowed_actions import ALLOWED_ACTIONS
 
 

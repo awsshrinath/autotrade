@@ -1,6 +1,7 @@
-from kiteconnect import KiteConnect
-from google.cloud import firestore
 from datetime import datetime
+
+from google.cloud import firestore
+from kiteconnect import KiteConnect
 
 # Global cache for capital values
 _capital_cache = {}
@@ -44,7 +45,8 @@ def get_current_capital(bot_name):
 
     # Get the capital data for the specified bot
     result = capital_data.get(
-        bot_name, {"allocated": 0, "used": 0, "available": 0, "max_per_trade": 0}
+        bot_name,
+        {"allocated": 0, "used": 0, "available": 0, "max_per_trade": 0},
     )
 
     # Cache the result
@@ -70,7 +72,12 @@ class CapitalManager:
             # Store in Firestore
             self.firestore.collection("gpt_runner_logs").document(
                 "capital_" + self.today
-            ).set({"available_balance": cash, "timestamp": datetime.now().isoformat()})
+            ).set(
+                {
+                    "available_balance": cash,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
             return cash
         except Exception as e:
             print("[ERROR] Failed to fetch margin:", e)

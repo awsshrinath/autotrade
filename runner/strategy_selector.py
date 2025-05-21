@@ -3,7 +3,9 @@ class StrategySelector:
         self.logger = logger
 
     @staticmethod
-    def choose_strategy(bot_type="stock", sentiment="neutral", market_sentiment=None):
+    def choose_strategy(
+        bot_type="stock", sentiment="neutral", market_sentiment=None
+    ):
         # Optional override using live market sentiment
         if market_sentiment:
             vix = market_sentiment.get("INDIA VIX", 0)
@@ -36,4 +38,6 @@ def select_best_strategy(bot_name="stock-trader", market_sentiment=None):
         if "stock" in bot_name
         else ("futures" if "futures" in bot_name else "options")
     )
-    return StrategySelector.choose_strategy(bot_type, market_sentiment=market_sentiment)
+    return StrategySelector.choose_strategy(
+        bot_type, market_sentiment=market_sentiment
+    )

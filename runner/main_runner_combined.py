@@ -1,19 +1,17 @@
+import datetime
 import os
 import time
-import datetime
 
-from runner.logger import Logger
-from runner.common_utils import create_daily_folders
-from runner.firestore_client import FirestoreClient
-from runner.openai_manager import OpenAIManager
-from runner.kiteconnect_manager import KiteConnectManager
-from runner.market_monitor import MarketMonitor
-from runner.strategy_selector import StrategySelector
 from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
 from gpt_runner.rag.rag_worker import embed_logs_for_today
-from runner.gpt_self_improvement_monitor import (
-    run_gpt_reflection,
-)
+from runner.common_utils import create_daily_folders
+from runner.firestore_client import FirestoreClient
+from runner.gpt_self_improvement_monitor import run_gpt_reflection
+from runner.kiteconnect_manager import KiteConnectManager
+from runner.logger import Logger
+from runner.market_monitor import MarketMonitor
+from runner.openai_manager import OpenAIManager
+from runner.strategy_selector import StrategySelector
 
 # Load trading mode (PAPER or LIVE)
 PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
@@ -93,7 +91,9 @@ def main():
                 logger.log_event("🔔 Market closed. Trading day complete.")
 
                 # Run GPT self-improvement analysis
-                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
+                logger.log_event(
+                    "🧠 Starting GPT Self-Improvement Analysis..."
+                )
                 run_gpt_reflection()  # Run reflection for all bots
                 break
 

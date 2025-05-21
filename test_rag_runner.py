@@ -1,8 +1,6 @@
+from gpt_runner.rag.faiss_firestore_adapter import add_firestore_record
 from gpt_runner.rag.rag_utils import add_to_memory
 from gpt_runner.rag.retriever import retrieve_similar_context
-from gpt_runner.rag.faiss_firestore_adapter import (
-    add_firestore_record,
-)
 
 
 def test_add_and_retrieve():

@@ -1,5 +1,5 @@
-from kiteconnect import KiteConnect
 from google.cloud import secretmanager
+from kiteconnect import KiteConnect
 
 PROJECT_ID = "autotrade-453303"
 
@@ -14,7 +14,9 @@ def access_secret(secret_id: str) -> str:
 def store_secret(secret_id: str, value: str):
     client = secretmanager.SecretManagerServiceClient()
     parent = f"projects/{PROJECT_ID}/secrets/{secret_id}"
-    client.add_secret_version(parent=parent, payload={"data": value.encode("UTF-8")})
+    client.add_secret_version(
+        parent=parent, payload={"data": value.encode("UTF-8")}
+    )
 
 
 def get_kite_login_url():

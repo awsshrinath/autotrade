@@ -1,5 +1,3 @@
-
-
 def opening_range_strategy(stock_data, capital, open_range):
     """
     ORB strategy:

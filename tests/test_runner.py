@@ -13,7 +13,9 @@ def test_vwap_strategy():
     try:
         from strategies.vwap_strategy import vwap_strategy
 
-        result = vwap_strategy(symbol="NIFTY", instrument_token="FAKE", capital=10000)
+        result = vwap_strategy(
+            symbol="NIFTY", instrument_token="FAKE", capital=10000
+        )
         print("✅ vwap_strategy loaded and callable.")
     except Exception as e:
         print(f"\u274c vwap_strategy failed: {e}")

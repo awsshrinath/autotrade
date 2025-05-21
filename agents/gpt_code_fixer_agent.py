@@ -1,11 +1,13 @@
 import os
-import tiktoken
 import re
-from runner.logger import Logger
-from runner.firestore_client import FirestoreClient
-from gpt_runner.rag.retriever import retrieve_similar_context
-from runner.openai_manager import ask_gpt
 from datetime import datetime
+
+import tiktoken
+
+from gpt_runner.rag.retriever import retrieve_similar_context
+from runner.firestore_client import FirestoreClient
+from runner.logger import Logger
+from runner.openai_manager import ask_gpt
 
 logger = Logger(log_dir="logs")
 firestore = FirestoreClient()
@@ -84,7 +86,9 @@ def run_code_fixer(log_path="logs/gpt_runner.log"):
         return
 
     similar_context = retrieve_similar_context(trace["error"])
-    rag_notes = "\n".join(["- " + d.get("text", "") for d, _ in similar_context])
+    rag_notes = "\n".join(
+        ["- " + d.get("text", "") for d, _ in similar_context]
+    )
 
     prompt = f"""
 You're an AI developer assistant. Analyze the following Python function which
@@ -111,7 +115,9 @@ caused an error:
 
     model = pick_model(prompt)
     suggestion = ask_gpt(
-        system_prompt="You're an AI developer.", user_prompt=prompt, model=model
+        system_prompt="You're an AI developer.",
+        user_prompt=prompt,
+        model=model,
     )
 
     if suggestion:
