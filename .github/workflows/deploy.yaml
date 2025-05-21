@@ -93,6 +93,7 @@ jobs:
       - name: 🔄 Restart Bot Deployments
         if: steps.check_cluster.outputs.exists == 'true'
         run: |
+          kubectl apply -f namespace.yaml
           kubectl rollout restart deployment stock-trader -n gpt
           kubectl rollout restart deployment options-trader -n gpt
           kubectl rollout restart deployment futures-trader -n gpt
