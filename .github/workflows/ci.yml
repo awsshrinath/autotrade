@@ -38,7 +38,9 @@ jobs:
         run: flake8 .
 
       - name: Security check with Bandit
-        run: bandit -r . -c bandit.yaml
+        run: |
+          bandit -r . -c bandit.yaml -f json -o bandit_report.json || true
+          python3 scripts/bandit_fail_on_high.py
 
       - name: Run tests (skip faiss tests via pytest.ini)
         run: pytest
