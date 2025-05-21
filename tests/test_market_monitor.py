@@ -6,9 +6,18 @@ class MockLogger:
         print(f"[MOCK LOG] {msg}")
 
 
+class MockKiteClient:
+    def ltp(self, symbols):
+        return {
+            "NSE:NIFTY 50": {"last_price": 18000},
+            "NSE:BANKNIFTY": {"last_price": 40000},
+            "NSE:INDIA VIX": {"last_price": 15},
+        }
+
+
 def test_get_market_sentiment_structure():
     monitor = MarketMonitor(logger=MockLogger())
-    sentiment = monitor.get_market_sentiment()
+    sentiment = monitor.get_market_sentiment(kite_client=MockKiteClient())
     assert isinstance(sentiment, dict)
     assert "sgx_nifty" in sentiment
     assert "dow" in sentiment

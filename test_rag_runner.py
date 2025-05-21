@@ -38,7 +38,7 @@ def test_add_and_retrieve():
 
     print("✅ Retrieving similar context for a new scenario...")
     test_query = "SGX flat, Dow red, VIX spiking. What worked before?"
-    results = retrieve_similar_context(test_query, top_k=2)
+    results = retrieve_similar_context(test_query, limit=2)
 
     for i, (meta, score) in enumerate(results):
         print(

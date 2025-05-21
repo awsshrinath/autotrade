@@ -115,6 +115,7 @@ def load_vector_index(index_name="bot_index"):
     vector_store = VectorStore(index_name=index_name)
     return vector_store
 
+
 def load_from_vector_store(query: str):
     """
     Dummy placeholder for vector retrieval
