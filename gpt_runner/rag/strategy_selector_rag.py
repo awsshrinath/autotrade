@@ -5,7 +5,7 @@ from gpt_runner.rag.retriever import retrieve_similar_context
 def strategy_with_memory(today_market_summary):
     similar_cases = retrieve_similar_context(today_market_summary)
     context = "\n".join(
-        f"{i+1}. {d['date']} - {d['summary']}"
+        f"{i + 1}. {d['date']} - {d['summary']}"
         for i, (d, _) in enumerate(similar_cases)
     )
 

@@ -49,8 +49,8 @@ def extract_function_block(filepath, function_name):
         if inside:
             func_block.append(line)
             if line.strip() == "" or (
-                len(line) - len(line.lstrip()) <= indent_level
-                and not line.strip().startswith("def")
+                len(line) - len(line.lstrip()) <= indent_level and
+                not line.strip().startswith("def")
             ):
                 break
     return "".join(func_block)

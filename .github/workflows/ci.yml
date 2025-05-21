@@ -1,4 +1,5 @@
 name: CI
+
 on:
   push:
     branches: [ main ]
@@ -8,17 +9,26 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Install dependencies
-        run: pip install flake8 bandit pytest
-      - name: Run flake8
-        run: flake8 .
-      - name: Run Bandit
+        run: |
+          pip install flake8 bandit pytest
+
+      - name: Lint with flake8 (respects .flake8 config)
+        run: |
+          echo "Running flake8 with config..."
+          flake8 .
+
+      - name: Security check with Bandit
         run: bandit -r .
-      - name: Run tests
+
+      - name: Run Tests
         run: pytest -q

@@ -13,8 +13,8 @@ def pick_strike(kite, symbol, direction, target_premium=100):
                 [
                     i["expiry"]
                     for i in instruments
-                    if i["instrument_type"] == "OPTIDX"
-                    and i["name"] in ["NIFTY", "BANKNIFTY"]
+                    if i["instrument_type"] == "OPTIDX" and
+                    i["name"] in ["NIFTY", "BANKNIFTY"]
                 ]
             )
         )

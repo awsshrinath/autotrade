@@ -1,17 +1,9 @@
 import os
 import sys
+import time
 from datetime import datetime
 from datetime import time as dtime
-
 import pytz
-
-# Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-import time
-
-import pytz
-
 from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
@@ -21,14 +13,8 @@ from runner.trade_manager import simulate_exit
 
 IST = pytz.timezone("Asia/Kolkata")
 
-
-def is_market_open():
-    now = datetime.now().astimezone(IST)
-    weekday = now.weekday()
-    if weekday >= 5:
-        print("[INFO] Weekend. Market is closed.")
-        return False
-    return dtime(9, 15) <= now.time() <= dtime(15, 15)
+# Add project root to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 def wait_until_market_opens(logger):
@@ -63,8 +49,8 @@ def is_market_open():
     if weekday >= 5:
         print("[INFO] Weekend detected. Market is closed.")
         return False
-    start_time = time(9, 15)
-    end_time = time(15, 15)
+    start_time = dtime(9, 15)
+    end_time = dtime(15, 15)
     return start_time <= now.time() <= end_time
 
 

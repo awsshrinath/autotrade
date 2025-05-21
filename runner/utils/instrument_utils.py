@@ -29,9 +29,9 @@ def get_futures_token(symbol, expiry_date_str=None):
 
     for inst in instruments:
         if (
-            inst["instrument_type"] == "FUT"
-            and inst["name"] == symbol
-            and inst["expiry"] == expiry_date_str
+            inst["instrument_type"] == "FUT" and
+            inst["name"] == symbol and
+            inst["expiry"] == expiry_date_str
         ):
             return inst["instrument_token"]
     return None
@@ -44,11 +44,11 @@ def get_options_token(symbol, strike_price, option_type, expiry_date_str=None):
 
     for inst in instruments:
         if (
-            inst["instrument_type"] == "OPT"
-            and inst["name"] == symbol
-            and inst["strike"] == strike_price
-            and inst["expiry"] == expiry_date_str
-            and inst["tradingsymbol"].endswith(option_type.upper())
+            inst["instrument_type"] == "OPT" and
+            inst["name"] == symbol and
+            inst["strike"] == strike_price and
+            inst["expiry"] == expiry_date_str and
+            inst["tradingsymbol"].endswith(option_type.upper())
         ):
             return inst["instrument_token"]
     return None

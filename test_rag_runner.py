@@ -42,7 +42,7 @@ def test_add_and_retrieve():
 
     for i, (meta, score) in enumerate(results):
         print(
-            f"{i+1}. Score: {score:.4f} | Date: {meta.get('date')} | Summary: {meta.get('summary')}"
+            f"{i + 1}. Score: {score:.4f} | Date: {meta.get('date')} | Summary: {meta.get('summary')}"
         )
 
     print("✅ Test complete.")
