@@ -1,100 +1,49 @@
-name: CI/CD - Test, Build, Deploy
+deploy-to-prod:
+  name: 🚀 Deploy to GKE
+  needs: test-and-build
+  runs-on: ubuntu-latest
 
-on:
-  push:
-    branches: [main]
+  steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v3
 
-permissions:
-  contents: write
-  id-token: write
+    - name: 🔐 Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: ${{ secrets.GCP_REGION }}
-  IMAGE_PREFIX: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo
+    - name: 🔎 Check if GKE Cluster Exists
+      id: check_cluster
+      run: |
+        if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
+          --region ${{ secrets.GKE_ZONE }} \
+          --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "Cluster not found"
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
 
-jobs:
-  test-and-build:
-    name: 🧪 Test & Build & Push Images
-    runs-on: ubuntu-latest
+    - name: ⚙️ Get GKE credentials
+      if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+        location: ${{ secrets.GKE_ZONE }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v3
+    - name: 🏗️ Create GPT Namespace
+      if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+      run: kubectl apply -f deployments/namespace.yaml
 
-      - name: ⚙️ Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: 📦 Apply Kubernetes Manifests
+      if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+      run: kubectl apply -f deployments/
 
-      - name: 📦 Install Python dependencies
-        run: pip install -r requirements.txt
-
-      - name: 🔐 Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: 🐳 Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
-
-      - name: 🚀 Build & Push All Docker Images
-        run: |
-          docker build -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=main.py .
-          docker push $IMAGE_PREFIX/gpt-runner:latest
-
-          docker build -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_runner.py .
-          docker push $IMAGE_PREFIX/stock-trader:latest
-
-          docker build -t $IMAGE_PREFIX/options-trader:latest --build-arg RUNNER_SCRIPT=options_runner.py .
-          docker push $IMAGE_PREFIX/options-trader:latest
-
-          docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_runner.py .
-          docker push $IMAGE_PREFIX/futures-trader:latest
-
-  deploy-to-prod:
-    name: 🚀 Deploy to GKE
-    needs: test-and-build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v3
-
-      - name: 🔐 Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: 🔎 Check if GKE Cluster Exists
-        id: check_cluster
-        run: |
-          if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-            --region ${{ secrets.GKE_ZONE }} \
-            --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "Cluster not found"
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: ⚙️ Get GKE credentials
-        if: steps.check_cluster.outputs.exists == 'true'
-        uses: google-github-actions/get-gke-credentials@v1
-        with:
-          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GKE_ZONE }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: 📦 Apply Kubernetes Manifests
-        if: steps.check_cluster.outputs.exists == 'true'
-        run: kubectl apply -f deployments/
-
-      - name: 🔄 Restart Bot Deployments
-        if: steps.check_cluster.outputs.exists == 'true'
-        run: |
-          kubectl apply -f namespace.yaml
-          kubectl rollout restart deployment stock-trader -n gpt
-          kubectl rollout restart deployment options-trader -n gpt
-          kubectl rollout restart deployment futures-trader -n gpt
-          kubectl rollout restart deployment main-runner -n gpt
+    - name: 🔄 Restart Bot Deployments
+      if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+      run: |
+        kubectl rollout restart deployment stock-trader -n gpt || true
+        kubectl rollout restart deployment options-trader -n gpt || true
+        kubectl rollout restart deployment futures-trader -n gpt || true
+        kubectl rollout restart deployment main-runner -n gpt || true
