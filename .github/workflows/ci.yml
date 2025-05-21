@@ -20,19 +20,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-            pip install "numpy<2.0.0"
-            pip install faiss-cpu==1.7.3.post2 
-            pip install flake8 bandit pytest
-            pip install -r requirements.txt
+          pip install "numpy<2.0.0"
+          pip install faiss-cpu==1.7.3   
+          pip install flake8 bandit pytest
+          pip install -r requirements.txt
 
       - name: Lint with flake8 (respects .flake8 config)
-        run: |
-          echo "Running flake8 with config..."
-          flake8 .
+        run: flake8 .
 
       - name: Security check with Bandit
         run: bandit -r . -c bandit.yaml
 
       - name: Run Tests
-        run: |
-            pytest --ignore=test_gpt_monitor.py --ignore=test_rag_runner.py
+        run: pytest --ignore=test_gpt_monitor.py --ignore=test_rag_runner.py
