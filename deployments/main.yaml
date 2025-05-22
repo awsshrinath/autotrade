@@ -27,3 +27,6 @@ spec:
             requests:
               memory: "512Mi"
               cpu: "250m"
+          env:
+            - name: RUNNER_SCRIPT
+              value: runner/main_runner_combined.py
