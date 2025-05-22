@@ -13,7 +13,7 @@ spec:
       labels:
         app: main-runner
     spec:
-      serviceAccountName: gpt-runner-sa@autotrade-453303.iam.gserviceaccount.com
+      serviceAccountName: gpt-runner-sa
       containers:
         - name: main-runner
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
