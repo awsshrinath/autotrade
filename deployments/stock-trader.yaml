@@ -21,3 +21,6 @@ spec:
             requests:
               memory: "512Mi"
               cpu: "250m"
+          env:
+            - name: RUNNER_SCRIPT
+              value: stock_trading/stock_runner.py

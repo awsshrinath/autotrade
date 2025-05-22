@@ -7,5 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ARG RUNNER_SCRIPT=runner/main_runner_combined.py
-CMD ["sh", "-c", "python ${RUNNER_SCRIPT}"]
+# Set default runner (can be overridden in Kubernetes via ENV)
+ENV RUNNER_SCRIPT=runner/main_runner_combined.py
+
+# Shell form CMD allows env var substitution
+CMD python -u "$RUNNER_SCRIPT"

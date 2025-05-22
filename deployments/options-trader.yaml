@@ -21,3 +21,6 @@ spec:
             requests:
               memory: "512Mi"
               cpu: "250m"
+          env:
+            - name: RUNNER_SCRIPT
+              value: options_trading/options_runner.py
