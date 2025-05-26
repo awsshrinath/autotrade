@@ -2,13 +2,11 @@ import datetime
 import os
 import time
 
-# Temporarily disabled until Docker image is rebuilt with package fixes
-# from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
-# from gpt_runner.rag.rag_worker import embed_logs_for_today
+from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
+from gpt_runner.rag.rag_worker import embed_logs_for_today
 from runner.common_utils import create_daily_folders
 from runner.firestore_client import FirestoreClient
-# Temporarily disabled until Docker image is rebuilt with package fixes
-# from runner.gpt_self_improvement_monitor import run_gpt_reflection
+from runner.gpt_self_improvement_monitor import run_gpt_reflection
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.market_monitor import MarketMonitor
@@ -21,11 +19,10 @@ PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
 
 def initialize_memory(logger):
     """Initialize RAG memory by syncing FAISS with Firestore and embedding today's logs"""
-    logger.log_event("[RAG] Temporarily disabled - RAG initialization skipped until Docker image is rebuilt")
-    # logger.log_event("[RAG] Syncing FAISS with Firestore...")
-    # sync_firestore_to_faiss()
-    # logger.log_event("[RAG] Embedding today's logs...")
-    # embed_logs_for_today()
+    logger.log_event("[RAG] Syncing FAISS with Firestore...")
+    sync_firestore_to_faiss()
+    logger.log_event("[RAG] Embedding today's logs...")
+    embed_logs_for_today()
 
 
 def main():
@@ -94,14 +91,14 @@ def main():
                 logger.log_event("🔔 Market closed. Trading day complete.")
 
                 # Run GPT self-improvement analysis
-                logger.log_event("🧠 GPT Self-Improvement Analysis temporarily disabled")
-                # run_gpt_reflection()  # Run reflection for all bots
+                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
+                run_gpt_reflection()  # Run reflection for all bots
                 break
 
     except KeyboardInterrupt:
         logger.log_event("🛑 Interrupted manually. Stopping monitoring.")
-        logger.log_event("🧠 GPT Reflection temporarily disabled after manual stop")
-        # run_gpt_reflection()
+        logger.log_event("🧠 Running GPT Reflection after manual stop...")
+        run_gpt_reflection()
 
 
 if __name__ == "__main__":
