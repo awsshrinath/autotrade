@@ -89,7 +89,8 @@ def run_options_trading_bot():
         strategy_name = "scalp"  # Default fallback
     else:
         # Extract the options strategy from the plan
-        strategy_name = daily_plan.get("options", "scalp")
+        strategy_tuple = daily_plan.get("options", "scalp")
+        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
         logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
 
         # Log market sentiment from the plan

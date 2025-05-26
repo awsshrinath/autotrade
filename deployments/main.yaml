@@ -17,6 +17,28 @@ spec:
       containers:
         - name: main-runner
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+          command: ["/bin/bash", "-c"]
+          args: 
+            - |
+              cd /app
+              
+              # Fix package structure silently
+              if [ ! -f "gpt_runner/__init__.py" ]; then
+                echo "# Makes gpt_runner a Python package" > gpt_runner/__init__.py
+              fi
+              mkdir -p gpt_runner/rag
+              echo "# Makes rag a Python package" > gpt_runner/rag/__init__.py
+              
+              # Fix import path
+              sed -i 's/from gpt_runner\.gpt_self_improvement_monitor/from gpt_runner.rag.gpt_self_improvement_monitor/' runner/gpt_runner.py
+              
+              # Set Python path and run
+              export PYTHONPATH="/app:$PYTHONPATH"
+              python3 -B -c "
+              import sys
+              sys.path.insert(0, '/app')
+              exec(open('/app/runner/main_runner_combined.py').read())
+              "
           resources:
             requests:
               memory: "512Mi"
