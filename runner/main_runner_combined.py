@@ -7,7 +7,8 @@ import time
 # from gpt_runner.rag.rag_worker import embed_logs_for_today
 from runner.common_utils import create_daily_folders
 from runner.firestore_client import FirestoreClient
-from runner.gpt_self_improvement_monitor import run_gpt_reflection
+# Temporarily disabled until Docker image is rebuilt with package fixes
+# from runner.gpt_self_improvement_monitor import run_gpt_reflection
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.market_monitor import MarketMonitor
@@ -93,14 +94,14 @@ def main():
                 logger.log_event("🔔 Market closed. Trading day complete.")
 
                 # Run GPT self-improvement analysis
-                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
-                run_gpt_reflection()  # Run reflection for all bots
+                logger.log_event("🧠 GPT Self-Improvement Analysis temporarily disabled")
+                # run_gpt_reflection()  # Run reflection for all bots
                 break
 
     except KeyboardInterrupt:
         logger.log_event("🛑 Interrupted manually. Stopping monitoring.")
-        logger.log_event("🧠 Running GPT Reflection after manual stop...")
-        run_gpt_reflection()
+        logger.log_event("🧠 GPT Reflection temporarily disabled after manual stop")
+        # run_gpt_reflection()
 
 
 if __name__ == "__main__":

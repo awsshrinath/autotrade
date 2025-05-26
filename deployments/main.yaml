@@ -17,6 +17,101 @@ spec:
       containers:
         - name: main-runner
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+          command: ["/bin/bash", "-c"]
+          args: 
+            - |
+              echo "Starting main runner with temporary fixes..."
+              cd /app
+              cat > /tmp/temp_main_runner.py << 'EOF'
+              import datetime
+              import os
+              import time
+
+              from runner.common_utils import create_daily_folders
+              from runner.firestore_client import FirestoreClient
+              from runner.kiteconnect_manager import KiteConnectManager
+              from runner.logger import Logger
+              from runner.market_monitor import MarketMonitor
+              from runner.openai_manager import OpenAIManager
+              from runner.strategy_selector import StrategySelector
+
+              # Load trading mode (PAPER or LIVE)
+              PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
+
+              def initialize_memory(logger):
+                  logger.log_event("[RAG] Temporarily disabled - RAG initialization skipped until Docker image is rebuilt")
+
+              def main():
+                  today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+                  logger = Logger(today_date)
+                  create_daily_folders(today_date)
+                  logger.log_event("✅ GPT Runner+ Orchestrator Started")
+
+                  # Init memory + RAG sync
+                  initialize_memory(logger)
+
+                  # Initialize clients
+                  firestore_client = FirestoreClient(logger)
+                  OpenAIManager(logger)
+                  kite_manager = KiteConnectManager(logger)
+                  kite_manager.set_access_token()
+                  kite = kite_manager.get_kite_client()
+
+                  # Get market context
+                  market_monitor = MarketMonitor(logger)
+                  sentiment_data = market_monitor.get_market_sentiment(kite)
+                  logger.log_event(f"📈 Market Sentiment Data: {sentiment_data}")
+
+                  # Create and store daily strategy plan
+                  plan = {
+                      "date": today_date,
+                      "stocks": StrategySelector(logger).choose_strategy(
+                          "stock", market_sentiment=sentiment_data
+                      ),
+                      "options": StrategySelector(logger).choose_strategy(
+                          "options", market_sentiment=sentiment_data
+                      ),
+                      "futures": StrategySelector(logger).choose_strategy(
+                          "futures", market_sentiment=sentiment_data
+                      ),
+                      "mode": "paper" if PAPER_TRADE else "live",
+                      "timestamp": datetime.datetime.now().isoformat(),
+                      "market_sentiment": sentiment_data,
+                  }
+                  firestore_client.store_daily_plan(plan)
+                  logger.log_event(f"✅ Strategy Plan Saved: {plan}")
+
+                  # Wait until market opens at 9:15 AM IST
+                  now = datetime.datetime.now()
+                  market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
+                  if now < market_open:
+                      wait_minutes = int((market_open - now).total_seconds() / 60)
+                      logger.log_event(
+                          f"⏳ Waiting {wait_minutes} minutes until market opens at 9:15 AM IST..."
+                      )
+                      time.sleep((market_open - now).total_seconds())
+
+                  logger.log_event(
+                      "🚀 Trading bots are running in separate pods and will read the plan from Firestore"
+                  )
+
+                  try:
+                      while True:
+                          time.sleep(60)
+                          now = time.strftime("%H:%M")
+                          if now >= "15:30":
+                              logger.log_event("🔔 Market closed. Trading day complete.")
+                              logger.log_event("🧠 GPT Self-Improvement Analysis temporarily disabled")
+                              break
+
+                  except KeyboardInterrupt:
+                      logger.log_event("🛑 Interrupted manually. Stopping monitoring.")
+                      logger.log_event("🧠 GPT Reflection temporarily disabled after manual stop")
+
+              if __name__ == "__main__":
+                  main()
+              EOF
+              python3 /tmp/temp_main_runner.py
           resources:
             requests:
               memory: "512Mi"
