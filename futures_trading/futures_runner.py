@@ -104,7 +104,8 @@ def run_futures_trading_bot():
         strategy_name = "orb"  # Default fallback
     else:
         # Extract the futures strategy from the plan
-        strategy_name = daily_plan.get("futures", "orb")
+        strategy_tuple = daily_plan.get("futures", "orb")
+        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
         logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
 
         # Log market sentiment from the plan
