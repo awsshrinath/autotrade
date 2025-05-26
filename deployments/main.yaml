@@ -17,12 +17,6 @@ spec:
       containers:
         - name: main-runner
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
           resources:
             requests:
               memory: "512Mi"
