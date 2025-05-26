@@ -24,9 +24,7 @@ class GPTSelfImprovementMonitor:
 
     def analyze_errors(self, log_path="logs/gpt_runner.log", bot_names=None):
         if not os.path.exists(log_path):
-            self.logger.log_event(
-                f"[GPT SelfFix] Log file not found: {log_path}"
-            )
+            self.logger.log_event(f"[GPT SelfFix] Log file not found: {log_path}")
             return
 
         if bot_names is None:

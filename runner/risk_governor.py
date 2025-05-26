@@ -24,9 +24,7 @@ class RiskGovernor:
             print(f"❌ RiskGovernor: Max trades reached ({self.trade_count}).")
             return False
         if now >= self.cutoff_time:
-            print(
-                f"⏰ RiskGovernor: Time cutoff reached ({now} ≥ {self.cutoff_time})."
-            )
+            print(f"⏰ RiskGovernor: Time cutoff reached ({now} ≥ {self.cutoff_time}).")
             return False
         return True
 

@@ -43,9 +43,7 @@ def sync_firestore_to_faiss(collection_name="rag_memory", bot_name="default"):
                     embedding = data["embedding"]
 
                 # Add to vector data
-                vector_data.append(
-                    {"text": data["text"], "embedding": embedding}
-                )
+                vector_data.append({"text": data["text"], "embedding": embedding})
 
         # Save to vector store
         if vector_data:

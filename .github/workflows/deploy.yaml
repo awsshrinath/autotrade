@@ -2,7 +2,7 @@ name: CI/CD - Test, Build, Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, CICD1]
   repository_dispatch:
     types: [cluster_ready]
 
@@ -44,7 +44,9 @@ jobs:
       - name: 🚀 Build & Push All Docker Images
         run: |
           docker build -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
+          docker build -t $IMAGE_PREFIX/gpt-runner:v1.1-fix --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
           docker push $IMAGE_PREFIX/gpt-runner:latest
+          docker push $IMAGE_PREFIX/gpt-runner:v1.1-fix
 
           docker build -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_trading/stock_runner.py .
           docker push $IMAGE_PREFIX/stock-trader:latest

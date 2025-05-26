@@ -8,9 +8,7 @@ from typing import List
 import numpy as np
 
 
-def get_embedding(
-    text: str, model: str = "text-embedding-ada-002"
-) -> List[float]:
+def get_embedding(text: str, model: str = "text-embedding-ada-002") -> List[float]:
     """
     Get embedding for a text using OpenAI's embedding API
     """

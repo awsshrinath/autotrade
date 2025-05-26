@@ -20,8 +20,12 @@ class VWAPStrategy(BaseStrategy):
             from_date = to_date - timedelta(minutes=30)
             for symbol in symbols:
                 try:
-                    token = self.kite.ltp([f"NSE:{symbol}"])[f"NSE:{symbol}"]["instrument_token"]
-                    candles = self.kite.historical_data(token, from_date, to_date, "5minute")
+                    token = self.kite.ltp([f"NSE:{symbol}"])[f"NSE:{symbol}"][
+                        "instrument_token"
+                    ]
+                    candles = self.kite.historical_data(
+                        token, from_date, to_date, "5minute"
+                    )
                     if not candles or len(candles) < 5:
                         continue
                     vwap = calculate_vwap(candles)
@@ -67,7 +71,9 @@ class VWAPStrategy(BaseStrategy):
             ltp_data = self.kite.ltp([f"NSE:{symbol}"])
             current_price = ltp_data.get(f"NSE:{symbol}", {}).get("last_price")
             if current_price is None:
-                self.logger.log_event(f"[VWAP][ERROR] Could not fetch current price for {symbol}")
+                self.logger.log_event(
+                    f"[VWAP][ERROR] Could not fetch current price for {symbol}"
+                )
                 return False
             if current_price <= trade["stop_loss"]:
                 return True

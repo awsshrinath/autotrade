@@ -4,8 +4,12 @@ Now uses file-based configuration instead of environment variables
 """
 
 from config.config_manager import (
-    get_config, get_trading_config, get_paper_trade,
-    get_default_capital, get_max_daily_loss, get_position_limits
+    get_config,
+    get_trading_config,
+    get_paper_trade,
+    get_default_capital,
+    get_max_daily_loss,
+    get_position_limits,
 )
 
 # Initialize configuration
@@ -80,7 +84,7 @@ def validate_config():
 
 def get_strategy_config(strategy_name: str):
     """Get strategy-specific configuration"""
-    if strategy_name.lower() == 'scalp':
+    if strategy_name.lower() == "scalp":
         return SCALP_CONFIG
     else:
         # Return default strategy config
@@ -88,7 +92,7 @@ def get_strategy_config(strategy_name: str):
             "position_size_pct": 0.1,
             "stop_loss_pct": 0.02,
             "target_pct": 0.04,
-            "max_positions": 3
+            "max_positions": 3,
         }
 
 
@@ -97,7 +101,7 @@ def get_position_limits_dict():
     return {
         "stock": STOCK_POSITION_LIMIT,
         "option": OPTION_POSITION_LIMIT,
-        "future": FUTURE_POSITION_LIMIT
+        "future": FUTURE_POSITION_LIMIT,
     }
 
 
@@ -109,16 +113,13 @@ def get_risk_settings():
         "margin_utilization_limit": MARGIN_UTILIZATION_LIMIT,
         "max_volatility_threshold": MAX_VOLATILITY_THRESHOLD,
         "min_trade_value": MIN_TRADE_VALUE,
-        "position_limits": get_position_limits_dict()
+        "position_limits": get_position_limits_dict(),
     }
 
 
 def get_api_settings():
     """Get API settings"""
-    return {
-        "rate_limit": API_RATE_LIMIT,
-        "timeout": API_TIMEOUT
-    }
+    return {"rate_limit": API_RATE_LIMIT, "timeout": API_TIMEOUT}
 
 
 def get_monitoring_settings():
@@ -126,7 +127,7 @@ def get_monitoring_settings():
     return {
         "interval": MONITORING_INTERVAL,
         "backup_frequency": BACKUP_FREQUENCY,
-        "auto_square_off_time": AUTO_SQUARE_OFF_TIME
+        "auto_square_off_time": AUTO_SQUARE_OFF_TIME,
     }
 
 
@@ -143,10 +144,10 @@ if is_development():
     print(f"   Default Capital: ₹{DEFAULT_CAPITAL:,}")
     print(f"   Max Daily Loss: ₹{MAX_DAILY_LOSS:,}")
     print(f"   Log Level: {LOG_LEVEL}")
-    
+
     # Validate configuration
     validation = validate_config()
-    if not validation['valid']:
+    if not validation["valid"]:
         print(f"⚠️  Configuration Issues: {validation['issues']}")
-    if validation['warnings']:
+    if validation["warnings"]:
         print(f"⚠️  Configuration Warnings: {validation['warnings']}")

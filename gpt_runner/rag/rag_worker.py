@@ -106,9 +106,7 @@ Notes: {trade.get('notes', '')}
                     "type": "trade",
                     "bot": bot_name,
                     "symbol": trade.get("symbol", "unknown"),
-                    "timestamp": trade.get(
-                        "entry_time", datetime.now().isoformat()
-                    ),
+                    "timestamp": trade.get("entry_time", datetime.now().isoformat()),
                 },
             }
         )
@@ -118,9 +116,7 @@ Notes: {trade.get('notes', '')}
         save_to_vector_store(bot_name, vector_data)
 
 
-def embed_log_file(
-    bot_name: str, log_path: str, chunk_size: int = 1000
-) -> None:
+def embed_log_file(bot_name: str, log_path: str, chunk_size: int = 1000) -> None:
     """
     Embed log file content and save to vector store.
 
@@ -210,9 +206,7 @@ Reflection: {reflection}
         save_to_vector_store(bot_name, vector_data)
 
     except Exception as e:
-        logger.error(
-            f"Error embedding reflection for {bot_name} on {date_str}: {e}"
-        )
+        logger.error(f"Error embedding reflection for {bot_name} on {date_str}: {e}")
 
 
 if __name__ == "__main__":

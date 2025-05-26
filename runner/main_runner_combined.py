@@ -91,9 +91,7 @@ def main():
                 logger.log_event("🔔 Market closed. Trading day complete.")
 
                 # Run GPT self-improvement analysis
-                logger.log_event(
-                    "🧠 Starting GPT Self-Improvement Analysis..."
-                )
+                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
                 run_gpt_reflection()  # Run reflection for all bots
                 break
 

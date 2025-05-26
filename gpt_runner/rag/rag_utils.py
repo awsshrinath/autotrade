@@ -14,9 +14,7 @@ def add_to_memory(text: str, metadata: dict, bot_name="default", logger=None):
     """
     try:
         # Create a combined text with metadata
-        combined_text = (
-            f"{text} {' '.join([f'{k}:{v}' for k, v in metadata.items()])}"
-        )
+        combined_text = f"{text} {' '.join([f'{k}:{v}' for k, v in metadata.items()])}"
 
         # Embed the text
         vec = embed_text(text, logger)

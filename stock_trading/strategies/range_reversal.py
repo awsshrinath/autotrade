@@ -31,14 +31,10 @@ class RangeReversalStrategy(BaseStrategy):
                     if abs(close_price - open_price) < 1.0:
                         continue
 
-                    direction = (
-                        "bullish" if close_price > open_price else "bearish"
-                    )
+                    direction = "bullish" if close_price > open_price else "bearish"
                     entry = close_price
                     sl = entry - 1.0 if direction == "bullish" else entry + 1.0
-                    target = (
-                        entry + 2.0 if direction == "bullish" else entry - 2.0
-                    )
+                    target = entry + 2.0 if direction == "bullish" else entry - 2.0
 
                     trade = {
                         "symbol": symbol,

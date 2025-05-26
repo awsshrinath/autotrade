@@ -18,9 +18,7 @@ def access_secret(secret_id: str) -> str:
         response = client.access_secret_version(request={"name": name})
         return response.payload.data.decode("UTF-8").strip()
     except NotFound:
-        raise Exception(
-            f"❌ Secret '{secret_id}' not found in Secret Manager."
-        )
+        raise Exception(f"❌ Secret '{secret_id}' not found in Secret Manager.")
 
 
 def update_access_token(token_value: str):
@@ -64,9 +62,7 @@ def main():
 
     try:
         print("\n⏳ Exchanging request token for access token...")
-        data = kite.generate_session(
-            request_token=request_token, api_secret=api_secret
-        )
+        data = kite.generate_session(request_token=request_token, api_secret=api_secret)
         access_token = data["access_token"]
         print(f"✅ Got access token: {access_token[:6]}...")
 

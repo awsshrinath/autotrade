@@ -19,9 +19,9 @@ def pick_strike(
         {
             inst["expiry"]
             for inst in instruments
-            if inst["name"] == instrument_type and
-            inst["segment"] == "NFO-OPT" and
-            inst["expiry"] >= today
+            if inst["name"] == instrument_type
+            and inst["segment"] == "NFO-OPT"
+            and inst["expiry"] >= today
         }
     )
 

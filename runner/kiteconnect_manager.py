@@ -24,9 +24,7 @@ class KiteConnectManager:
         # Fetch daily Access Token securely
         self.access_token = access_secret("ZERODHA_ACCESS_TOKEN", PROJECT_ID)
         self.kite.set_access_token(self.access_token)
-        self.logger.log_event(
-            "Access token set successfully for KiteConnect session."
-        )
+        self.logger.log_event("Access token set successfully for KiteConnect session.")
 
     def get_kite_client(self):
         if self.access_token is None:

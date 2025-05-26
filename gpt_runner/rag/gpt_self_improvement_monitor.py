@@ -40,9 +40,7 @@ def run_reflection(bot_name):
 
         # Store to Firestore for memory
         client = FirestoreClient(logger)
-        client.log_reflection(
-            bot_name, datetime.now().strftime("%Y-%m-%d"), suggestion
-        )
+        client.log_reflection(bot_name, datetime.now().strftime("%Y-%m-%d"), suggestion)
 
     except Exception as e:
         logger.log_event(f"[GPT][ERROR] Self-reflection failed: {e}")

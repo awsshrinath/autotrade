@@ -69,7 +69,5 @@ def simulate_exit(trade, future_candles):
         "exit_price": future_candles[-1]["close"],
         "exit_reason": "auto_exit_eod",
         "status": "closed",
-        "hold_duration": (
-            future_candles[-1]["timestamp"] - entry_time
-        ).seconds,
+        "hold_duration": (future_candles[-1]["timestamp"] - entry_time).seconds,
     }

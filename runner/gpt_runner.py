@@ -44,9 +44,7 @@ def analyze_trades():
     gpt_client = OpenAIManager()
     logger = Logger("gpt_runner")
     monitor = GPTSelfImprovementMonitor(logger, firestore_client, gpt_client)
-    monitor.analyze_errors(
-        log_path="logs/gpt_runner.log", bot_name="stock-trader"
-    )
+    monitor.analyze_errors(log_path="logs/gpt_runner.log", bot_name="stock-trader")
 
 
 if __name__ == "__main__":

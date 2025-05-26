@@ -3,9 +3,7 @@ class StrategySelector:
         self.logger = logger
 
     @staticmethod
-    def choose_strategy(
-        bot_type="stock", sentiment=None, market_sentiment=None
-    ):
+    def choose_strategy(bot_type="stock", sentiment=None, market_sentiment=None):
         # Determine direction from sentiment
         direction = "neutral"
         if sentiment:
@@ -44,7 +42,9 @@ class StrategySelector:
 # ✅ Externally used function
 
 
-def select_best_strategy(bot_name="stock-trader", market_sentiment=None, sentiment=None):
+def select_best_strategy(
+    bot_name="stock-trader", market_sentiment=None, sentiment=None
+):
     bot_type = (
         "stock"
         if "stock" in bot_name
