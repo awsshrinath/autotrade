@@ -2,8 +2,9 @@ import datetime
 import os
 import time
 
-from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
-from gpt_runner.rag.rag_worker import embed_logs_for_today
+# Temporarily disabled until Docker image is rebuilt with package fixes
+# from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
+# from gpt_runner.rag.rag_worker import embed_logs_for_today
 from runner.common_utils import create_daily_folders
 from runner.firestore_client import FirestoreClient
 from runner.gpt_self_improvement_monitor import run_gpt_reflection
@@ -19,10 +20,11 @@ PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
 
 def initialize_memory(logger):
     """Initialize RAG memory by syncing FAISS with Firestore and embedding today's logs"""
-    logger.log_event("[RAG] Syncing FAISS with Firestore...")
-    sync_firestore_to_faiss()
-    logger.log_event("[RAG] Embedding today's logs...")
-    embed_logs_for_today()
+    logger.log_event("[RAG] Temporarily disabled - RAG initialization skipped until Docker image is rebuilt")
+    # logger.log_event("[RAG] Syncing FAISS with Firestore...")
+    # sync_firestore_to_faiss()
+    # logger.log_event("[RAG] Embedding today's logs...")
+    # embed_logs_for_today()
 
 
 def main():
