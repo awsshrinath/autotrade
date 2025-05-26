@@ -38,9 +38,7 @@ def retrieve_similar_context(
         documents, embeddings = load_from_vector_store(bot_name)
 
         if not documents or len(documents) == 0:
-            logger.warning(
-                f"No documents found in vector store for {bot_name}"
-            )
+            logger.warning(f"No documents found in vector store for {bot_name}")
             return []
 
         # Embed the query
@@ -59,9 +57,7 @@ def retrieve_similar_context(
         similarities.sort(key=lambda x: x[1], reverse=True)
 
         # Filter by threshold and limit
-        result = [item for item in similarities if item[1] >= threshold][
-            :limit
-        ]
+        result = [item for item in similarities if item[1] >= threshold][:limit]
 
         logger.info(
             f"Retrieved {len(result)} similar documents for query: {query[:50]}..."

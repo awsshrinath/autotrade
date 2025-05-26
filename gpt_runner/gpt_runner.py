@@ -146,9 +146,7 @@ def generate_improvement_suggestions(
     """
     # Get similar context from RAG
     similar_context = retrieve_similar_context(bot_name, limit=5)
-    context_text = "\n\n".join(
-        [item[0].get("text", "") for item in similar_context]
-    )
+    context_text = "\n\n".join([item[0].get("text", "") for item in similar_context])
 
     # Create prompt for GPT
     system_prompt = """You are an expert trading system developer. Based on the analysis of trading logs and historical context, suggest specific code and strategy improvements. Focus on:
@@ -231,25 +229,19 @@ def generate_trading_report(date_str: Optional[str] = None) -> Dict[str, Any]:
             "total_trades": total_trades,
             "profitable_trades": profitable_trades,
             "win_rate": win_rate,
-            "bots_active": len(
-                [bot for bot, trades in all_trades.items() if trades]
-            ),
+            "bots_active": len([bot for bot, trades in all_trades.items() if trades]),
         },
-        "trades_by_bot": {
-            bot: len(trades) for bot, trades in all_trades.items()
-        },
+        "trades_by_bot": {bot: len(trades) for bot, trades in all_trades.items()},
         "reflections": all_reflections,
         "generated_at": datetime.now().isoformat(),
     }
 
     # Save report to Firestore
     try:
-        firestore_client.db.collection("gpt_runner_reports").document(
-            date_str
-        ).set(report)
-        logger.log_event(
-            f"[REPORT] Trading report generated and saved for {date_str}"
+        firestore_client.db.collection("gpt_runner_reports").document(date_str).set(
+            report
         )
+        logger.log_event(f"[REPORT] Trading report generated and saved for {date_str}")
     except Exception as e:
         logger.log_event(f"[REPORT][ERROR] Failed to save report: {e}")
 

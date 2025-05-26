@@ -5,9 +5,7 @@ import os
 from runner.risk_governor import RiskGovernor
 
 # ✅ Initialize with limits
-risk_guard = RiskGovernor(
-    max_daily_loss=500, max_trades=3, cutoff_time="15:00"
-)
+risk_guard = RiskGovernor(max_daily_loss=500, max_trades=3, cutoff_time="15:00")
 
 
 class TradeManager:
@@ -155,9 +153,7 @@ def simulate_exit(trade, candles):
             return
 
         if not candles or not isinstance(candles, list):
-            print(
-                f"[WARN] No candles provided for simulate_exit on {trade['symbol']}"
-            )
+            print(f"[WARN] No candles provided for simulate_exit on {trade['symbol']}")
             return
 
         entry = trade["entry_price"]
@@ -228,6 +224,4 @@ def simulate_exit(trade, candles):
         )
 
     except Exception as e:
-        print(
-            f"[ERROR] Simulate exit failed for {trade.get('symbol', 'UNKNOWN')}: {e}"
-        )
+        print(f"[ERROR] Simulate exit failed for {trade.get('symbol', 'UNKNOWN')}: {e}")

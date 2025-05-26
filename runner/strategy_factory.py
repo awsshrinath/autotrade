@@ -17,7 +17,5 @@ def load_strategy(strategy_name, kite, logger):
         logger.log_event(f"[FACTORY] Loaded strategy: {strategy_name}")
         return strategy_cls(kite, logger)
     else:
-        logger.log_event(
-            f"[FACTORY][ERROR] Strategy not found: {strategy_name}"
-        )
+        logger.log_event(f"[FACTORY][ERROR] Strategy not found: {strategy_name}")
         return None

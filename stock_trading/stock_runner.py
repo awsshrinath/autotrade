@@ -126,16 +126,12 @@ def run_stock_trading_bot():
     else:
         # Extract the stock strategy from the plan
         strategy_name = daily_plan.get("stocks", "vwap")
-        logger.log_event(
-            f"[PLAN] Using strategy from daily plan: {strategy_name}"
-        )
+        logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
 
         # Log market sentiment from the plan
         sentiment = daily_plan.get("market_sentiment", {})
         if sentiment:
-            logger.log_event(
-                f"[SENTIMENT] Market sentiment from plan: {sentiment}"
-            )
+            logger.log_event(f"[SENTIMENT] Market sentiment from plan: {sentiment}")
 
     wait_until_market_opens(logger)
 
@@ -155,9 +151,7 @@ def run_stock_trading_bot():
                 if strategy:
                     trade_signal = strategy.analyze()
                     if trade_signal:
-                        logger.log_event(
-                            f"[TRADE] Executing trade: {trade_signal}"
-                        )
+                        logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
                         # Trade execution call here
                         # For production, uncomment:
                         # execute_trade(trade_signal, kite, logger)
@@ -169,9 +163,7 @@ def run_stock_trading_bot():
                 logger.log_event(f"[ERROR] Strategy loop exception: {e}")
             time.sleep(60)
 
-        logger.log_event(
-            "[CLOSE] Market closed. Sleeping to prevent CrashLoop."
-        )
+        logger.log_event("[CLOSE] Market closed. Sleeping to prevent CrashLoop.")
         sys.exit(0)
 
     except Exception as e:

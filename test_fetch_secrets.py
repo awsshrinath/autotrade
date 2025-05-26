@@ -22,9 +22,7 @@ def create_secret_manager_client():
         credentials = service_account.Credentials.from_service_account_file(
             r"D:\autotrade-453303-3c843b9f1ca3.json"  # <-- Update this path if needed
         )
-        client = secretmanager.SecretManagerServiceClient(
-            credentials=credentials
-        )
+        client = secretmanager.SecretManagerServiceClient(credentials=credentials)
         return client
 
 

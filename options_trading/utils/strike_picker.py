@@ -15,8 +15,8 @@ def pick_strike(kite, symbol, direction, target_premium=100):
                 [
                     i["expiry"]
                     for i in instruments
-                    if i["instrument_type"] == "OPTIDX" and
-                    i["name"] in ["NIFTY", "BANKNIFTY"]
+                    if i["instrument_type"] == "OPTIDX"
+                    and i["name"] in ["NIFTY", "BANKNIFTY"]
                 ]
             )
         )
@@ -27,9 +27,7 @@ def pick_strike(kite, symbol, direction, target_premium=100):
         return None
 
     underlying_ltp = kite.ltp(f"NSE:{symbol}")[f"NSE:{symbol}"]["last_price"]
-    rounded_price = int(
-        round(underlying_ltp / 50.0) * 50
-    )  # nearest 50 for NIFTY/BNF
+    rounded_price = int(round(underlying_ltp / 50.0) * 50)  # nearest 50 for NIFTY/BNF
 
     strikes_to_try = range(rounded_price - 500, rounded_price + 500, 50)
     tradingsymbol_prefix = f"{symbol}{next_expiry.strftime('%y%b').upper()}"
@@ -40,9 +38,7 @@ def pick_strike(kite, symbol, direction, target_premium=100):
     for strike in strikes_to_try:
         tradingsymbol = f"{tradingsymbol_prefix}{strike}{option_type}"
         try:
-            ltp = kite.ltp(f"NFO:{tradingsymbol}")[f"NFO:{tradingsymbol}"][
-                "last_price"
-            ]
+            ltp = kite.ltp(f"NFO:{tradingsymbol}")[f"NFO:{tradingsymbol}"]["last_price"]
             if abs(ltp - target_premium) <= 10:
                 return {
                     "tradingsymbol": tradingsymbol,

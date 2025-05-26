@@ -76,9 +76,7 @@ def main():
         logger.log_event("⚠️ No signal from strategy")
 
     # GPT Reflection
-    monitor = GPTSelfImprovementMonitor(
-        logger, firestore_client, openai_manager
-    )
+    monitor = GPTSelfImprovementMonitor(logger, firestore_client, openai_manager)
     monitor.analyze(bot_name="stock-trader")
 
 

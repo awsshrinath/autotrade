@@ -49,8 +49,8 @@ def extract_function_block(filepath, function_name):
         if inside:
             func_block.append(line)
             if line.strip() == "" or (
-                len(line) - len(line.lstrip()) <= indent_level and
-                not line.strip().startswith("def")
+                len(line) - len(line.lstrip()) <= indent_level
+                and not line.strip().startswith("def")
             ):
                 break
     return "".join(func_block)
@@ -86,9 +86,7 @@ def run_code_fixer(log_path="logs/gpt_runner.log"):
         return
 
     similar_context = retrieve_similar_context(trace["error"])
-    rag_notes = "\n".join(
-        ["- " + d.get("text", "") for d, _ in similar_context]
-    )
+    rag_notes = "\n".join(["- " + d.get("text", "") for d, _ in similar_context])
 
     prompt = f"""
 You're an AI developer assistant. Analyze the following Python function which
