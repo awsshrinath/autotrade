@@ -1,0 +1,64 @@
+# Staging Environment Configuration
+# Production-like settings but with paper trading for final testing
+
+# Environment Settings
+environment: "staging"
+paper_trade: true  # Always paper trade in staging
+
+# Capital Management - Production-like amounts
+default_capital: 500000
+max_daily_loss: 10000          # ₹10,000 max loss per day
+max_daily_loss_pct: 2.0        # 2% max loss
+
+# Position Limits - Production-like
+stock_position_limit: 0.08     # 8% max per stock
+option_position_limit: 0.04    # 4% max per option
+future_position_limit: 0.12    # 12% max per future
+
+# Risk Management - Production-like
+margin_utilization_limit: 0.60  # 60% max margin
+max_volatility_threshold: 0.04  # 4% volatility limit
+
+# API Settings - Moderate rate limits
+api_rate_limit: 2              # 2 requests per second
+api_timeout: 10                # 10 seconds timeout
+
+# Monitoring - Frequent monitoring
+monitoring_interval: 60        # 1 minute
+backup_frequency: 600          # 10 minutes
+auto_square_off_time: "15:15"  # Staging square off
+
+# Logging - Production level
+log_level: "INFO"
+
+# Strategy Settings - Production-like
+scalp_config:
+  min_price: 100
+  max_price: 115
+  sl_buffer: 25
+  target_buffer: 50
+  quantity: 50
+
+# Staging-specific settings
+staging:
+  validate_orders: true
+  paper_trading_realism: high
+  simulate_slippage: true
+  test_all_strategies: true
+
+# Alert Settings - Test alerts
+alerts_email_enabled: true
+alerts_slack_enabled: false
+alerts_webhook_url: "https://staging-webhook.example.com"
+
+# Options Settings - Realistic for staging
+options:
+  risk_free_rate: 0.06
+  use_real_volatility: true
+  calculate_real_greeks: true
+
+# Portfolio Settings - Production-like
+portfolio:
+  max_positions: 8
+  correlation_limit: 0.6
+  rebalance_frequency: 3600    # 1 hour

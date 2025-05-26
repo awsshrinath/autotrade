@@ -9,3 +9,12 @@ __pycache__/
 logs/
 !logs/.keep
 /temp-app/
+
+# Configuration files
+config/local.yaml
+config/generated_*.yaml
+exported_*_config.*
+
+# Temporary files
+*.tmp
+*.temp

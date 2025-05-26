@@ -1,0 +1,68 @@
+# Base configuration - Common settings for all environments
+# This file contains default values that can be overridden by environment-specific files
+
+# Environment Settings
+environment: "development"
+paper_trade: true
+
+# Capital Management
+default_capital: 100000
+max_daily_loss_pct: 2.0
+min_trade_value: 1000
+
+# Position Size Limits (as percentage of capital)
+stock_position_limit: 0.10    # 10% max per stock position
+option_position_limit: 0.05   # 5% max per options position  
+future_position_limit: 0.15   # 15% max per futures position
+
+# Risk Management
+margin_utilization_limit: 0.80  # 80% max margin utilization
+max_volatility_threshold: 0.05  # 5% volatility circuit breaker
+
+# API Settings
+api_rate_limit: 3              # requests per second
+api_timeout: 10                # seconds
+
+# Monitoring Settings
+monitoring_interval: 30        # seconds between health checks
+backup_frequency: 300          # seconds (5 minutes)
+auto_square_off_time: "15:20"  # automatic position closure time
+
+# Logging
+log_level: "INFO"
+
+# Strategy Configuration
+scalp_config:
+  min_price: 100
+  max_price: 120
+  sl_buffer: 30
+  target_buffer: 60
+  quantity: 75
+
+# Alert Settings
+alerts_email_enabled: false
+alerts_slack_enabled: false
+alerts_webhook_url: ""
+
+# Technical Indicators Settings
+technical_indicators:
+  rsi_period: 14
+  atr_period: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bollinger_period: 20
+  bollinger_std: 2.0
+
+# Options Settings
+options:
+  risk_free_rate: 0.06
+  default_iv: 0.20
+  max_iv: 5.0
+  min_iv: 0.01
+
+# Portfolio Settings
+portfolio:
+  max_positions: 10
+  correlation_limit: 0.7
+  diversification_threshold: 0.3
