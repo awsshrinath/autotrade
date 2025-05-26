@@ -16,7 +16,7 @@ spec:
       serviceAccountName: gpt-runner-sa
       containers:
         - name: main-runner
-          image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+          image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:v1748245661
           resources:
             requests:
               memory: "512Mi"
