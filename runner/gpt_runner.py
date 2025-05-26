@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-from gpt_runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
+from gpt_runner.rag.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
 from runner.firestore_client import FirestoreClient
 from runner.logger import Logger
 from runner.openai_manager import OpenAIManager
