@@ -20,17 +20,62 @@ spec:
           command: ["/bin/bash", "-c"]
           args: 
             - |
-              echo "Starting main runner with RAG/FAISS fixes..."
+              echo "Starting main runner with comprehensive package fixes..."
               cd /app
+              
+              # Debug: Check current directory structure
+              echo "=== Debug: Current directory structure ==="
+              ls -la gpt_runner/ || echo "gpt_runner directory not found"
+              ls -la gpt_runner/rag/ || echo "gpt_runner/rag directory not found"
+              
+              # Ensure gpt_runner is a package
+              if [ ! -f "gpt_runner/__init__.py" ]; then
+                echo "Creating gpt_runner/__init__.py..."
+                echo "# Makes gpt_runner a Python package" > gpt_runner/__init__.py
+              fi
               
               # Create the missing __init__.py file for gpt_runner.rag package
               mkdir -p gpt_runner/rag
               echo "# Makes rag a Python package" > gpt_runner/rag/__init__.py
               
-              # Fix the import in runner/gpt_runner.py  
-              sed -i 's/from gpt_runner.gpt_self_improvement_monitor/from gpt_runner.rag.gpt_self_improvement_monitor/' runner/gpt_runner.py
+              # Debug: Verify files were created
+              echo "=== Debug: After creating files ==="
+              ls -la gpt_runner/__init__.py
+              ls -la gpt_runner/rag/__init__.py
+              cat gpt_runner/rag/__init__.py
               
-              echo "Package structure fixed, running main_runner_combined.py..."
+              # Fix the import in runner/gpt_runner.py  
+              echo "=== Fixing import in runner/gpt_runner.py ==="
+              cp runner/gpt_runner.py runner/gpt_runner.py.backup
+              sed -i 's/from gpt_runner\.gpt_self_improvement_monitor/from gpt_runner.rag.gpt_self_improvement_monitor/' runner/gpt_runner.py
+              
+              # Verify the fix
+              echo "=== Debug: After import fix ==="
+              grep "from gpt_runner" runner/gpt_runner.py
+              
+              # Test the imports
+              echo "=== Testing imports ==="
+              python3 -c "
+              import sys
+              sys.path.insert(0, '/app')
+              try:
+                  from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
+                  print('✅ RAG imports working')
+              except Exception as e:
+                  print(f'❌ RAG import failed: {e}')
+                  import traceback
+                  traceback.print_exc()
+              
+              try:
+                  from runner.gpt_self_improvement_monitor import run_gpt_reflection
+                  print('✅ GPT monitor import working')
+              except Exception as e:
+                  print(f'❌ GPT monitor import failed: {e}')
+                  import traceback
+                  traceback.print_exc()
+              " || echo "Import test failed"
+              
+              echo "=== Starting main runner ==="
               python3 runner/main_runner_combined.py
           resources:
             requests:
