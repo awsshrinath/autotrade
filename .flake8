@@ -5,17 +5,18 @@ exclude =
     __pycache__,
     tests,
     build,
-    dist
+    dist,
+    config/__init__.py
 ignore =
-    E501,  
-    E402,  
-    E722, 
-    E203,  
-    F841,
-    W504, 
-    E266,
-    W291
-    W293,
-    E302,
-    E303,
-    F401,
+    E501,  # line too long
+    E402,  # module level import not at top of file
+    E722,  # do not use bare except
+    E203,  # whitespace before ':'
+    F841,  # local variable assigned but never used
+    W504,  # line break after binary operator
+    E266,  # too many leading '#' for block comment
+    W291,  # trailing whitespace
+    W293,  # blank line contains whitespace
+    E302,  # expected 2 blank lines
+    E303,  # too many blank lines
+    F401,  # module imported but unused

@@ -1,0 +1,44 @@
+# Local Configuration Example
+# Copy this file to 'local.yaml' and customize for your local development
+# This file should be added to .gitignore to keep personal settings private
+
+# Override any setting for local development
+# Example overrides:
+
+# Force paper trading for safety
+paper_trade: true
+
+# Use smaller capital for testing
+default_capital: 50000
+max_daily_loss: 500
+
+# Personal development settings
+log_level: "DEBUG"
+
+# Test with specific strategies
+scalp_config:
+  quantity: 10  # Very small quantities for testing
+
+# Enable additional debug features
+development:
+  mock_market_data: true
+  enable_debug_mode: true
+  test_mode: true
+  verbose_logging: true
+
+# Personal API settings (if different)
+api_rate_limit: 1
+
+# Personal alert settings
+alerts_email_enabled: false
+alerts_slack_enabled: false
+
+# Custom technical indicator settings for testing
+technical_indicators:
+  rsi_period: 7    # Faster for testing
+  atr_period: 7
+  
+# Override any other setting as needed for your local environment
+# Examples:
+# monitoring_interval: 300  # 5 minutes for slower local testing
+# backup_frequency: 3600    # 1 hour for local testing
