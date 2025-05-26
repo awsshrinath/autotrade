@@ -3,6 +3,8 @@ name: CI/CD - Test, Build, Deploy
 on:
   push:
     branches: [main]
+  repository_dispatch:
+    types: [cluster_ready]
 
 permissions:
   contents: write
@@ -15,6 +17,7 @@ env:
 
 jobs:
   test-and-build:
+    if: github.event_name == 'push'
     name: 🧪 Test & Build & Push Images
     runs-on: ubuntu-latest
 
@@ -54,7 +57,7 @@ jobs:
 
   deploy-to-prod:
     name: 🚀 Deploy to GKE
-    needs: test-and-build
+    if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -78,7 +81,7 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: ⚙️ Get GKE credentials
+      - name: ⚙️ Get GKE Credentials
         if: ${{ steps.check_cluster.outputs.exists == 'true' }}
         uses: google-github-actions/get-gke-credentials@v1
         with:
@@ -92,7 +95,9 @@ jobs:
 
       - name: 📦 Apply Kubernetes Manifests
         if: ${{ steps.check_cluster.outputs.exists == 'true' }}
-        run: kubectl apply -f deployments/
+        run: |
+          kubectl apply -f deployments/
+          kubectl rollout status deployment main-runner -n gpt --timeout=300s
 
       - name: 🔄 Restart Bot Deployments
         if: ${{ steps.check_cluster.outputs.exists == 'true' }}
@@ -101,3 +106,7 @@ jobs:
           kubectl rollout restart deployment options-trader -n gpt || true
           kubectl rollout restart deployment futures-trader -n gpt || true
           kubectl rollout restart deployment main-runner -n gpt || true
+
+      - name: 🔎 Verify Pods
+        if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+        run: kubectl get pods -n gpt
