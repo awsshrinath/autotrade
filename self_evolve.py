@@ -23,5 +23,6 @@ def self_evolve():
 
     logger.log_event("Self-evolution pipeline complete.")
 
+
 if __name__ == "__main__":
-    self_evolve() 
+    self_evolve()

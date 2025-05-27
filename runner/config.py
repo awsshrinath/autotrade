@@ -138,7 +138,7 @@ def save_current_config():
 
 # Display configuration on import (for debugging)
 if is_development():
-    print(f"📊 TRON Configuration Loaded:")
+    print("📊 TRON Configuration Loaded:")
     print(f"   Environment: {ENVIRONMENT}")
     print(f"   Paper Trade: {PAPER_TRADE}")
     print(f"   Default Capital: ₹{DEFAULT_CAPITAL:,}")

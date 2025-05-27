@@ -22,44 +22,42 @@ def test_imports():
         print("✅ GCP Memory Client import successful")
     except Exception as e:
         print(f"❌ GCP Memory Client import failed: {e}")
-        return False
+        assert False, f"GCP Memory Client import failed: {e}"
     
     try:
         from runner.cognitive_memory import CognitiveMemory, MemoryType, ImportanceLevel, MemoryItem
         print("✅ Cognitive Memory import successful")
     except Exception as e:
         print(f"❌ Cognitive Memory import failed: {e}")
-        return False
+        assert False, f"Cognitive Memory import failed: {e}"
     
     try:
         from runner.thought_journal import ThoughtJournal, DecisionType, ConfidenceLevel, EmotionalState, ThoughtEntry
         print("✅ Thought Journal import successful")
     except Exception as e:
         print(f"❌ Thought Journal import failed: {e}")
-        return False
+        assert False, f"Thought Journal import failed: {e}"
     
     try:
         from runner.cognitive_state_machine import CognitiveStateMachine, CognitiveState, StateTransitionTrigger
         print("✅ Cognitive State Machine import successful")
     except Exception as e:
         print(f"❌ Cognitive State Machine import failed: {e}")
-        return False
+        assert False, f"Cognitive State Machine import failed: {e}"
     
     try:
         from runner.metacognition import MetaCognition, BiasType, DecisionOutcome, LearningType
         print("✅ Metacognition import successful")
     except Exception as e:
         print(f"❌ Metacognition import failed: {e}")
-        return False
+        assert False, f"Metacognition import failed: {e}"
     
     try:
         from runner.cognitive_system import CognitiveSystem, create_cognitive_system
         print("✅ Cognitive System import successful")
     except Exception as e:
         print(f"❌ Cognitive System import failed: {e}")
-        return False
-    
-    return True
+        assert False, f"Cognitive System import failed: {e}"
 
 def test_data_models():
     """Test data model creation and serialization"""
@@ -112,11 +110,10 @@ def test_data_models():
         restored_thought = ThoughtEntry.from_dict(thought_dict)
         print("✅ ThoughtEntry serialization/deserialization successful")
         
-        return True
         
     except Exception as e:
         print(f"❌ Data model test failed: {e}")
-        return False
+        assert False, f"Data model test failed: {e}"
 
 def test_mock_gcp_client():
     """Test GCP client with mocked dependencies"""
@@ -148,11 +145,10 @@ def test_mock_gcp_client():
                 assert all(health_status.values()), f"Health check failed: {health_status}"
                 print("✅ GCP client mock test successful")
                 
-        return True
-        
+                        
     except Exception as e:
         print(f"❌ GCP client mock test failed: {e}")
-        return False
+        assert False, f"GCP client mock test failed: {e}"
 
 def test_cognitive_memory_mock():
     """Test cognitive memory with mocked GCP client"""
@@ -184,11 +180,10 @@ def test_cognitive_memory_mock():
         assert memory_id, "Memory storage should return an ID"
         print("✅ Cognitive memory mock test successful")
         
-        return True
         
     except Exception as e:
         print(f"❌ Cognitive memory mock test failed: {e}")
-        return False
+        assert False, f"Cognitive memory mock test failed: {e}"
 
 def test_thought_journal_mock():
     """Test thought journal with mocked GCP client"""
@@ -218,11 +213,10 @@ def test_thought_journal_mock():
         assert thought_id, "Thought recording should return an ID"
         print("✅ Thought journal mock test successful")
         
-        return True
         
     except Exception as e:
         print(f"❌ Thought journal mock test failed: {e}")
-        return False
+        assert False, f"Thought journal mock test failed: {e}"
 
 def test_state_machine_mock():
     """Test cognitive state machine with mocked GCP client"""
@@ -252,11 +246,10 @@ def test_state_machine_mock():
         assert state_machine.get_current_state() == CognitiveState.ANALYZING
         print("✅ State machine mock test successful")
         
-        return True
         
     except Exception as e:
         print(f"❌ State machine mock test failed: {e}")
-        return False
+        assert False, f"State machine mock test failed: {e}"
 
 def test_trade_manager_integration():
     """Test trade manager integration with cognitive system"""
@@ -296,11 +289,10 @@ def test_trade_manager_integration():
         assert trade_manager_with_cognitive.cognitive_system is not None
         print("✅ Trade manager integration mock test successful")
         
-        return True
         
     except Exception as e:
         print(f"❌ Trade manager integration test failed: {e}")
-        return False
+        assert False, f"Trade manager integration test failed: {e}"
 
 def test_requirements():
     """Test that required packages are available"""
@@ -328,10 +320,9 @@ def test_requirements():
     
     if missing_packages:
         print(f"❌ Missing packages: {missing_packages}")
-        return False
+        assert False, f"Missing packages: {missing_packages}"
     else:
         print("✅ All required packages available")
-        return True
 
 def main():
     """Run all tests"""
@@ -362,7 +353,7 @@ def main():
             print(f"❌ Test {test.__name__} crashed: {e}")
             failed += 1
     
-    print(f"\n📊 Test Results:")
+    print("\n📊 Test Results:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
     print(f"📈 Success Rate: {passed/(passed+failed)*100:.1f}%")
@@ -377,6 +368,7 @@ def main():
     else:
         print(f"\n⚠️  {failed} tests failed. Please review the implementation.")
         return False
+
 
 if __name__ == "__main__":
     success = main()

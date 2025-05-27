@@ -30,7 +30,7 @@ def test_python_syntax():
     
     for file_path in cognitive_files:
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
             # Parse the file to check syntax
@@ -39,15 +39,15 @@ def test_python_syntax():
             
         except FileNotFoundError:
             print(f"❌ {file_path} - File not found")
-            return False
+            assert False, f"File not found: {file_path}"
         except SyntaxError as e:
             print(f"❌ {file_path} - Syntax error: {e}")
-            return False
+            assert False, f"Syntax error in {file_path}: {e}"
         except Exception as e:
             print(f"❌ {file_path} - Error: {e}")
-            return False
+            assert False, f"Error in {file_path}: {e}"
     
-    return True
+    assert True
 
 def test_class_definitions():
     """Test that key classes are properly defined"""
@@ -56,7 +56,7 @@ def test_class_definitions():
     try:
         # Test dataclass syntax  
         import dataclasses
-        import datetime
+        from datetime import datetime
         from enum import Enum
         
         # Test that dataclass decorator works
@@ -79,15 +79,13 @@ def test_class_definitions():
         print("✅ Enum definitions valid")
         
         # Test datetime usage
-        now = datetime.datetime.utcnow()
-        assert isinstance(now, datetime.datetime)
+        now = datetime.utcnow()
+        assert isinstance(now, datetime)
         print("✅ Datetime functionality valid")
-        
-        return True
         
     except Exception as e:
         print(f"❌ Class definition test failed: {e}")
-        return False
+        assert False, f"Class definition test failed: {e}"
 
 def test_integration_points():
     """Test integration points in trade manager and main runner"""
@@ -95,7 +93,7 @@ def test_integration_points():
     
     try:
         # Check trade manager modification
-        with open('runner/trade_manager.py', 'r') as f:
+        with open('runner/trade_manager.py', 'r', encoding='utf-8') as f:
             trade_manager_content = f.read()
         
         # Look for cognitive system integration
@@ -110,47 +108,45 @@ def test_integration_points():
                 print(f"✅ Trade manager has: {import_line}")
             else:
                 print(f"❌ Trade manager missing: {import_line}")
-                return False
+                assert False, f"Trade manager missing: {import_line}"
         
         # Check for cognitive integration in constructor
         if 'cognitive_system' in trade_manager_content:
             print("✅ Trade manager has cognitive_system parameter")
         else:
             print("❌ Trade manager missing cognitive_system parameter")
-            return False
+            assert False, "Trade manager missing cognitive_system parameter"
         
         # Check main runner modification
-        with open('runner/main_runner_combined.py', 'r') as f:
+        with open('runner/main_runner_combined.py', 'r', encoding='utf-8') as f:
             main_runner_content = f.read()
         
         if 'initialize_cognitive_system' in main_runner_content:
             print("✅ Main runner has cognitive initialization")
         else:
             print("❌ Main runner missing cognitive initialization")
-            return False
+            assert False, "Main runner missing cognitive initialization"
         
         # Check firestore client updates
-        with open('runner/firestore_client.py', 'r') as f:
+        with open('runner/firestore_client.py', 'r', encoding='utf-8') as f:
             firestore_content = f.read()
         
         if 'log_cognitive_thought' in firestore_content:
             print("✅ Firestore client has cognitive methods")
         else:
             print("❌ Firestore client missing cognitive methods")
-            return False
-        
-        return True
+            assert False, "Firestore client missing cognitive methods"
         
     except Exception as e:
         print(f"❌ Integration test failed: {e}")
-        return False
+        assert False, f"Integration test failed: {e}"
 
 def test_requirements_file():
     """Test that requirements.txt has been updated"""
     print("\n🧪 Testing requirements.txt...")
     
     try:
-        with open('requirements.txt', 'r') as f:
+        with open('requirements.txt', 'r', encoding='utf-8') as f:
             requirements_content = f.read()
         
         required_packages = [
@@ -163,13 +159,11 @@ def test_requirements_file():
                 print(f"✅ Requirements includes: {package}")
             else:
                 print(f"❌ Requirements missing: {package}")
-                return False
-        
-        return True
+                assert False, f"Requirements missing: {package}"
         
     except Exception as e:
         print(f"❌ Requirements test failed: {e}")
-        return False
+        assert False, f"Requirements test failed: {e}"
 
 def test_file_structure():
     """Test that all required files exist"""
@@ -189,16 +183,14 @@ def test_file_structure():
             print(f"✅ {file_path} exists")
         else:
             print(f"❌ {file_path} missing")
-            return False
-    
-    return True
+            assert False, f"Required file missing: {file_path}"
 
 def test_memory_bucket_info():
     """Test that bucket information is properly documented"""
     print("\n🧪 Testing bucket documentation...")
     
     try:
-        with open('runner/gcp_memory_client.py', 'r') as f:
+        with open('runner/gcp_memory_client.py', 'r', encoding='utf-8') as f:
             gcp_client_content = f.read()
         
         required_buckets = [
@@ -213,13 +205,11 @@ def test_memory_bucket_info():
                 print(f"✅ Bucket defined: {bucket}")
             else:
                 print(f"❌ Bucket missing: {bucket}")
-                return False
-        
-        return True
+                assert False, f"Bucket missing: {bucket}"
         
     except Exception as e:
         print(f"❌ Bucket documentation test failed: {e}")
-        return False
+        assert False, f"Bucket documentation test failed: {e}"
 
 def main():
     """Run all structural tests"""
@@ -248,7 +238,7 @@ def main():
             print(f"❌ Test {test.__name__} crashed: {e}")
             failed += 1
     
-    print(f"\n📊 Test Results:")
+    print("\n📊 Test Results:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
     print(f"📈 Success Rate: {passed/(passed+failed)*100:.1f}%")
@@ -268,6 +258,7 @@ def main():
     else:
         print(f"\n⚠️  {failed} tests failed. Please review the implementation.")
         return False
+
 
 if __name__ == "__main__":
     success = main()

@@ -1,5 +1,5 @@
-# runner/thought_journal.py
-# Persistent thought journaling system for cognitive self-awareness
+# runner / thought_journal.py
+# Persistent thought journaling system for cognitive self - awareness
 # Captures every decision, reasoning process, and emotional state with Firestore persistence
 
 import uuid
@@ -65,21 +65,21 @@ class ThoughtEntry:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for Firestore storage"""
         return {
-            'id': self.id,
-            'timestamp': self.timestamp,
-            'decision': self.decision,
-            'reasoning': self.reasoning,
-            'confidence': self.confidence,
-            'emotional_state': self.emotional_state,
-            'market_context': self.market_context,
-            'strategy_id': self.strategy_id,
-            'trade_id': self.trade_id,
-            'decision_type': self.decision_type,
-            'importance_score': self.importance_score,
-            'follow_up_required': self.follow_up_required,
-            'tags': self.tags,
-            'related_thoughts': self.related_thoughts,
-            'outcome': self.outcome,
+                    'id': self.id,
+                    'timestamp': self.timestamp,
+                    'decision': self.decision,
+                    'reasoning': self.reasoning,
+                    'confidence': self.confidence,
+                    'emotional_state': self.emotional_state,
+                    'market_context': self.market_context,
+                    'strategy_id': self.strategy_id,
+                    'trade_id': self.trade_id,
+                    'decision_type': self.decision_type,
+                    'importance_score': self.importance_score,
+                    'follow_up_required': self.follow_up_required,
+                    'tags': self.tags,
+                    'related_thoughts': self.related_thoughts,
+                'outcome': self.outcome,
             'reflection': self.reflection
         }
     
@@ -87,21 +87,21 @@ class ThoughtEntry:
     def from_dict(cls, data: Dict[str, Any]) -> 'ThoughtEntry':
         """Create ThoughtEntry from dictionary"""
         return cls(
-            id=data['id'],
-            timestamp=data['timestamp'],
-            decision=data['decision'],
-            reasoning=data['reasoning'],
-            confidence=data['confidence'],
-            emotional_state=data['emotional_state'],
-            market_context=data.get('market_context', {}),
-            strategy_id=data.get('strategy_id'),
-            trade_id=data.get('trade_id'),
-            decision_type=data['decision_type'],
-            importance_score=data.get('importance_score', 1.0),
-            follow_up_required=data.get('follow_up_required', False),
-            tags=data.get('tags', []),
-            related_thoughts=data.get('related_thoughts', []),
-            outcome=data.get('outcome'),
+                    id=data['id'],
+                    timestamp=data['timestamp'],
+                    decision=data['decision'],
+                    reasoning=data['reasoning'],
+                    confidence=data['confidence'],
+                    emotional_state=data['emotional_state'],
+                    market_context=data.get('market_context', {}),
+                    strategy_id=data.get('strategy_id'),
+                    trade_id=data.get('trade_id'),
+                    decision_type=data['decision_type'],
+                    importance_score=data.get('importance_score', 1.0),
+                    follow_up_required=data.get('follow_up_required', False),
+                    tags=data.get('tags', []),
+                    related_thoughts=data.get('related_thoughts', []),
+                outcome=data.get('outcome'),
             reflection=data.get('reflection')
         )
 
@@ -121,7 +121,7 @@ class ThoughtPattern:
 
 class ThoughtJournal:
     """
-    Persistent thought journaling system for cognitive self-awareness.
+    Persistent thought journaling system for cognitive self - awareness.
     Captures every decision, reasoning process, and learning moment.
     """
     
@@ -151,9 +151,9 @@ class ThoughtJournal:
             recent_cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
             
             recent_thoughts = self.gcp_client.query_memory_collection(
-                'thought_journal',
-                filters=[('timestamp', '>=', recent_cutoff)],
-                order_by='timestamp',
+                        'thought_journal',
+                        filters=[('timestamp', '>=', recent_cutoff)],
+                    order_by='timestamp',
                 limit=self.max_cache_size
             )
             
@@ -167,10 +167,10 @@ class ThoughtJournal:
             self._recent_thoughts_cache = []
     
     def record_thought(self, decision: str, reasoning: str, 
-                      decision_type: DecisionType = DecisionType.MARKET_ANALYSIS,
-                      confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM,
-                      market_context: Dict[str, Any] = None,
-                      strategy_id: str = None, trade_id: str = None,
+                              decision_type: DecisionType = DecisionType.MARKET_ANALYSIS,
+                              confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM,
+                              market_context: Dict[str, Any] = None,
+                          strategy_id: str = None, trade_id: str = None,
                       tags: List[str] = None) -> str:
         """Record a new thought with comprehensive metadata"""
         
@@ -180,32 +180,32 @@ class ThoughtJournal:
         # Calculate importance score based on decision type and confidence
         importance_score = self._calculate_importance_score(decision_type, confidence)
         
-        # Determine if follow-up is required
+        # Determine if follow - up is required
         follow_up_required = self._requires_follow_up(decision_type, confidence)
         
         thought_entry = ThoughtEntry(
-            id=thought_id,
-            timestamp=now,
-            decision=decision,
-            reasoning=reasoning,
-            confidence=confidence.value,
-            emotional_state=self.current_emotional_state.value,
-            market_context=market_context or {},
-            strategy_id=strategy_id,
-            trade_id=trade_id,
-            decision_type=decision_type.value,
-            importance_score=importance_score,
-            follow_up_required=follow_up_required,
-            tags=tags or [],
-            related_thoughts=self._find_related_thoughts(decision, reasoning),
-            outcome=None,
+                    id=thought_id,
+                    timestamp=now,
+                    decision=decision,
+                    reasoning=reasoning,
+                    confidence=confidence.value,
+                    emotional_state=self.current_emotional_state.value,
+                    market_context=market_context or {},
+                    strategy_id=strategy_id,
+                    trade_id=trade_id,
+                    decision_type=decision_type.value,
+                    importance_score=importance_score,
+                    follow_up_required=follow_up_required,
+                    tags=tags or [],
+                    related_thoughts=self._find_related_thoughts(decision, reasoning),
+                outcome=None,
             reflection=None
         )
         
         # Store to Firestore
         success = self.gcp_client.store_memory_item(
-            'thought_journal',
-            thought_id,
+                    'thought_journal',
+                thought_id,
             thought_entry.to_dict()
         )
         
@@ -228,14 +228,14 @@ class ThoughtJournal:
         """Update thought with actual outcome and reflection"""
         try:
             updates = {
-                'outcome': outcome,
-                'reflection': reflection,
+                        'outcome': outcome,
+                    'reflection': reflection,
                 'outcome_timestamp': datetime.datetime.utcnow()
             }
             
             success = self.gcp_client.update_memory_item(
-                'thought_journal',
-                thought_id,
+                        'thought_journal',
+                    thought_id,
                 updates
             )
             
@@ -258,27 +258,27 @@ class ThoughtJournal:
                                   confidence: ConfidenceLevel) -> float:
         """Calculate importance score for thought prioritization"""
         type_weights = {
-            DecisionType.TRADE_ENTRY: 4.0,
-            DecisionType.TRADE_EXIT: 4.0,
-            DecisionType.STRATEGY_SELECTION: 3.5,
-            DecisionType.RISK_ASSESSMENT: 3.0,
-            DecisionType.MARKET_ANALYSIS: 2.0,
-            DecisionType.PERFORMANCE_REVIEW: 3.5,
-            DecisionType.LEARNING: 2.5,
+                    DecisionType.TRADE_ENTRY: 4.0,
+                    DecisionType.TRADE_EXIT: 4.0,
+                    DecisionType.STRATEGY_SELECTION: 3.5,
+                    DecisionType.RISK_ASSESSMENT: 3.0,
+                    DecisionType.MARKET_ANALYSIS: 2.0,
+                    DecisionType.PERFORMANCE_REVIEW: 3.5,
+                DecisionType.LEARNING: 2.5,
             DecisionType.METACOGNITIVE: 2.0
         }
         
         base_score = type_weights.get(decision_type, 1.0)
-        confidence_multiplier = confidence.value / 5.0  # Normalize to 0-1
+        confidence_multiplier = confidence.value / 5.0  # Normalize to 0 - 1
         
         return base_score * (0.5 + confidence_multiplier)
     
     def _requires_follow_up(self, decision_type: DecisionType, 
                           confidence: ConfidenceLevel) -> bool:
-        """Determine if thought requires follow-up tracking"""
+        """Determine if thought requires follow - up tracking"""
         high_priority_types = [
-            DecisionType.TRADE_ENTRY,
-            DecisionType.STRATEGY_SELECTION,
+                    DecisionType.TRADE_ENTRY,
+                DecisionType.STRATEGY_SELECTION,
             DecisionType.RISK_ASSESSMENT
         ]
         
@@ -339,7 +339,7 @@ class ThoughtJournal:
         window_size = 5
         moving_avg = []
         for i in range(len(confidence_trends) - window_size + 1):
-            avg = sum(confidence_trends[i:i+window_size]) / window_size
+            avg = sum(confidence_trends[i:i + window_size]) / window_size
             moving_avg.append(avg)
         
         # Detect trends
@@ -348,51 +348,51 @@ class ThoughtJournal:
             
             if trend < -0.5:
                 pattern = ThoughtPattern(
-                    pattern_id="decreasing_confidence",
-                    pattern_type="confidence_trend",
-                    description="Confidence levels are decreasing over recent decisions",
-                    frequency=1,
-                    confidence_impact=trend,
+                            pattern_id="decreasing_confidence",
+                            pattern_type="confidence_trend",
+                            description="Confidence levels are decreasing over recent decisions",
+                            frequency=1,
+                        confidence_impact=trend,
                     success_rate=0.0,  # To be calculated with outcomes
-                    examples=[],
-                    suggested_improvements=["Review recent successful decisions", "Practice confidence-building exercises"]
+                        examples=[],
+                    suggested_improvements=["Review recent successful decisions", "Practice confidence - building exercises"]
                 )
                 self._thought_patterns["decreasing_confidence"] = pattern
                 
             elif trend > 0.5:
                 pattern = ThoughtPattern(
-                    pattern_id="increasing_confidence",
-                    pattern_type="confidence_trend", 
-                    description="Confidence levels are increasing over recent decisions",
-                    frequency=1,
-                    confidence_impact=trend,
-                    success_rate=0.0,
-                    examples=[],
+                            pattern_id="increasing_confidence",
+                            pattern_type="confidence_trend", 
+                            description="Confidence levels are increasing over recent decisions",
+                            frequency=1,
+                            confidence_impact=trend,
+                            success_rate=0.0,
+                        examples=[],
                     suggested_improvements=["Monitor for overconfidence", "Maintain risk awareness"]
                 )
                 self._thought_patterns["increasing_confidence"] = pattern
     
     def _identify_decision_biases(self, decision_type_counts: Dict[str, int]):
-        """Identify potential decision-making biases"""
+        """Identify potential decision - making biases"""
         total_decisions = sum(decision_type_counts.values())
         
         for decision_type, count in decision_type_counts.items():
             frequency = count / total_decisions
             
-            # Flag if over-reliance on certain decision types
+            # Flag if over - reliance on certain decision types
             if frequency > 0.6:  # More than 60% of decisions
                 pattern = ThoughtPattern(
-                    pattern_id=f"bias_{decision_type}",
-                    pattern_type="decision_bias",
-                    description=f"Over-reliance on {decision_type} decisions ({frequency:.1%})",
-                    frequency=count,
-                    confidence_impact=0.0,
-                    success_rate=0.0,
-                    examples=[],
+                            pattern_id=f"bias_{decision_type}",
+                            pattern_type="decision_bias",
+                            description=f"Over - reliance on {decision_type} decisions ({frequency:.1%})",
+                            frequency=count,
+                            confidence_impact=0.0,
+                            success_rate=0.0,
+                        examples=[],
                     suggested_improvements=[
-                        f"Diversify decision types beyond {decision_type}",
-                        "Consider alternative approaches",
-                        "Review decision-making framework"
+                                f"Diversify decision types beyond {decision_type}",
+                            "Consider alternative approaches",
+                        "Review decision - making framework"
                     ]
                 )
                 self._thought_patterns[f"bias_{decision_type}"] = pattern
@@ -413,9 +413,9 @@ class ThoughtJournal:
         # Query Firestore for more thoughts if needed
         try:
             thoughts_data = self.gcp_client.query_memory_collection(
-                'thought_journal',
-                filters=[('timestamp', '>=', cutoff_time)],
-                order_by='timestamp',
+                        'thought_journal',
+                        filters=[('timestamp', '>=', cutoff_time)],
+                    order_by='timestamp',
                 limit=limit
             )
             
@@ -425,8 +425,8 @@ class ThoughtJournal:
             return recent_from_cache
     
     def search_thoughts(self, query: str = None, decision_type: DecisionType = None,
-                       emotional_state: EmotionalState = None, confidence_range: Tuple[int, int] = None,
-                       date_range: Tuple[datetime.datetime, datetime.datetime] = None,
+                               emotional_state: EmotionalState = None, confidence_range: Tuple[int, int] = None,
+                           date_range: Tuple[datetime.datetime, datetime.datetime] = None,
                        limit: int = 20) -> List[ThoughtEntry]:
         """Advanced thought search with multiple filters"""
         try:
@@ -448,9 +448,9 @@ class ThoughtJournal:
                 filters.append(('timestamp', '<=', date_range[1]))
             
             thoughts_data = self.gcp_client.query_memory_collection(
-                'thought_journal',
-                filters=filters,
-                order_by='timestamp',
+                        'thought_journal',
+                        filters=filters,
+                    order_by='timestamp',
                 limit=limit
             )
             
@@ -472,19 +472,19 @@ class ThoughtJournal:
             return []
     
     def get_thoughts_requiring_followup(self) -> List[ThoughtEntry]:
-        """Get thoughts that require follow-up tracking"""
+        """Get thoughts that require follow - up tracking"""
         try:
             thoughts_data = self.gcp_client.query_memory_collection(
-                'thought_journal',
-                filters=[('follow_up_required', '==', True), ('outcome', '==', None)],
-                order_by='timestamp',
+                        'thought_journal',
+                        filters=[('follow_up_required', '==', True), ('outcome', '==', None)],
+                    order_by='timestamp',
                 limit=50
             )
             
             return [ThoughtEntry.from_dict(data) for data in thoughts_data]
         
         except Exception as e:
-            self.logger.error(f"Failed to get follow-up thoughts: {e}")
+            self.logger.error(f"Failed to get follow - up thoughts: {e}")
             return []
     
     def generate_thought_summary(self, hours: int = 24) -> Dict[str, Any]:
@@ -493,8 +493,8 @@ class ThoughtJournal:
         
         if not recent_thoughts:
             return {
-                'period_hours': hours,
-                'total_thoughts': 0,
+                        'period_hours': hours,
+                    'total_thoughts': 0,
                 'summary': 'No thoughts recorded in this period'
             }
         
@@ -504,15 +504,15 @@ class ThoughtJournal:
         confidence_levels = [thought.confidence for thought in recent_thoughts]
         
         summary = {
-            'period_hours': hours,
-            'total_thoughts': len(recent_thoughts),
-            'decision_type_distribution': self._count_distribution(decision_types),
-            'emotional_state_distribution': self._count_distribution(emotional_states),
-            'average_confidence': sum(confidence_levels) / len(confidence_levels),
-            'confidence_trend': self._calculate_trend(confidence_levels),
-            'high_importance_thoughts': len([t for t in recent_thoughts if t.importance_score > 3.0]),
-            'thoughts_requiring_followup': len([t for t in recent_thoughts if t.follow_up_required]),
-            'identified_patterns': list(self._thought_patterns.keys()),
+                    'period_hours': hours,
+                    'total_thoughts': len(recent_thoughts),
+                    'decision_type_distribution': self._count_distribution(decision_types),
+                    'emotional_state_distribution': self._count_distribution(emotional_states),
+                    'average_confidence': sum(confidence_levels) / len(confidence_levels),
+                    'confidence_trend': self._calculate_trend(confidence_levels),
+                    'high_importance_thoughts': len([t for t in recent_thoughts if t.importance_score > 3.0]),
+                    'thoughts_requiring_followup': len([t for t in recent_thoughts if t.follow_up_required]),
+                'identified_patterns': list(self._thought_patterns.keys()),
             'most_recent_thought': recent_thoughts[-1].decision if recent_thoughts else None
         }
         
@@ -556,7 +556,7 @@ class ThoughtJournal:
             end_time = datetime.datetime.combine(date, datetime.time.max)
             
             daily_thoughts = self.search_thoughts(
-                date_range=(start_time, end_time),
+                    date_range=(start_time, end_time),
                 limit=1000
             )
             
@@ -589,7 +589,7 @@ class ThoughtJournal:
         return self._thought_patterns.copy()
     
     def clear_thought_cache(self):
-        """Clear in-memory thought cache"""
+        """Clear in - memory thought cache"""
         self._recent_thoughts_cache.clear()
         self._thought_patterns.clear()
         self.logger.info("Thought cache cleared")

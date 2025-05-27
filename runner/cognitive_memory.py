@@ -1,6 +1,6 @@
-# runner/cognitive_memory.py
-# Multi-layer cognitive memory system with GCP persistence
-# Implements working, short-term, long-term, and episodic memory with automatic persistence
+# runner / cognitive_memory.py
+# Multi - layer cognitive memory system with GCP persistence
+# Implements working, short - term, long - term, and episodic memory with automatic persistence
 
 import uuid
 import datetime
@@ -44,15 +44,15 @@ class MemoryItem:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for Firestore storage"""
         return {
-            'id': self.id,
-            'content': self.content,
-            'memory_type': self.memory_type,
-            'importance': self.importance,
-            'created_at': self.created_at,
-            'last_accessed': self.last_accessed,
-            'decay_rate': self.decay_rate,
-            'associations': self.associations,
-            'metadata': self.metadata,
+                    'id': self.id,
+                    'content': self.content,
+                    'memory_type': self.memory_type,
+                    'importance': self.importance,
+                    'created_at': self.created_at,
+                    'last_accessed': self.last_accessed,
+                    'decay_rate': self.decay_rate,
+                    'associations': self.associations,
+                'metadata': self.metadata,
             'tags': self.tags
         }
     
@@ -60,15 +60,15 @@ class MemoryItem:
     def from_dict(cls, data: Dict[str, Any]) -> 'MemoryItem':
         """Create MemoryItem from dictionary"""
         return cls(
-            id=data['id'],
-            content=data['content'],
-            memory_type=data['memory_type'],
-            importance=data['importance'],
-            created_at=data['created_at'],
-            last_accessed=data['last_accessed'],
-            decay_rate=data['decay_rate'],
-            associations=data.get('associations', []),
-            metadata=data.get('metadata', {}),
+                    id=data['id'],
+                    content=data['content'],
+                    memory_type=data['memory_type'],
+                    importance=data['importance'],
+                    created_at=data['created_at'],
+                    last_accessed=data['last_accessed'],
+                    decay_rate=data['decay_rate'],
+                    associations=data.get('associations', []),
+                metadata=data.get('metadata', {}),
             tags=data.get('tags', [])
         )
     
@@ -88,8 +88,8 @@ class MemoryItem:
 
 class CognitiveMemory:
     """
-    Human-like multi-layer memory system with GCP persistence.
-    Handles working memory (7±2 items), short-term, long-term, and episodic memory.
+    Human - like multi - layer memory system with GCP persistence.
+    Handles working memory (7±2 items), short - term, long - term, and episodic memory.
     """
     
     def __init__(self, gcp_client: GCPMemoryClient, logger: logging.Logger = None):
@@ -103,10 +103,10 @@ class CognitiveMemory:
             MemoryType.WORKING: 0.5,      # Fast decay (hours)
             MemoryType.SHORT_TERM: 0.1,   # Medium decay
             MemoryType.LONG_TERM: 0.01,   # Slow decay
-            MemoryType.EPISODIC: 0.05     # Episode-dependent decay
+            MemoryType.EPISODIC: 0.05     # Episode - dependent decay
         }
         
-        # In-memory caches for performance
+        # In - memory caches for performance
         self._working_memory_cache: List[MemoryItem] = []
         self._memory_associations: Dict[str, List[str]] = {}
         
@@ -114,7 +114,7 @@ class CognitiveMemory:
         self._last_cleanup = datetime.datetime.utcnow()
         self._memory_loaded = False
         
-        # Auto-initialize from GCP
+        # Auto - initialize from GCP
         self._load_memory_state()
     
     def _load_memory_state(self):
@@ -142,7 +142,7 @@ class CognitiveMemory:
             MemoryItem.from_dict(item) for item in snapshot.working_memory
         ]
         
-        # Restore recent short-term memories to cache if needed
+        # Restore recent short - term memories to cache if needed
         recent_threshold = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
         for item_data in snapshot.short_term_memory:
             item = MemoryItem.from_dict(item_data)
@@ -154,8 +154,8 @@ class CognitiveMemory:
     def _load_working_memory(self):
         """Load working memory from Firestore"""
         working_memories = self.gcp_client.query_memory_collection(
-            'working_memory',
-            order_by='last_accessed',
+                    'working_memory',
+                order_by='last_accessed',
             limit=self.working_memory_limit
         )
         
@@ -164,22 +164,22 @@ class CognitiveMemory:
         ]
     
     def store_memory(self, content: str, memory_type: MemoryType = MemoryType.WORKING,
-                    importance: ImportanceLevel = ImportanceLevel.MEDIUM,
-                    tags: List[str] = None, metadata: Dict[str, Any] = None) -> str:
+                         importance: ImportanceLevel = ImportanceLevel.MEDIUM,
+                     tags: List[str] = None, metadata: Dict[str, Any] = None) -> str:
         """Store new memory item with automatic persistence"""
         memory_id = str(uuid.uuid4())
         now = datetime.datetime.utcnow()
         
         memory_item = MemoryItem(
-            id=memory_id,
-            content=content,
-            memory_type=memory_type.value,
-            importance=importance.value,
-            created_at=now,
-            last_accessed=now,
-            decay_rate=self.decay_rates[memory_type],
-            associations=[],
-            metadata=metadata or {},
+                    id=memory_id,
+                    content=content,
+                    memory_type=memory_type.value,
+                    importance=importance.value,
+                    created_at=now,
+                    last_accessed=now,
+                    decay_rate=self.decay_rates[memory_type],
+                    associations=[],
+                metadata=metadata or {},
             tags=tags or []
         )
         
@@ -187,12 +187,12 @@ class CognitiveMemory:
         if memory_type == MemoryType.WORKING:
             self._add_to_working_memory(memory_item)
         else:
-            # Store directly to Firestore for non-working memory
+            # Store directly to Firestore for non - working memory
             collection_name = f"{memory_type.value}_memory"
             self.gcp_client.store_memory_item(
-                collection_name, 
-                memory_id, 
-                memory_item.to_dict(),
+                        collection_name, 
+                        memory_id, 
+                    memory_item.to_dict(),
                 ttl_hours=self._get_ttl_hours(memory_type)
             )
         
@@ -206,21 +206,21 @@ class CognitiveMemory:
         
         # Handle overflow (Miller's Rule: 7±2 items)
         if len(self._working_memory_cache) > self.working_memory_limit:
-            # Move oldest/least important items to short-term memory
+            # Move oldest / least important items to short - term memory
             self._consolidate_working_memory()
         
         # Persist to Firestore
         self.gcp_client.store_memory_item(
-            'working_memory',
-            memory_item.id,
-            memory_item.to_dict(),
+                    'working_memory',
+                    memory_item.id,
+                memory_item.to_dict(),
             ttl_hours=1  # Working memory TTL
         )
     
     def _consolidate_working_memory(self):
-        """Move items from working to short-term memory"""
+        """Move items from working to short - term memory"""
         while len(self._working_memory_cache) > self.working_memory_limit:
-            # Find least important/oldest item
+            # Find least important / oldest item
             candidates = [
                 (i, item) for i, item in enumerate(self._working_memory_cache)
                 if item.calculate_current_strength() < 2.0  # Below medium importance
@@ -236,12 +236,12 @@ class CognitiveMemory:
                          key=lambda i: self._working_memory_cache[i].last_accessed)
                 item_to_move = self._working_memory_cache[idx]
             
-            # Move to short-term memory
+            # Move to short - term memory
             item_to_move.memory_type = MemoryType.SHORT_TERM.value
             self.gcp_client.store_memory_item(
-                'short_term_memory',
-                item_to_move.id,
-                item_to_move.to_dict(),
+                        'short_term_memory',
+                        item_to_move.id,
+                    item_to_move.to_dict(),
                 ttl_hours=self._get_ttl_hours(MemoryType.SHORT_TERM)
             )
             
@@ -249,7 +249,7 @@ class CognitiveMemory:
             self._working_memory_cache.pop(idx)
             self.gcp_client.delete_memory_item('working_memory', item_to_move.id)
             
-            self.logger.debug(f"Moved memory {item_to_move.id} to short-term")
+            self.logger.debug(f"Moved memory {item_to_move.id} to short - term")
     
     def retrieve_memory(self, memory_id: str) -> Optional[MemoryItem]:
         """Retrieve memory by ID from any layer"""
@@ -269,8 +269,8 @@ class CognitiveMemory:
                 # Update access time
                 memory_item.last_accessed = datetime.datetime.utcnow()
                 self.gcp_client.update_memory_item(
-                    memory_type, 
-                    memory_id, 
+                            memory_type, 
+                        memory_id, 
                     {'last_accessed': memory_item.last_accessed}
                 )
                 
@@ -319,9 +319,9 @@ class CognitiveMemory:
                 filters.append(('tags', 'array_contains_any', tags))
             
             memories_data = self.gcp_client.query_memory_collection(
-                collection_name,
-                filters=filters,
-                order_by='importance',
+                        collection_name,
+                        filters=filters,
+                    order_by='importance',
                 limit=limit
             )
             
@@ -348,7 +348,7 @@ class CognitiveMemory:
     
     def create_memory_association(self, memory_id1: str, memory_id2: str, strength: float = 1.0):
         """Create association between two memories"""
-        # Update in-memory associations
+        # Update in - memory associations
         if memory_id1 not in self._memory_associations:
             self._memory_associations[memory_id1] = []
         if memory_id2 not in self._memory_associations:
@@ -399,13 +399,13 @@ class CognitiveMemory:
         episode_content = f"{event_type}: {json.dumps(details, default=str)}"
         
         memory_id = self.store_memory(
-            content=episode_content,
-            memory_type=MemoryType.EPISODIC,
-            importance=importance,
-            tags=[event_type, 'episode'],
+                    content=episode_content,
+                    memory_type=MemoryType.EPISODIC,
+                    importance=importance,
+                tags=[event_type, 'episode'],
             metadata={
-                'event_type': event_type,
-                'event_details': details,
+                        'event_type': event_type,
+                    'event_details': details,
                 'is_episodic': True
             }
         )
@@ -426,7 +426,7 @@ class CognitiveMemory:
         # 1. Clean up expired memories
         self.gcp_client.cleanup_expired_memories()
         
-        # 2. Promote important short-term memories to long-term
+        # 2. Promote important short - term memories to long - term
         self._promote_important_memories()
         
         # 3. Decay memory strengths
@@ -439,10 +439,10 @@ class CognitiveMemory:
         self.logger.info("Memory consolidation completed")
     
     def _promote_important_memories(self):
-        """Promote important short-term memories to long-term storage"""
+        """Promote important short - term memories to long - term storage"""
         short_term_memories = self.gcp_client.query_memory_collection(
-            'short_term_memory',
-            order_by='importance',
+                    'short_term_memory',
+                order_by='importance',
             limit=100
         )
         
@@ -453,18 +453,18 @@ class CognitiveMemory:
             if (memory_item.importance >= ImportanceLevel.HIGH.value and
                 memory_item.calculate_current_strength() > 3.0):
                 
-                # Move to long-term memory
+                # Move to long - term memory
                 memory_item.memory_type = MemoryType.LONG_TERM.value
                 self.gcp_client.store_memory_item(
-                    'long_term_memory',
-                    memory_item.id,
+                            'long_term_memory',
+                        memory_item.id,
                     memory_item.to_dict()
                 )
                 
-                # Remove from short-term
+                # Remove from short - term
                 self.gcp_client.delete_memory_item('short_term_memory', memory_item.id)
                 
-                self.logger.debug(f"Promoted memory {memory_item.id} to long-term")
+                self.logger.debug(f"Promoted memory {memory_item.id} to long - term")
     
     def _apply_memory_decay(self):
         """Apply decay to all memories based on time and access patterns"""
@@ -507,11 +507,11 @@ class CognitiveMemory:
             performance_metrics = {}
             
             snapshot = MemorySnapshot(
-                timestamp=datetime.datetime.utcnow(),
-                working_memory=working_memory,
-                short_term_memory=short_term_data,
-                cognitive_state=cognitive_state,
-                recent_thoughts=recent_thoughts,
+                        timestamp=datetime.datetime.utcnow(),
+                        working_memory=working_memory,
+                        short_term_memory=short_term_data,
+                        cognitive_state=cognitive_state,
+                    recent_thoughts=recent_thoughts,
                 performance_metrics=performance_metrics
             )
             
@@ -522,7 +522,7 @@ class CognitiveMemory:
     def _get_ttl_hours(self, memory_type: MemoryType) -> Optional[int]:
         """Get TTL hours for memory type"""
         ttl_config = {
-            MemoryType.WORKING: 1,
+                MemoryType.WORKING: 1,
             MemoryType.SHORT_TERM: 168,  # 7 days
             MemoryType.LONG_TERM: None,  # No TTL
             MemoryType.EPISODIC: None    # No TTL
@@ -533,8 +533,8 @@ class CognitiveMemory:
         """Update memory access time in Firestore"""
         collection_name = f"{memory_item.memory_type}_memory"
         self.gcp_client.update_memory_item(
-            collection_name,
-            memory_item.id,
+                    collection_name,
+                memory_item.id,
             {'last_accessed': memory_item.last_accessed}
         )
     
@@ -543,11 +543,11 @@ class CognitiveMemory:
         stats = self.gcp_client.get_memory_stats()
         
         return {
-            'working_memory_count': len(self._working_memory_cache),
-            'working_memory_limit': self.working_memory_limit,
-            'firestore_stats': stats,
-            'memory_loaded': self._memory_loaded,
-            'last_cleanup': self._last_cleanup,
+                    'working_memory_count': len(self._working_memory_cache),
+                    'working_memory_limit': self.working_memory_limit,
+                    'firestore_stats': stats,
+                    'memory_loaded': self._memory_loaded,
+                'last_cleanup': self._last_cleanup,
             'total_associations': len(self._memory_associations)
         }
     
