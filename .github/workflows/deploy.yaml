@@ -39,6 +39,12 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      - name: 🔐 Set ADC for gsutil
+        run: |
+            echo ${{ secrets.GCP_SA_KEY }} > /tmp/key.json
+            gcloud auth activate-service-account --key-file=/tmp/key.json
+            gcloud auth application-default login --key-file=/tmp/key.json
+
       - name: 🐳 Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
