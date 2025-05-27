@@ -22,7 +22,7 @@ def create_secret_manager_client():
     return secretmanager.SecretManagerServiceClient(credentials=credentials)
 
 
-def access_secret(secret_id, project_id):
+def access_secret(secret_id, project_id="autotrade-453303"):
     """
     Accesses the latest version of the specified secret from Secret Manager.
     """

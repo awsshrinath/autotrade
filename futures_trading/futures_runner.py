@@ -1,5 +1,9 @@
 import os
 import sys
+
+# Add project root to path BEFORE any other imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import time
 from datetime import datetime
 from datetime import time as dtime
@@ -10,9 +14,6 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import simulate_exit
-
-# Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 IST = pytz.timezone("Asia/Kolkata")
 

@@ -1,16 +1,23 @@
+# main_runner.py
+
+
+import os
 import datetime
 import time
 
-from runner.common_utils import create_daily_folders
-from runner.firestore_client import FirestoreClient
-from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
-from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
-from runner.market_data_fetcher import MarketDataFetcher
 from runner.market_monitor import MarketMonitor
-from runner.openai_manager import OpenAIManager
 from runner.strategy_selector import StrategySelector
-from runner.trade_manager import execute_trade, simulate_exit
+from runner.trade_manager import TradeManager
+from runner.logger import Logger
+from runner.gpt_codefix_suggestor import GPTCodeFixSuggestor
+from runner.daily_report_generator import DailyReportGenerator
+from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
+from runner.utils import create_daily_folders
+from runner.openai_manager import OpenAIManager
+from runner.kiteconnect_manager import KiteConnectManager
+from runner.market_data_fetcher import MarketDataFetcher
+from runner.firestore_client import FirestoreClient
+
 
 
 def main():
@@ -18,66 +25,50 @@ def main():
     logger = Logger(today_date)
     create_daily_folders(today_date)
 
-    logger.log_event("✅ GPT Runner+ Started Successfully.")
+    logger.log_event("GPT Runner+ Started Successfully.")
 
-    # Firestore
     firestore_client = FirestoreClient(logger)
-
-    # GPT
+    
+    # Initialize Secret Manager / OpenAIManager if needed
+    
     openai_manager = OpenAIManager(logger)
 
-    # Kite Client
+    # Initialize KiteConnect Manager
     kite_manager = KiteConnectManager(logger)
     kite_manager.set_access_token()
     kite = kite_manager.get_kite_client()
 
     market_data_fetcher = MarketDataFetcher(kite, logger)
 
-    # Strategy
+    # Initialize StrategySelector
     strategy_selector = StrategySelector(logger)
+
+    # Initialize TradeManager
+    trade_manager = TradeManager(kite, logger)
+
+    # Pre-Market Monitoring
     market_monitor = MarketMonitor(logger)
-
-    # Market Sentiment using live LTP
-    sentiment_data = market_monitor.get_market_sentiment(kite)
-    logger.log_event(f"📈 Market Sentiment Data: {sentiment_data}")
-
-    # Pre-market data used for strategy selection
     pre_market_data = market_monitor.fetch_premarket_data()
-    logger.log_event("📊 Pre-Market Data Fetched")
+    logger.log_event("Starting Pre-Market Monitoring...")
 
-    selected_strategy, sentiment = strategy_selector.choose_strategy(
-        "stock", pre_market_data
-    )
-    logger.log_event(
-        f"📌 Strategy Selected: {selected_strategy} | Sentiment: {sentiment}"
-    )
+    # Select Strategy
+    selected_strategy = strategy_selector.select_strategy(pre_market_data)
+    logger.log_event(f"Selected Strategy for Today: {selected_strategy}")
+    trade_manager.load_strategy(selected_strategy)
 
-    # Wait till market open
+    # Wait for Market Open
     now = datetime.datetime.now()
     market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
     if now < market_open:
-        logger.log_event("⏰ Waiting for market to open at 9:15 AM...")
+        logger.log_event("Waiting for Indian Market Open at 9:15 AM...")
         time.sleep((market_open - now).total_seconds())
 
-    # --- Simulate strategy execution (replace with your actual bot logic)
-    logger.log_event("🚀 Live Trading Session Started")
+    # Start Live Trading
+    logger.log_event("Starting Live Trading Session...")
+    trade_manager.start_trading(selected_strategy, market_data_fetcher)
 
-    # Simulate trade (example)
-    candles = market_data_fetcher.get_candles("RELIANCE", "5minute", 60)
-    from stock_trading.strategies.vwap_strategy import vwap_strategy
-
-    trade = vwap_strategy("RELIANCE", candles, capital=10000)
-
-    if trade:
-        trade["strategy"] = selected_strategy
-        execute_trade(trade, paper_mode=True)
-        simulate_exit(trade, candles)
-    else:
-        logger.log_event("⚠️ No signal from strategy")
-
-    # GPT Reflection
     monitor = GPTSelfImprovementMonitor(logger, firestore_client, openai_manager)
-    monitor.analyze(bot_name="stock-trader")
+    monitor.analyze(bot_name=selected_strategy)
 
 
 if __name__ == "__main__":
