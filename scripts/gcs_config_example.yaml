@@ -1,0 +1,109 @@
+# Example GCS Configuration for TRON Trading System
+# This file shows how to configure your application to use the created GCS buckets
+
+# Environment Configuration
+environment: "prod"  # or "dev", "staging"
+gcp_project_id: "autotrade-453303"
+gcs_region: "asia-south1"
+
+# GCS Bucket Configuration
+gcs_buckets:
+  # Trading System Buckets
+  trading_logs: "tron-trading-logs"
+  trade_data: "tron-trade-data"
+  strategy_configs: "tron-strategy-configs"
+  market_data: "tron-market-data"
+  
+  # Cognitive System Buckets
+  cognitive_memory: "tron-cognitive-memory"
+  thought_archives: "tron-thought-archives"
+  analysis_reports: "tron-analysis-reports"
+  memory_backups: "tron-memory-backups"
+  
+  # ML/AI Buckets
+  model_artifacts: "tron-model-artifacts"
+
+# For development environment, use prefixed buckets:
+# gcs_buckets:
+#   trading_logs: "dev-tron-trading-logs"
+#   trade_data: "dev-tron-trade-data"
+#   # ... etc
+
+# Kubernetes Environment Variables
+# Add these to your deployment YAML files:
+kubernetes_env_vars:
+  - name: GCP_PROJECT_ID
+    value: "autotrade-453303"
+  - name: GCS_REGION
+    value: "asia-south1"
+  - name: ENVIRONMENT
+    value: "prod"
+  - name: GCS_TRADING_LOGS_BUCKET
+    value: "tron-trading-logs"
+  - name: GCS_TRADE_DATA_BUCKET
+    value: "tron-trade-data"
+  - name: GCS_STRATEGY_CONFIGS_BUCKET
+    value: "tron-strategy-configs"
+  - name: GCS_COGNITIVE_MEMORY_BUCKET
+    value: "tron-cognitive-memory"
+  - name: GCS_THOUGHT_ARCHIVES_BUCKET
+    value: "tron-thought-archives"
+  - name: GCS_ANALYSIS_REPORTS_BUCKET
+    value: "tron-analysis-reports"
+  - name: GCS_MEMORY_BACKUPS_BUCKET
+    value: "tron-memory-backups"
+  - name: GCS_MODEL_ARTIFACTS_BUCKET
+    value: "tron-model-artifacts"
+  - name: GCS_MARKET_DATA_BUCKET
+    value: "tron-market-data"
+
+# Python Code Example
+# How to use these buckets in your Python code:
+python_usage_example: |
+  import os
+  from google.cloud import storage
+  
+  # Initialize GCS client
+  client = storage.Client(project=os.getenv('GCP_PROJECT_ID'))
+  
+  # Get bucket references
+  trading_logs_bucket = client.bucket(os.getenv('GCS_TRADING_LOGS_BUCKET'))
+  trade_data_bucket = client.bucket(os.getenv('GCS_TRADE_DATA_BUCKET'))
+  
+  # Upload a trading log
+  blob = trading_logs_bucket.blob(f"logs/{datetime.now().strftime('%Y-%m-%d')}/trading.log")
+  blob.upload_from_string(log_content)
+  
+  # Download strategy config
+  config_blob = client.bucket(os.getenv('GCS_STRATEGY_CONFIGS_BUCKET')).blob('strategies/vwap.json')
+  strategy_config = config_blob.download_as_text()
+
+# Lifecycle Policies Summary
+lifecycle_policies:
+  trading_logs: "90 days retention"
+  trade_data: "7 years retention (regulatory compliance)"
+  strategy_configs: "No automatic deletion"
+  market_data: "30 days retention"
+  cognitive_memory: "No automatic deletion"
+  thought_archives: "1 year retention"
+  analysis_reports: "No automatic deletion"
+  memory_backups: "6 months retention + versioning"
+  model_artifacts: "No automatic deletion + versioning"
+
+# Cost Optimization Notes
+cost_optimization:
+  - "Monitor bucket usage regularly with: gsutil du -sh gs://bucket-name"
+  - "Review lifecycle policies quarterly"
+  - "Consider moving old data to cheaper storage classes"
+  - "Set up billing alerts in GCP Console"
+  - "Use compression for large files"
+  - "Clean up temporary files regularly"
+
+# Security Best Practices
+security:
+  - "Uniform bucket-level access is enabled"
+  - "Public access prevention is enforced"
+  - "Use service accounts with minimal required permissions"
+  - "Enable audit logging for sensitive buckets"
+  - "Regularly review IAM permissions"
+  - "Use encryption at rest (enabled by default)" 
