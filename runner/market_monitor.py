@@ -18,6 +18,10 @@ class MarketMonitor:
 
         return context
 
+    def get_sentiment(self, kite_client=None):
+        """Alias for get_market_sentiment for backward compatibility"""
+        return self.get_market_sentiment(kite_client)
+
     def get_market_sentiment(self, kite_client):
         try:
             indices = {

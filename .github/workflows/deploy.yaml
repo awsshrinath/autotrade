@@ -17,7 +17,8 @@ env:
 
 jobs:
   test-and-build:
-    if: github.event_name == 'push'
+    # Run for both push and repository_dispatch to ensure images exist
+    if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     name: 🧪 Test & Build & Push Images
     runs-on: ubuntu-latest
 
@@ -41,7 +42,20 @@ jobs:
       - name: 🐳 Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
+      - name: 🔍 Check if images exist (for repository_dispatch)
+        if: github.event_name == 'repository_dispatch'
+        id: check_images
+        run: |
+          # Check if the main image exists
+          if gcloud artifacts docker images list $IMAGE_PREFIX/gpt-runner --filter="tags:latest" --format="value(name)" | grep -q latest; then
+            echo "images_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "images_exist=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: 🚀 Build & Push All Docker Images
+        # Always build on push, only build on dispatch if images don't exist
+        if: github.event_name == 'push' || (github.event_name == 'repository_dispatch' && steps.check_images.outputs.images_exist == 'false')
         run: |
           docker build -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
           docker build -t $IMAGE_PREFIX/gpt-runner:v1748245661 --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
@@ -61,6 +75,7 @@ jobs:
     name: 🚀 Deploy to GKE
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
+    needs: test-and-build  # Wait for images to be built/verified
 
     steps:
       - name: 📥 Checkout repository
@@ -74,17 +89,42 @@ jobs:
       - name: 🔎 Check if GKE Cluster Exists
         id: check_cluster
         run: |
+          echo "Checking for cluster: ${{ secrets.GKE_CLUSTER_NAME }}"
           if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
             --region ${{ secrets.GKE_ZONE }} \
             --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
             echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Cluster found"
           else
-            echo "Cluster not found"
+            echo "❌ Cluster not found"
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: ⏳ Wait for cluster to be ready (repository_dispatch only)
+        if: github.event_name == 'repository_dispatch' && steps.check_cluster.outputs.exists == 'true'
+        run: |
+          echo "Waiting for cluster to be fully ready..."
+          sleep 60  # Give the cluster time to be fully ready
+          
+          # Wait for cluster to be in RUNNING state
+          timeout 300 bash -c '
+            while true; do
+              STATUS=$(gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
+                --region ${{ secrets.GKE_ZONE }} \
+                --project ${{ secrets.GCP_PROJECT_ID }} \
+                --format="value(status)")
+              echo "Cluster status: $STATUS"
+              if [ "$STATUS" = "RUNNING" ]; then
+                echo "✅ Cluster is ready"
+                break
+              fi
+              echo "⏳ Waiting for cluster to be ready..."
+              sleep 10
+            done
+          '
+
       - name: ⚙️ Get GKE Credentials
-        if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+        if: steps.check_cluster.outputs.exists == 'true'
         uses: google-github-actions/get-gke-credentials@v1
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
@@ -92,23 +132,41 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: 🏗️ Create GPT Namespace
-        if: ${{ steps.check_cluster.outputs.exists == 'true' }}
-        run: kubectl apply -f deployments/namespace.yaml
+        if: steps.check_cluster.outputs.exists == 'true'
+        run: |
+          echo "Creating namespace..."
+          kubectl apply -f deployments/namespace.yaml
+          
+          # Wait for namespace to be ready
+          kubectl wait --for=condition=Ready namespace/gpt --timeout=60s || true
 
       - name: 📦 Apply Kubernetes Manifests
-        if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+        if: steps.check_cluster.outputs.exists == 'true'
         run: |
+          echo "Applying Kubernetes manifests..."
           kubectl apply -f deployments/
+          
+          echo "Waiting for main-runner deployment to be ready..."
           kubectl rollout status deployment main-runner -n gpt --timeout=300s
 
       - name: 🔄 Restart Bot Deployments
-        if: ${{ steps.check_cluster.outputs.exists == 'true' }}
+        if: steps.check_cluster.outputs.exists == 'true'
         run: |
+          echo "Restarting deployments..."
           kubectl rollout restart deployment stock-trader -n gpt || true
           kubectl rollout restart deployment options-trader -n gpt || true
           kubectl rollout restart deployment futures-trader -n gpt || true
           kubectl rollout restart deployment main-runner -n gpt || true
+          
+          echo "Waiting for deployments to be ready..."
+          kubectl rollout status deployment stock-trader -n gpt --timeout=300s || true
+          kubectl rollout status deployment options-trader -n gpt --timeout=300s || true
+          kubectl rollout status deployment futures-trader -n gpt --timeout=300s || true
+          kubectl rollout status deployment main-runner -n gpt --timeout=300s || true
 
       - name: 🔎 Verify Pods
-        if: ${{ steps.check_cluster.outputs.exists == 'true' }}
-        run: kubectl get pods -n gpt
+        if: steps.check_cluster.outputs.exists == 'true'
+        run: |
+          echo "Final pod status:"
+          kubectl get pods -n gpt
+          kubectl get deployments -n gpt

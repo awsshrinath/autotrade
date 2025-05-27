@@ -26,7 +26,8 @@ class KiteConnectManager:
         self.kite.set_access_token(self.access_token)
         self.logger.log_event("Access token set successfully for KiteConnect session.")
 
-    def get_kite_client(self):
+    def get_kite_client(self, project_id=None):
+        # project_id parameter for backward compatibility, but not used since it's set in __init__
         if self.access_token is None:
             self.set_access_token()
         return self.kite

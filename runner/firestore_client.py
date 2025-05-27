@@ -38,7 +38,13 @@ class FirestoreClient:
             if self.logger:
                 self.logger.log_event(f"[Firestore Error] log_trade failed: {e}")
 
-    def fetch_trades(self, bot_name, date_str):
+    def fetch_trades(self, bot_name, date_str=None, date=None):
+        # Handle backward compatibility for 'date' parameter
+        if date_str is None and date is not None:
+            date_str = date
+        elif date_str is None:
+            raise ValueError("Either date_str or date parameter must be provided")
+            
         try:
             collection_ref = (
                 self.db.collection("gpt_runner_trades")
@@ -163,6 +169,169 @@ class FirestoreClient:
             if self.logger:
                 self.logger.log_event(f"[Firestore Error] fetch_reflection failed: {e}")
             return ""
+
+    # --- COGNITIVE SYSTEM LOGGING ---
+
+    def log_cognitive_thought(self, thought_data):
+        """Log a cognitive thought entry"""
+        try:
+            doc_ref = self.db.collection("thought_journal").document()
+            doc_ref.set(thought_data)
+            if self.logger:
+                self.logger.log_event(f"Cognitive thought logged: {thought_data.get('decision', 'Unknown')}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_cognitive_thought failed: {e}")
+
+    def log_memory_item(self, collection_name, memory_data):
+        """Log a memory item to specified cognitive collection"""
+        try:
+            doc_ref = self.db.collection(collection_name).document()
+            doc_ref.set(memory_data)
+            if self.logger:
+                self.logger.log_event(f"Memory item logged to {collection_name}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_memory_item failed: {e}")
+
+    def log_state_transition(self, transition_data):
+        """Log a cognitive state transition"""
+        try:
+            doc_ref = self.db.collection("state_transitions").document()
+            doc_ref.set(transition_data)
+            if self.logger:
+                self.logger.log_event(f"State transition logged: {transition_data.get('from_state')} -> {transition_data.get('to_state')}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_state_transition failed: {e}")
+
+    def log_decision_analysis(self, analysis_data):
+        """Log a decision analysis result"""
+        try:
+            doc_ref = self.db.collection("decision_analysis").document()
+            doc_ref.set(analysis_data)
+            if self.logger:
+                self.logger.log_event(f"Decision analysis logged: {analysis_data.get('decision_id', 'Unknown')}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_decision_analysis failed: {e}")
+
+    def log_bias_detection(self, bias_data):
+        """Log a detected cognitive bias"""
+        try:
+            doc_ref = self.db.collection("bias_tracking").document()
+            doc_ref.set(bias_data)
+            if self.logger:
+                self.logger.log_event(f"Bias detection logged: {bias_data.get('bias_type', 'Unknown')}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_bias_detection failed: {e}")
+
+    def log_learning_metric(self, learning_data):
+        """Log a learning progress metric"""
+        try:
+            doc_ref = self.db.collection("learning_metrics").document()
+            doc_ref.set(learning_data)
+            if self.logger:
+                self.logger.log_event(f"Learning metric logged: {learning_data.get('learning_type', 'Unknown')}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_learning_metric failed: {e}")
+
+    def log_performance_attribution(self, attribution_data):
+        """Log a performance attribution analysis"""
+        try:
+            doc_ref = self.db.collection("performance_attribution").document()
+            doc_ref.set(attribution_data)
+            if self.logger:
+                self.logger.log_event(f"Performance attribution logged for period: {attribution_data.get('period_start')} to {attribution_data.get('period_end')}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_performance_attribution failed: {e}")
+
+    def get_cognitive_summary(self, days_back=7):
+        """Get a summary of cognitive system activity"""
+        try:
+            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_back)
+            
+            # Count recent thoughts
+            thoughts_query = (
+                self.db.collection("thought_journal")
+                .where("timestamp", ">=", cutoff_date)
+            )
+            thoughts_count = len(list(thoughts_query.stream()))
+            
+            # Count recent state transitions
+            transitions_query = (
+                self.db.collection("state_transitions")
+                .where("timestamp", ">=", cutoff_date)
+            )
+            transitions_count = len(list(transitions_query.stream()))
+            
+            # Count detected biases
+            biases_query = (
+                self.db.collection("bias_tracking")
+                .where("timestamp", ">=", cutoff_date)
+            )
+            biases_count = len(list(biases_query.stream()))
+            
+            summary = {
+                "period_days": days_back,
+                "thoughts_recorded": thoughts_count,
+                "state_transitions": transitions_count,
+                "biases_detected": biases_count,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            
+            if self.logger:
+                self.logger.log_event(f"Cognitive summary generated: {summary}")
+            
+            return summary
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] get_cognitive_summary failed: {e}")
+            return {}
+
+    def cleanup_old_cognitive_data(self, days_to_keep=30):
+        """Clean up old cognitive data to manage storage costs"""
+        try:
+            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_to_keep)
+            
+            # Collections to clean up (excluding long_term_memory and episodic_memory)
+            collections_to_clean = [
+                "working_memory",
+                "short_term_memory", 
+                "thought_journal",
+                "state_transitions"
+            ]
+            
+            total_deleted = 0
+            
+            for collection_name in collections_to_clean:
+                # Get old documents
+                old_docs_query = (
+                    self.db.collection(collection_name)
+                    .where("timestamp", "<", cutoff_date)
+                    .limit(100)  # Process in batches
+                )
+                
+                old_docs = list(old_docs_query.stream())
+                
+                # Delete old documents
+                for doc in old_docs:
+                    doc.reference.delete()
+                    total_deleted += 1
+            
+            if self.logger:
+                self.logger.log_event(f"Cleaned up {total_deleted} old cognitive records older than {days_to_keep} days")
+            
+            return total_deleted
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] cleanup_old_cognitive_data failed: {e}")
+            return 0
 
 
 def fetch_recent_trades(bot_name, limit=5):

@@ -3,6 +3,12 @@ Scalping Strategy for options trading.
 This is a placeholder file to satisfy import requirements.
 """
 
+import os
+import sys
+
+# Add project root to path BEFORE any other imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 
 class ScalpStrategy:
     """

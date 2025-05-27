@@ -1,19 +1,48 @@
 from datetime import datetime
 
-from gpt_runner.rag.embedder import embed_logs_for_today
+from gpt_runner.rag.rag_worker import embed_logs_for_today
 from gpt_runner.rag.retriever import retrieve_similar_context
-from mcp.context_builder import build_mcp_context
-from mcp.prompt_template import build_prompts
-from mcp.response_parser import parse_gpt_response
 from runner.firestore_client import FirestoreClient
 from runner.logger import Logger
-from runner.openai_manager import OpenAIManager, ask_gpt
+from runner.openai_manager import OpenAIManager
 
-context = build_mcp_context(bot_name="options-trader")
-system, user = build_prompts(context)
-gpt_response = ask_gpt(system, user)
-parsed = parse_gpt_response(gpt_response)
-print("Parsed GPT Action:", parsed)
+
+class GPTSelfImprovementMonitor:
+    """Monitor for GPT self-improvement and analysis"""
+    
+    def __init__(self, logger, firestore_client, gpt_client):
+        self.logger = logger
+        self.firestore_client = firestore_client
+        self.gpt_client = gpt_client
+    
+    def analyze_errors(self, log_path, bot_name):
+        """Analyze errors from log file and provide improvement suggestions"""
+        try:
+            self.logger.log_event(f"[GPT] Analyzing errors for bot: {bot_name}")
+            
+            # Read log file and analyze errors
+            with open(log_path, 'r') as f:
+                log_content = f.read()
+            
+            # Use GPT to analyze the logs
+            prompt = f"""Analyze the following log content for errors and issues:
+            
+{log_content}
+
+Provide specific suggestions for improvement and error prevention."""
+            
+            suggestion = self.gpt_client.get_suggestion(prompt)
+            self.logger.log_event(f"[GPT] Error analysis: {suggestion}")
+            
+            # Store analysis to Firestore
+            self.firestore_client.log_reflection(
+                bot_name, 
+                datetime.now().strftime("%Y-%m-%d"), 
+                suggestion
+            )
+            
+        except Exception as e:
+            self.logger.log_event(f"[GPT][ERROR] Error analysis failed: {e}")
 
 
 def run_reflection(bot_name):

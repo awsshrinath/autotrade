@@ -1,6 +1,10 @@
 import json
 import os
+import sys
 from datetime import datetime
+
+# Add project root to path to fix import issues
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from gpt_runner.rag.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
 from runner.firestore_client import FirestoreClient

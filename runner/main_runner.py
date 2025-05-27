@@ -1,7 +1,11 @@
 import datetime
 import os
 import subprocess
+import sys
 import time
+
+# Add project root to path BEFORE any other imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from gpt_runner.gpt_runner import run_gpt_runner
 from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
