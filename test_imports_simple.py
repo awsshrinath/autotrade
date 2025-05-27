@@ -54,7 +54,8 @@ def test_imports():
     except ImportError as e:
         print(f"❌ FirestoreClient import failed: {e}")
     
-    print("Import testing complete!")
+        print("Import testing complete!")
+
 
 if __name__ == "__main__":
-    test_imports() 
+    test_imports()

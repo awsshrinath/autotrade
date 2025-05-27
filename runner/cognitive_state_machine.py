@@ -1,4 +1,4 @@
-# runner/cognitive_state_machine.py
+# runner / cognitive_state_machine.py
 # Cognitive State Machine with Firestore persistence for state management
 # Manages OBSERVING, ANALYZING, EXECUTING states with automatic persistence across cluster recreations
 
@@ -105,72 +105,72 @@ class CognitiveStateMachine:
         """Initialize state machine configuration"""
         return {
             CognitiveState.INITIALIZING: StateConfiguration(
-                state=CognitiveState.INITIALIZING,
-                max_duration_minutes=5,
-                allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.EMERGENCY],
-                entry_actions=["load_memory", "check_systems", "validate_config"],
-                exit_actions=["log_initialization_complete"],
-                periodic_actions=[],
+                        state=CognitiveState.INITIALIZING,
+                        max_duration_minutes=5,
+                        allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.EMERGENCY],
+                        entry_actions=["load_memory", "check_systems", "validate_config"],
+                        exit_actions=["log_initialization_complete"],
+                    periodic_actions=[],
                 timeout_transition=CognitiveState.EMERGENCY
             ),
             
             CognitiveState.OBSERVING: StateConfiguration(
-                state=CognitiveState.OBSERVING,
-                max_duration_minutes=30,
-                allowed_transitions=[CognitiveState.ANALYZING, CognitiveState.REFLECTING, CognitiveState.EMERGENCY],
-                entry_actions=["start_market_monitoring", "reset_analysis_context"],
-                exit_actions=["save_observation_summary"],
-                periodic_actions=["fetch_market_data", "monitor_signals"],
+                        state=CognitiveState.OBSERVING,
+                        max_duration_minutes=30,
+                        allowed_transitions=[CognitiveState.ANALYZING, CognitiveState.REFLECTING, CognitiveState.EMERGENCY],
+                        entry_actions=["start_market_monitoring", "reset_analysis_context"],
+                        exit_actions=["save_observation_summary"],
+                    periodic_actions=["fetch_market_data", "monitor_signals"],
                 timeout_transition=CognitiveState.ANALYZING
             ),
             
             CognitiveState.ANALYZING: StateConfiguration(
-                state=CognitiveState.ANALYZING,
-                max_duration_minutes=10,
-                allowed_transitions=[CognitiveState.EXECUTING, CognitiveState.OBSERVING, CognitiveState.EMERGENCY],
-                entry_actions=["start_analysis", "load_strategy_context"],
-                exit_actions=["save_analysis_results"],
-                periodic_actions=["run_strategy_analysis", "check_risk_parameters"],
+                        state=CognitiveState.ANALYZING,
+                        max_duration_minutes=10,
+                        allowed_transitions=[CognitiveState.EXECUTING, CognitiveState.OBSERVING, CognitiveState.EMERGENCY],
+                        entry_actions=["start_analysis", "load_strategy_context"],
+                        exit_actions=["save_analysis_results"],
+                    periodic_actions=["run_strategy_analysis", "check_risk_parameters"],
                 timeout_transition=CognitiveState.OBSERVING
             ),
             
             CognitiveState.EXECUTING: StateConfiguration(
-                state=CognitiveState.EXECUTING,
-                max_duration_minutes=15,
-                allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.REFLECTING, CognitiveState.EMERGENCY],
-                entry_actions=["prepare_execution", "validate_trade_params"],
-                exit_actions=["log_execution_complete", "update_positions"],
-                periodic_actions=["monitor_execution", "check_exit_conditions"],
+                        state=CognitiveState.EXECUTING,
+                        max_duration_minutes=15,
+                        allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.REFLECTING, CognitiveState.EMERGENCY],
+                        entry_actions=["prepare_execution", "validate_trade_params"],
+                        exit_actions=["log_execution_complete", "update_positions"],
+                    periodic_actions=["monitor_execution", "check_exit_conditions"],
                 timeout_transition=CognitiveState.OBSERVING
             ),
             
             CognitiveState.REFLECTING: StateConfiguration(
-                state=CognitiveState.REFLECTING,
-                max_duration_minutes=20,
-                allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.MAINTENANCE, CognitiveState.EMERGENCY],
-                entry_actions=["start_reflection", "gather_performance_data"],
-                exit_actions=["save_reflection_results", "update_learning"],
-                periodic_actions=["analyze_performance", "identify_improvements"],
+                        state=CognitiveState.REFLECTING,
+                        max_duration_minutes=20,
+                        allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.MAINTENANCE, CognitiveState.EMERGENCY],
+                        entry_actions=["start_reflection", "gather_performance_data"],
+                        exit_actions=["save_reflection_results", "update_learning"],
+                    periodic_actions=["analyze_performance", "identify_improvements"],
                 timeout_transition=CognitiveState.OBSERVING
             ),
             
             CognitiveState.EMERGENCY: StateConfiguration(
-                state=CognitiveState.EMERGENCY,
-                max_duration_minutes=60,
-                allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.MAINTENANCE],
-                entry_actions=["emergency_procedures", "alert_handlers"],
-                exit_actions=["log_emergency_resolution"],
-                periodic_actions=["monitor_critical_systems", "attempt_recovery"],
+                        state=CognitiveState.EMERGENCY,
+                        max_duration_minutes=60,
+                        allowed_transitions=[CognitiveState.OBSERVING, CognitiveState.MAINTENANCE],
+                        entry_actions=["emergency_procedures", "alert_handlers"],
+                        exit_actions=["log_emergency_resolution"],
+                    periodic_actions=["monitor_critical_systems", "attempt_recovery"],
                 timeout_transition=CognitiveState.MAINTENANCE
             ),
             
             CognitiveState.MAINTENANCE: StateConfiguration(
-                state=CognitiveState.MAINTENANCE,
+                    state=CognitiveState.MAINTENANCE,
                 max_duration_minutes=None,  # No timeout
-                allowed_transitions=[CognitiveState.INITIALIZING],
-                entry_actions=["start_maintenance_mode"],
-                exit_actions=["complete_maintenance"],
-                periodic_actions=["system_health_checks"],
+                        allowed_transitions=[CognitiveState.INITIALIZING],
+                        entry_actions=["start_maintenance_mode"],
+                        exit_actions=["complete_maintenance"],
+                    periodic_actions=["system_health_checks"],
                 timeout_transition=None
             )
         }
@@ -179,7 +179,7 @@ class CognitiveStateMachine:
         """Load cognitive state from Firestore on startup"""
         try:
             state_data = self.gcp_client.get_memory_item(
-                'cognitive_state',
+                    'cognitive_state',
                 self._state_document_id
             )
             
@@ -211,16 +211,16 @@ class CognitiveStateMachine:
         """Persist current state to Firestore"""
         try:
             state_data = {
-                'current_state': self.current_state.value,
-                'state_entry_time': self.state_entry_time,
-                'previous_state': self.previous_state.value if self.previous_state else None,
-                'state_context': self.state_context,
+                        'current_state': self.current_state.value,
+                        'state_entry_time': self.state_entry_time,
+                        'previous_state': self.previous_state.value if self.previous_state else None,
+                    'state_context': self.state_context,
                 'last_updated': datetime.datetime.utcnow()
             }
             
             success = self.gcp_client.store_memory_item(
-                'cognitive_state',
-                self._state_document_id,
+                        'cognitive_state',
+                    self._state_document_id,
                 state_data
             )
             
@@ -258,7 +258,7 @@ class CognitiveStateMachine:
             self._force_state_transition(CognitiveState.EMERGENCY, StateTransitionTrigger.ERROR_DETECTED)
     
     def transition_to(self, new_state: CognitiveState, trigger: StateTransitionTrigger,
-                     reason: str = "", confidence: float = 1.0, 
+                         reason: str = "", confidence: float = 1.0, 
                      context: Dict[str, Any] = None) -> bool:
         """Transition to new cognitive state with validation and persistence"""
         
@@ -276,16 +276,16 @@ class CognitiveStateMachine:
         
         # Create transition record
         transition = StateTransition(
-            id=f"transition_{int(current_time.timestamp())}",
-            from_state=self.current_state.value,
-            to_state=new_state.value,
-            trigger=trigger.value,
-            timestamp=current_time,
-            duration_seconds=duration_seconds,
-            market_context=context or {},
-            reason=reason,
-            confidence=confidence,
-            success=True,
+                    id=f"transition_{int(current_time.timestamp())}",
+                    from_state=self.current_state.value,
+                    to_state=new_state.value,
+                    trigger=trigger.value,
+                    timestamp=current_time,
+                    duration_seconds=duration_seconds,
+                    market_context=context or {},
+                    reason=reason,
+                    confidence=confidence,
+                success=True,
             metadata={}
         )
         
@@ -322,16 +322,16 @@ class CognitiveStateMachine:
         duration_seconds = (current_time - self.state_entry_time).total_seconds()
         
         transition = StateTransition(
-            id=f"forced_transition_{int(current_time.timestamp())}",
-            from_state=self.current_state.value,
-            to_state=new_state.value,
-            trigger=trigger.value,
-            timestamp=current_time,
-            duration_seconds=duration_seconds,
-            market_context={},
-            reason="Forced transition for error recovery",
-            confidence=0.5,
-            success=True,
+                    id=f"forced_transition_{int(current_time.timestamp())}",
+                    from_state=self.current_state.value,
+                    to_state=new_state.value,
+                    trigger=trigger.value,
+                    timestamp=current_time,
+                    duration_seconds=duration_seconds,
+                    market_context={},
+                    reason="Forced transition for error recovery",
+                    confidence=0.5,
+                success=True,
             metadata={'forced': True}
         )
         
@@ -346,7 +346,7 @@ class CognitiveStateMachine:
         self.logger.warning(f"Forced state transition: {transition.from_state} -> {transition.to_state}")
     
     def _execute_state_actions(self, state: CognitiveState, action_type: str):
-        """Execute configured actions for state entry/exit"""
+        """Execute configured actions for state entry / exit"""
         try:
             config = self.state_configs[state]
             actions = getattr(config, action_type, [])
@@ -363,8 +363,8 @@ class CognitiveStateMachine:
         """Record state transition in Firestore"""
         try:
             success = self.gcp_client.store_memory_item(
-                'state_transitions',
-                transition.id,
+                        'state_transitions',
+                    transition.id,
                 transition.to_dict()
             )
             
@@ -427,9 +427,9 @@ class CognitiveStateMachine:
             cutoff_time = datetime.datetime.utcnow() - datetime.timedelta(hours=hours)
             
             transitions_data = self.gcp_client.query_memory_collection(
-                'state_transitions',
-                filters=[('timestamp', '>=', cutoff_time)],
-                order_by='timestamp',
+                        'state_transitions',
+                        filters=[('timestamp', '>=', cutoff_time)],
+                    order_by='timestamp',
                 limit=100
             )
             
@@ -445,9 +445,9 @@ class CognitiveStateMachine:
         
         if not recent_transitions:
             return {
-                'total_transitions': 0,
-                'average_state_duration': 0,
-                'state_distribution': {},
+                        'total_transitions': 0,
+                        'average_state_duration': 0,
+                    'state_distribution': {},
                 'most_common_trigger': None
             }
         
@@ -476,13 +476,13 @@ class CognitiveStateMachine:
         }
         
         return {
-            'total_transitions': len(recent_transitions),
-            'average_state_duration': sum(avg_durations.values()) / len(avg_durations) if avg_durations else 0,
-            'state_distribution': state_counts,
-            'average_state_durations': avg_durations,
-            'trigger_distribution': trigger_counts,
-            'most_common_trigger': max(trigger_counts.items(), key=lambda x: x[1])[0] if trigger_counts else None,
-            'current_state': self.current_state.value,
+                    'total_transitions': len(recent_transitions),
+                    'average_state_duration': sum(avg_durations.values()) / len(avg_durations) if avg_durations else 0,
+                    'state_distribution': state_counts,
+                    'average_state_durations': avg_durations,
+                    'trigger_distribution': trigger_counts,
+                    'most_common_trigger': max(trigger_counts.items(), key=lambda x: x[1])[0] if trigger_counts else None,
+                'current_state': self.current_state.value,
             'current_state_duration': self.get_state_duration()
         }
     
@@ -499,16 +499,16 @@ class CognitiveStateMachine:
         
         # Record emergency reset
         emergency_transition = StateTransition(
-            id=f"emergency_reset_{int(datetime.datetime.utcnow().timestamp())}",
-            from_state="unknown",
-            to_state=CognitiveState.INITIALIZING.value,
-            trigger=StateTransitionTrigger.ERROR_DETECTED.value,
-            timestamp=datetime.datetime.utcnow(),
-            duration_seconds=0,
-            market_context={},
-            reason="Emergency state machine reset",
-            confidence=0.0,
-            success=True,
+                    id=f"emergency_reset_{int(datetime.datetime.utcnow().timestamp())}",
+                    from_state="unknown",
+                    to_state=CognitiveState.INITIALIZING.value,
+                    trigger=StateTransitionTrigger.ERROR_DETECTED.value,
+                    timestamp=datetime.datetime.utcnow(),
+                    duration_seconds=0,
+                    market_context={},
+                    reason="Emergency state machine reset",
+                    confidence=0.0,
+                success=True,
             metadata={'emergency_reset': True}
         )
         
@@ -518,9 +518,9 @@ class CognitiveStateMachine:
     def health_check(self) -> Dict[str, bool]:
         """Perform health check on state machine"""
         health = {
-            'state_valid': False,
-            'duration_valid': False,
-            'persistence_working': False,
+                    'state_valid': False,
+                    'duration_valid': False,
+                'persistence_working': False,
             'transitions_recorded': False
         }
         

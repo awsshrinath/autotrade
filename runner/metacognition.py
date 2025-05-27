@@ -1,5 +1,5 @@
-# runner/metacognition.py
-# Metacognition system for self-awareness and performance analysis
+# runner / metacognition.py
+# Metacognition system for self - awareness and performance analysis
 # Implements decision tracking, bias detection, and learning progress with Firestore analytics
 
 import uuid
@@ -96,7 +96,7 @@ class LearningMetric:
     id: str
     learning_type: str
     timestamp: datetime.datetime
-    skill_level: float  # 0-10 scale
+    skill_level: float  # 0 - 10 scale
     improvement_rate: float
     accuracy_trend: float
     confidence_calibration: float
@@ -139,7 +139,7 @@ class PerformanceAttribution:
 
 class MetaCognition:
     """
-    Advanced metacognitive system for self-awareness and continuous improvement.
+    Advanced metacognitive system for self - awareness and continuous improvement.
     Analyzes decision quality, detects biases, and tracks learning progress.
     """
     
@@ -153,11 +153,11 @@ class MetaCognition:
         
         # Bias detection thresholds
         self.bias_thresholds = {
-            BiasType.OVERCONFIDENCE_BIAS: 0.7,
-            BiasType.CONFIRMATION_BIAS: 0.6,
-            BiasType.ANCHORING_BIAS: 0.5,
-            BiasType.LOSS_AVERSION: 0.8,
-            BiasType.RECENCY_BIAS: 0.6,
+                    BiasType.OVERCONFIDENCE_BIAS: 0.7,
+                    BiasType.CONFIRMATION_BIAS: 0.6,
+                    BiasType.ANCHORING_BIAS: 0.5,
+                    BiasType.LOSS_AVERSION: 0.8,
+                BiasType.RECENCY_BIAS: 0.6,
             BiasType.OVERTRADING: 0.5
         }
         
@@ -179,9 +179,9 @@ class MetaCognition:
             
             # Load recent decision analyses
             recent_decisions = self.gcp_client.query_memory_collection(
-                'decision_analysis',
-                filters=[('timestamp', '>=', cutoff_time)],
-                order_by='timestamp',
+                        'decision_analysis',
+                        filters=[('timestamp', '>=', cutoff_time)],
+                    order_by='timestamp',
                 limit=100
             )
             
@@ -196,16 +196,16 @@ class MetaCognition:
             self._decision_history = []
     
     def analyze_decision(self, decision_id: str, decision_type: str, 
-                        initial_confidence: float, actual_outcome: DecisionOutcome,
-                        profit_loss: float = None, strategy_used: str = None,
-                        market_context: Dict[str, Any] = None, 
+                                initial_confidence: float, actual_outcome: DecisionOutcome,
+                                profit_loss: float = None, strategy_used: str = None,
+                            market_context: Dict[str, Any] = None, 
                         time_to_outcome: float = None) -> str:
         """Analyze a completed decision for learning and bias detection"""
         
         analysis_id = str(uuid.uuid4())
         now = datetime.datetime.utcnow()
         
-        # Calculate outcome confidence based on profit/loss
+        # Calculate outcome confidence based on profit / loss
         outcome_confidence = self._calculate_outcome_confidence(actual_outcome, profit_loss)
         
         # Calculate accuracy score
@@ -222,27 +222,27 @@ class MetaCognition:
         )
         
         decision_analysis = DecisionAnalysis(
-            id=analysis_id,
-            decision_id=decision_id,
-            timestamp=now,
-            decision_type=decision_type,
-            initial_confidence=initial_confidence,
-            actual_outcome=actual_outcome.value,
-            outcome_confidence=outcome_confidence,
-            profit_loss=profit_loss,
-            market_context=market_context or {},
-            strategy_used=strategy_used or "unknown",
-            time_to_outcome=time_to_outcome or 0.0,
-            accuracy_score=accuracy_score,
-            bias_indicators=bias_indicators,
-            learning_opportunities=learning_opportunities,
+                    id=analysis_id,
+                    decision_id=decision_id,
+                    timestamp=now,
+                    decision_type=decision_type,
+                    initial_confidence=initial_confidence,
+                    actual_outcome=actual_outcome.value,
+                    outcome_confidence=outcome_confidence,
+                    profit_loss=profit_loss,
+                    market_context=market_context or {},
+                    strategy_used=strategy_used or "unknown",
+                    time_to_outcome=time_to_outcome or 0.0,
+                    accuracy_score=accuracy_score,
+                    bias_indicators=bias_indicators,
+                learning_opportunities=learning_opportunities,
             metadata={}
         )
         
         # Store analysis
         success = self.gcp_client.store_memory_item(
-            'decision_analysis',
-            analysis_id,
+                    'decision_analysis',
+                analysis_id,
             decision_analysis.to_dict()
         )
         
@@ -263,14 +263,14 @@ class MetaCognition:
     def _calculate_outcome_confidence(self, outcome: DecisionOutcome, profit_loss: float = None) -> float:
         """Calculate confidence in outcome assessment"""
         base_confidence = {
-            DecisionOutcome.SUCCESS: 1.0,
-            DecisionOutcome.FAILURE: 1.0,
-            DecisionOutcome.PARTIAL_SUCCESS: 0.7,
-            DecisionOutcome.PENDING: 0.3,
+                    DecisionOutcome.SUCCESS: 1.0,
+                    DecisionOutcome.FAILURE: 1.0,
+                    DecisionOutcome.PARTIAL_SUCCESS: 0.7,
+                DecisionOutcome.PENDING: 0.3,
             DecisionOutcome.CANCELLED: 0.5
         }.get(outcome, 0.5)
         
-        # Adjust based on profit/loss magnitude
+        # Adjust based on profit / loss magnitude
         if profit_loss is not None:
             magnitude_factor = min(abs(profit_loss) / 1000.0, 1.0)  # Normalize to 1000 units
             base_confidence = base_confidence * (0.7 + 0.3 * magnitude_factor)
@@ -281,10 +281,10 @@ class MetaCognition:
                                 actual_outcome: DecisionOutcome) -> float:
         """Calculate decision accuracy score"""
         outcome_success = {
-            DecisionOutcome.SUCCESS: 1.0,
-            DecisionOutcome.PARTIAL_SUCCESS: 0.6,
-            DecisionOutcome.FAILURE: 0.0,
-            DecisionOutcome.CANCELLED: 0.3,
+                    DecisionOutcome.SUCCESS: 1.0,
+                    DecisionOutcome.PARTIAL_SUCCESS: 0.6,
+                    DecisionOutcome.FAILURE: 0.0,
+                DecisionOutcome.CANCELLED: 0.3,
             DecisionOutcome.PENDING: 0.5
         }.get(actual_outcome, 0.5)
         
@@ -331,11 +331,11 @@ class MetaCognition:
         if abs(initial_confidence - accuracy_score) > 0.3:
             opportunities.append("Improve confidence calibration")
         
-        # Failed high-confidence decisions
+        # Failed high - confidence decisions
         if initial_confidence > 0.7 and actual_outcome == DecisionOutcome.FAILURE:
-            opportunities.append("Review high-confidence failure patterns")
+            opportunities.append("Review high - confidence failure patterns")
         
-        # Successful low-confidence decisions
+        # Successful low - confidence decisions
         if initial_confidence < 0.4 and actual_outcome == DecisionOutcome.SUCCESS:
             opportunities.append("Understand factors that increase confidence")
         
@@ -381,13 +381,13 @@ class MetaCognition:
         
         if overconfidence_score > self.bias_thresholds[BiasType.OVERCONFIDENCE_BIAS]:
             self._record_bias_detection(
-                BiasType.OVERCONFIDENCE_BIAS,
-                overconfidence_score,
+                        BiasType.OVERCONFIDENCE_BIAS,
+                    overconfidence_score,
                 [
-                    f"High confidence decisions success rate: {success_rate:.2%}",
-                    f"Expected success rate: {expected_success_rate:.2%}",
+                            f"High confidence decisions success rate: {success_rate:.2%}",
+                        f"Expected success rate: {expected_success_rate:.2%}",
                     f"Overconfidence gap: {overconfidence_score:.2%}"
-                ],
+                    ],
                 [d.id for d in high_confidence_decisions]
             )
     
@@ -416,13 +416,13 @@ class MetaCognition:
                 
                 if confirmation_score > self.bias_thresholds[BiasType.CONFIRMATION_BIAS]:
                     self._record_bias_detection(
-                        BiasType.CONFIRMATION_BIAS,
-                        confirmation_score,
+                                BiasType.CONFIRMATION_BIAS,
+                            confirmation_score,
                         [
-                            f"Low strategy diversity in {sentiment} market",
-                            f"Strategy count: {strategy_diversity}",
+                                    f"Low strategy diversity in {sentiment} market",
+                                f"Strategy count: {strategy_diversity}",
                             f"Confidence variance: {confidence_variance:.3f}"
-                        ],
+                            ],
                         [d.id for d in sentiment_decisions]
                     )
     
@@ -448,13 +448,13 @@ class MetaCognition:
         
         if confidence_bias > self.bias_thresholds[BiasType.RECENCY_BIAS]:
             self._record_bias_detection(
-                BiasType.RECENCY_BIAS,
-                confidence_bias,
+                        BiasType.RECENCY_BIAS,
+                    confidence_bias,
                 [
-                    f"Recent confidence: {recent_avg_confidence:.2f}",
-                    f"Historical confidence: {older_avg_confidence:.2f}",
+                            f"Recent confidence: {recent_avg_confidence:.2f}",
+                        f"Historical confidence: {older_avg_confidence:.2f}",
                     f"Recent success rate: {recent_success_rate:.2%}"
-                ],
+                    ],
                 [d.id for d in recent_decisions]
             )
     
@@ -474,18 +474,18 @@ class MetaCognition:
         avg_accuracy = statistics.mean([d.accuracy_score for d in decisions])
         
         # Overtrading if high frequency with low accuracy
-        if decision_frequency > 2.0 and avg_accuracy < 0.6:  # More than 2 decisions/hour with low accuracy
+        if decision_frequency > 2.0 and avg_accuracy < 0.6:  # More than 2 decisions / hour with low accuracy
             overtrading_score = decision_frequency * (1.0 - avg_accuracy)
             
             if overtrading_score > self.bias_thresholds[BiasType.OVERTRADING]:
                 self._record_bias_detection(
-                    BiasType.OVERTRADING,
-                    overtrading_score,
+                            BiasType.OVERTRADING,
+                        overtrading_score,
                     [
-                        f"Decision frequency: {decision_frequency:.1f} per hour",
-                        f"Average accuracy: {avg_accuracy:.2%}",
+                                f"Decision frequency: {decision_frequency:.1f} per hour",
+                            f"Average accuracy: {avg_accuracy:.2%}",
                         f"Overtrading score: {overtrading_score:.2f}"
-                    ],
+                        ],
                     [d.id for d in decisions]
                 )
     
@@ -498,21 +498,21 @@ class MetaCognition:
         mitigation_suggestions = self._get_bias_mitigation_suggestions(bias_type)
         
         bias_detection = BiasDetection(
-            id=bias_id,
-            bias_type=bias_type.value,
-            confidence=confidence,
-            evidence=evidence,
-            impact_assessment=self._assess_bias_impact(bias_type, confidence),
-            severity=min(confidence * 2.0, 1.0),  # Scale to 0-1
-            timestamp=datetime.datetime.utcnow(),
-            related_decisions=related_decisions,
-            suggested_mitigation=mitigation_suggestions,
+                    id=bias_id,
+                    bias_type=bias_type.value,
+                    confidence=confidence,
+                    evidence=evidence,
+                impact_assessment=self._assess_bias_impact(bias_type, confidence),
+            severity=min(confidence * 2.0, 1.0),  # Scale to 0 - 1
+                    timestamp=datetime.datetime.utcnow(),
+                    related_decisions=related_decisions,
+                suggested_mitigation=mitigation_suggestions,
             metadata={}
         )
         
         success = self.gcp_client.store_memory_item(
-            'bias_tracking',
-            bias_id,
+                    'bias_tracking',
+                bias_id,
             bias_detection.to_dict()
         )
         
@@ -523,33 +523,33 @@ class MetaCognition:
         """Get mitigation suggestions for specific bias"""
         suggestions = {
             BiasType.OVERCONFIDENCE_BIAS: [
-                "Implement pre-mortem analysis before high-confidence decisions",
-                "Track confidence vs actual outcomes more closely",
+                        "Implement pre - mortem analysis before high - confidence decisions",
+                    "Track confidence vs actual outcomes more closely",
                 "Seek contrarian viewpoints before major decisions"
-            ],
+                ],
             BiasType.CONFIRMATION_BIAS: [
-                "Actively seek disconfirming evidence",
-                "Use structured decision frameworks",
+                        "Actively seek disconfirming evidence",
+                    "Use structured decision frameworks",
                 "Implement devil's advocate processes"
-            ],
+                ],
             BiasType.RECENCY_BIAS: [
-                "Review longer-term performance patterns",
-                "Weight historical data appropriately",
+                        "Review longer - term performance patterns",
+                    "Weight historical data appropriately",
                 "Use systematic decision criteria"
-            ],
+                ],
             BiasType.OVERTRADING: [
-                "Implement cooling-off periods between trades",
-                "Set daily trade limits",
+                        "Implement cooling - off periods between trades",
+                    "Set daily trade limits",
                 "Focus on quality over quantity"
-            ],
+                ],
             BiasType.LOSS_AVERSION: [
-                "Set strict stop-loss rules",
-                "Practice position sizing discipline",
-                "Review risk-reward ratios regularly"
+                        "Set strict stop - loss rules",
+                    "Practice position sizing discipline",
+                "Review risk - reward ratios regularly"
             ]
         }
         
-        return suggestions.get(bias_type, ["Review decision-making process"])
+        return suggestions.get(bias_type, ["Review decision - making process"])
     
     def _assess_bias_impact(self, bias_type: BiasType, confidence: float) -> str:
         """Assess impact of detected bias"""
@@ -582,22 +582,22 @@ class MetaCognition:
             confidence_calibration = self._calculate_confidence_calibration(learning_type)
             
             learning_metric = LearningMetric(
-                id=str(uuid.uuid4()),
-                learning_type=learning_type,
-                timestamp=datetime.datetime.utcnow(),
-                skill_level=skill_level,
-                improvement_rate=improvement_rate,
-                accuracy_trend=decision_analysis.accuracy_score,
-                confidence_calibration=confidence_calibration,
-                key_learnings=decision_analysis.learning_opportunities,
-                areas_for_improvement=self._identify_improvement_areas(learning_type),
+                        id=str(uuid.uuid4()),
+                        learning_type=learning_type,
+                        timestamp=datetime.datetime.utcnow(),
+                        skill_level=skill_level,
+                        improvement_rate=improvement_rate,
+                        accuracy_trend=decision_analysis.accuracy_score,
+                        confidence_calibration=confidence_calibration,
+                        key_learnings=decision_analysis.learning_opportunities,
+                    areas_for_improvement=self._identify_improvement_areas(learning_type),
                 evidence={'recent_decision': decision_analysis.id}
             )
             
             # Store learning metric
             self.gcp_client.store_memory_item(
-                'learning_metrics',
-                learning_metric.id,
+                        'learning_metrics',
+                    learning_metric.id,
                 learning_metric.to_dict()
             )
         
@@ -607,10 +607,10 @@ class MetaCognition:
     def _map_decision_to_learning_type(self, decision_type: str) -> str:
         """Map decision type to learning category"""
         mapping = {
-            'trade_entry': LearningType.STRATEGY_IMPROVEMENT.value,
-            'trade_exit': LearningType.STRATEGY_IMPROVEMENT.value,
-            'risk_assessment': LearningType.RISK_MANAGEMENT.value,
-            'market_analysis': LearningType.MARKET_ANALYSIS.value,
+                    'trade_entry': LearningType.STRATEGY_IMPROVEMENT.value,
+                    'trade_exit': LearningType.STRATEGY_IMPROVEMENT.value,
+                    'risk_assessment': LearningType.RISK_MANAGEMENT.value,
+                'market_analysis': LearningType.MARKET_ANALYSIS.value,
             'strategy_selection': LearningType.DECISION_MAKING.value
         }
         
@@ -619,7 +619,7 @@ class MetaCognition:
     def _calculate_skill_level(self, learning_type: str, decision_analysis: DecisionAnalysis) -> float:
         """Calculate current skill level for learning type"""
         # Base skill on recent accuracy and confidence calibration
-        accuracy_component = decision_analysis.accuracy_score * 5.0  # Scale to 0-5
+        accuracy_component = decision_analysis.accuracy_score * 5.0  # Scale to 0 - 5
         
         # Get recent decisions of same type for trend analysis
         same_type_decisions = [
@@ -776,26 +776,26 @@ class MetaCognition:
             confidence_accuracy = 1.0 - statistics.mean(confidence_errors)
             
             attribution = PerformanceAttribution(
-                id=str(uuid.uuid4()),
-                period_start=cutoff_time,
-                period_end=datetime.datetime.utcnow(),
-                total_pnl=total_pnl,
-                strategy_attribution=strategy_pnl,
-                market_attribution=market_conditions,
-                skill_attribution=skill_attribution,
-                luck_attribution=luck_attribution,
-                bias_impact=bias_impact,
-                decision_quality_score=decision_quality_score,
-                areas_of_strength=self._identify_strengths(period_decisions),
-                areas_for_improvement=self._identify_weaknesses(period_decisions),
+                        id=str(uuid.uuid4()),
+                        period_start=cutoff_time,
+                        period_end=datetime.datetime.utcnow(),
+                        total_pnl=total_pnl,
+                        strategy_attribution=strategy_pnl,
+                        market_attribution=market_conditions,
+                        skill_attribution=skill_attribution,
+                        luck_attribution=luck_attribution,
+                        bias_impact=bias_impact,
+                        decision_quality_score=decision_quality_score,
+                        areas_of_strength=self._identify_strengths(period_decisions),
+                    areas_for_improvement=self._identify_weaknesses(period_decisions),
                 confidence_accuracy=confidence_accuracy
             )
             
             # Store attribution analysis
             attribution_id = attribution.id
             success = self.gcp_client.store_memory_item(
-                'performance_attribution',
-                attribution_id,
+                        'performance_attribution',
+                    attribution_id,
                 attribution.to_dict()
             )
             
@@ -815,7 +815,7 @@ class MetaCognition:
         # High accuracy decisions
         high_accuracy = [d for d in decisions if d.accuracy_score > 0.8]
         if len(high_accuracy) / len(decisions) > 0.3:
-            strengths.append("Consistent high-accuracy decisions")
+            strengths.append("Consistent high - accuracy decisions")
         
         # Good confidence calibration
         well_calibrated = [
@@ -823,7 +823,7 @@ class MetaCognition:
             if abs(d.initial_confidence - d.accuracy_score) < 0.2
         ]
         if len(well_calibrated) / len(decisions) > 0.7:
-            strengths.append("Well-calibrated confidence")
+            strengths.append("Well - calibrated confidence")
         
         # Profitable strategies
         profitable_decisions = [d for d in decisions if d.profit_loss > 0]
@@ -839,7 +839,7 @@ class MetaCognition:
         # Low accuracy decisions
         low_accuracy = [d for d in decisions if d.accuracy_score < 0.4]
         if len(low_accuracy) / len(decisions) > 0.3:
-            weaknesses.append("Too many low-accuracy decisions")
+            weaknesses.append("Too many low - accuracy decisions")
         
         # Poor confidence calibration
         poorly_calibrated = [
@@ -864,27 +864,27 @@ class MetaCognition:
             
             # Learning progress
             learning_metrics = self.gcp_client.query_memory_collection(
-                'learning_metrics',
-                order_by='timestamp',
+                        'learning_metrics',
+                    order_by='timestamp',
                 limit=10
             )
             
             # Bias tracking
             recent_biases = self.gcp_client.query_memory_collection(
-                'bias_tracking',
-                filters=[('timestamp', '>=', datetime.datetime.utcnow() - datetime.timedelta(days=7))],
+                        'bias_tracking',
+                    filters=[('timestamp', '>=', datetime.datetime.utcnow() - datetime.timedelta(days=7))],
                 limit=20
             )
             
             summary = {
-                'total_decisions_analyzed': len(self._decision_history),
-                'recent_decision_count': len(recent_decisions),
-                'average_accuracy': statistics.mean([d.accuracy_score for d in recent_decisions]) if recent_decisions else 0,
-                'recent_biases_detected': len(recent_biases),
-                'learning_areas_tracked': len(set(lm.get('learning_type') for lm in learning_metrics)),
-                'confidence_calibration': self._calculate_overall_calibration(),
-                'improvement_trend': self._calculate_overall_improvement_trend(),
-                'top_bias_types': self._get_top_bias_types(recent_biases),
+                        'total_decisions_analyzed': len(self._decision_history),
+                        'recent_decision_count': len(recent_decisions),
+                        'average_accuracy': statistics.mean([d.accuracy_score for d in recent_decisions]) if recent_decisions else 0,
+                        'recent_biases_detected': len(recent_biases),
+                        'learning_areas_tracked': len(set(lm.get('learning_type') for lm in learning_metrics)),
+                        'confidence_calibration': self._calculate_overall_calibration(),
+                        'improvement_trend': self._calculate_overall_improvement_trend(),
+                    'top_bias_types': self._get_top_bias_types(recent_biases),
                 'skill_levels': self._get_current_skill_levels()
             }
             

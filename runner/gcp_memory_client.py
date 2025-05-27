@@ -1,4 +1,4 @@
-# runner/gcp_memory_client.py
+# runner / gcp_memory_client.py
 # GCP Memory Client for Cloud Storage and Firestore operations
 # Provides unified interface for cognitive system persistence across daily cluster recreations
 
@@ -15,7 +15,7 @@ import logging
 
 @dataclass
 class MemorySnapshot:
-    """Snapshot of cognitive memory state for backup/restore"""
+    """Snapshot of cognitive memory state for backup / restore"""
     timestamp: datetime.datetime
     working_memory: List[Dict]
     short_term_memory: List[Dict]
@@ -38,22 +38,22 @@ class GCPMemoryClient:
         self._init_clients()
         
         # Bucket names for different memory types
-        self.memory_bucket = "tron-cognitive-memory"
-        self.thought_bucket = "tron-thought-archives"
-        self.reports_bucket = "tron-analysis-reports"
-        self.backup_bucket = "tron-memory-backups"
+        self.memory_bucket = "tron - cognitive - memory"
+        self.thought_bucket = "tron - thought - archives"
+        self.reports_bucket = "tron - analysis - reports"
+        self.backup_bucket = "tron - memory - backups"
         
         # Firestore collection names
         self.collections = {
-            'working_memory': 'working_memory',
-            'short_term_memory': 'short_term_memory', 
-            'long_term_memory': 'long_term_memory',
-            'episodic_memory': 'episodic_memory',
-            'thought_journal': 'thought_journal',
-            'state_transitions': 'state_transitions',
-            'decision_analysis': 'decision_analysis',
-            'performance_attribution': 'performance_attribution',
-            'bias_tracking': 'bias_tracking',
+                    'working_memory': 'working_memory',
+                    'short_term_memory': 'short_term_memory', 
+                    'long_term_memory': 'long_term_memory',
+                    'episodic_memory': 'episodic_memory',
+                    'thought_journal': 'thought_journal',
+                    'state_transitions': 'state_transitions',
+                    'decision_analysis': 'decision_analysis',
+                    'performance_attribution': 'performance_attribution',
+                'bias_tracking': 'bias_tracking',
             'learning_metrics': 'learning_metrics'
         }
         
@@ -73,9 +73,9 @@ class GCPMemoryClient:
     def _ensure_buckets_exist(self):
         """Ensure all required Cloud Storage buckets exist"""
         buckets = [
-            self.memory_bucket,
-            self.thought_bucket, 
-            self.reports_bucket,
+                    self.memory_bucket,
+                    self.thought_bucket, 
+                self.reports_bucket,
             self.backup_bucket
         ]
         
@@ -98,8 +98,8 @@ class GCPMemoryClient:
             
             # Add timestamp and TTL if specified
             data_with_meta = {
-                **data,
-                'created_at': firestore.SERVER_TIMESTAMP,
+                        **data,
+                    'created_at': firestore.SERVER_TIMESTAMP,
                 'last_accessed': firestore.SERVER_TIMESTAMP
             }
             
@@ -161,7 +161,7 @@ class GCPMemoryClient:
         try:
             doc_ref = self.firestore_client.collection(collection_name).document(doc_id)
             updates_with_meta = {
-                **updates,
+                    **updates,
                 'last_accessed': firestore.SERVER_TIMESTAMP
             }
             doc_ref.update(updates_with_meta)
@@ -186,7 +186,7 @@ class GCPMemoryClient:
             try:
                 # Query expired items
                 expired_docs = self.query_memory_collection(
-                    collection_name,
+                        collection_name,
                     filters=[('expires_at', '<', datetime.datetime.utcnow())]
                 )
                 
@@ -205,7 +205,7 @@ class GCPMemoryClient:
         """Store compressed memory snapshot to Cloud Storage"""
         try:
             timestamp_str = snapshot.timestamp.strftime("%Y%m%d_%H%M%S")
-            blob_name = f"snapshots/memory_snapshot_{timestamp_str}.pkl.gz"
+            blob_name = f"snapshots / memory_snapshot_{timestamp_str}.pkl.gz"
             
             # Serialize and compress snapshot
             serialized_data = pickle.dumps(asdict(snapshot))
@@ -226,7 +226,7 @@ class GCPMemoryClient:
         """Load the most recent memory snapshot from Cloud Storage"""
         try:
             bucket = self.storage_client.bucket(self.memory_bucket)
-            blobs = list(bucket.list_blobs(prefix="snapshots/memory_snapshot_"))
+            blobs = list(bucket.list_blobs(prefix="snapshots / memory_snapshot_"))
             
             if not blobs:
                 self.logger.info("No memory snapshots found")
@@ -253,11 +253,11 @@ class GCPMemoryClient:
     def store_thought_archive(self, thoughts: List[Dict], date_str: str) -> bool:
         """Store compressed daily thought archive"""
         try:
-            blob_name = f"daily_thoughts/thoughts_{date_str}.json.gz"
+            blob_name = f"daily_thoughts / thoughts_{date_str}.json.gz"
             
             # Serialize and compress thoughts
             json_data = json.dumps(thoughts, default=str, indent=2)
-            compressed_data = gzip.compress(json_data.encode('utf-8'))
+            compressed_data = gzip.compress(json_data.encode('utf - 8'))
             
             # Upload to Cloud Storage
             bucket = self.storage_client.bucket(self.thought_bucket)
@@ -294,7 +294,7 @@ class GCPMemoryClient:
             
             # Collect all cognitive data from Firestore
             backup_data = {
-                'timestamp': timestamp.isoformat(),
+                    'timestamp': timestamp.isoformat(),
                 'collections': {}
             }
             
@@ -304,7 +304,7 @@ class GCPMemoryClient:
             
             # Compress and store backup
             json_data = json.dumps(backup_data, default=str, indent=2)
-            compressed_data = gzip.compress(json_data.encode('utf-8'))
+            compressed_data = gzip.compress(json_data.encode('utf - 8'))
             
             bucket = self.storage_client.bucket(self.backup_bucket)
             blob = bucket.blob(f"{backup_name}.json.gz")
@@ -333,7 +333,7 @@ class GCPMemoryClient:
             
             # Download and decompress backup
             compressed_data = blob.download_as_bytes()
-            json_data = gzip.decompress(compressed_data).decode('utf-8')
+            json_data = gzip.decompress(compressed_data).decode('utf - 8')
             backup_data = json.loads(json_data)
             
             # Restore data to Firestore
@@ -354,8 +354,8 @@ class GCPMemoryClient:
     def health_check(self) -> Dict[str, bool]:
         """Perform health check on all GCP services"""
         health_status = {
-            'firestore': False,
-            'cloud_storage': False,
+                    'firestore': False,
+                'cloud_storage': False,
             'buckets': False
         }
         

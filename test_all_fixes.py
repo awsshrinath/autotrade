@@ -121,5 +121,6 @@ def test_all_fixes():
     print("=" * 60)
     print("Fix verification complete!")
 
+
 if __name__ == "__main__":
-    test_all_fixes() 
+    test_all_fixes()
