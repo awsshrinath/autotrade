@@ -19,8 +19,11 @@ spec:
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/stock-trader:latest
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "250m"
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1024Mi"
           env:
             - name: RUNNER_SCRIPT
               value: stock_trading/stock_runner.py
