@@ -284,7 +284,7 @@ jobs:
         run: |
           echo "Checking for cluster: ${{ secrets.GKE_CLUSTER_NAME }}"
           if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-            --region ${{ secrets.GKE_ZONE }} \
+            --region ${{ secrets.GKE_REGION }} \
             --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "✅ Cluster found"
@@ -303,7 +303,7 @@ jobs:
           timeout 300 bash -c '
             while true; do
               STATUS=$(gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-                --region ${{ secrets.GKE_ZONE }} \
+                --region ${{ secrets.GKE_REGION }} \
                 --project ${{ secrets.GCP_PROJECT_ID }} \
                 --format="value(status)")
               echo "Cluster status: $STATUS"
@@ -321,7 +321,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v1
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GKE_ZONE }}
+          location: ${{ secrets.GKE_REGION  }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: 🏗️ Create GPT Namespace
