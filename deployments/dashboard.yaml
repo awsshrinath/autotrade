@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-dashboard
+  namespace: gpt
+  labels:
+    app: trading-dashboard
+    component: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading-dashboard
+  template:
+    metadata:
+      labels:
+        app: trading-dashboard
+        component: dashboard
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+        - name: dashboard
+          image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/trading-dashboard:latest
+          ports:
+            - containerPort: 8501
+              name: http
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: DASHBOARD_USERNAME
+              value: "admin"
+            - name: DASHBOARD_PASSWORD
+              value: "tron2024"
+            - name: AUTH_ENABLED
+              value: "true"
+            - name: REAL_TIME_UPDATES
+              value: "true"
+            - name: AUTO_REFRESH_INTERVAL
+              value: "30"
+            - name: FEATURE_LIVE_TRADING
+              value: "false"  # Set to true for live trading
+            - name: FEATURE_COGNITIVE_INSIGHTS
+              value: "true"
+            - name: FEATURE_RISK_MONITORING
+              value: "true"
+            - name: ALERTS_ENABLED
+              value: "true"
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /app/logs
+      volumes:
+        - name: logs-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-service
+  namespace: gpt
+  labels:
+    app: trading-dashboard
+spec:
+  selector:
+    app: trading-dashboard
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8501
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard-ingress
+  namespace: gpt
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - dashboard.tron-trading.com
+      secretName: dashboard-tls
+  rules:
+    - host: dashboard.tron-trading.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard-service
+                port:
+                  number: 80 

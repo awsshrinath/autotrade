@@ -19,8 +19,11 @@ spec:
           image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/futures-trader:latest
           resources:
             requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
               memory: "512Mi"
-              cpu: "250m"
           env:
            - name: RUNNER_SCRIPT
              value: futures_trading/futures_runner.py

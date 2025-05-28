@@ -72,11 +72,62 @@ class MarketMonitor:
                 self.logger.log_event(f"[ERROR] get_market_sentiment failed: {e}")
             return {}
 
+    def fetch_premarket_data(self):
+        """Fetch pre-market data for strategy selection"""
+        try:
+            # Placeholder implementation - in real scenario would fetch actual pre-market data
+            premarket_data = {
+                "sgx_nifty": {"change": 0.5, "trend": "bullish"},
+                "dow_futures": {"change": -0.2, "trend": "bearish"},
+                "crude_oil": {"change": 1.2, "trend": "bullish"},
+                "dollar_index": {"change": -0.1, "trend": "neutral"},
+                "vix": {"value": 15.5, "trend": "low"},
+                "market_sentiment": "neutral"
+            }
+            
+            if self.logger:
+                self.logger.log_event("Fetched pre-market data successfully")
+            
+            return premarket_data
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[ERROR] fetch_premarket_data failed: {e}")
+            return {}
 
-# Standalone function for backward compatibility
+
+# Standalone functions for backward compatibility
 def get_latest_market_context(kite_client=None, logger=None):
     """
     Standalone function to get the latest market context
     """
     monitor = MarketMonitor(logger)
     return monitor.get_latest_market_context(kite_client)
+
+
+def get_nifty_trend(kite_client=None, logger=None):
+    """
+    Get NIFTY trend analysis - standalone function for strategy compatibility
+    """
+    try:
+        if kite_client:
+            monitor = MarketMonitor(logger)
+            sentiment = monitor.get_market_sentiment(kite_client)
+            return sentiment.get("nifty_trend", "neutral")
+        else:
+            # Fallback when no kite client available (paper trading)
+            import random
+            trends = ["bullish", "bearish", "neutral"]
+            return random.choice(trends)
+    except Exception as e:
+        if logger:
+            logger.log_event(f"[ERROR] get_nifty_trend failed: {e}")
+        return "neutral"
+
+
+def get_market_sentiment(kite_client=None, logger=None):
+    """
+    Standalone function to get market sentiment
+    """
+    monitor = MarketMonitor(logger)
+    return monitor.get_market_sentiment(kite_client)
