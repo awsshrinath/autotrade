@@ -95,6 +95,10 @@ jobs:
           docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
           docker push $IMAGE_PREFIX/futures-trader:latest
 
+          docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=dashboard/app.py .
+          docker push $IMAGE_PREFIX/futures-trader:latest
+
+
   setup-gcs-buckets:
     name: 🪣 Setup GCS Buckets
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
@@ -284,7 +288,7 @@ jobs:
         run: |
           echo "Checking for cluster: ${{ secrets.GKE_CLUSTER_NAME }}"
           if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-            --region ${{ secrets.GKE_ZONE }} \
+            --region ${{ secrets.GKE_REGION }} \
             --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "✅ Cluster found"
@@ -303,7 +307,7 @@ jobs:
           timeout 300 bash -c '
             while true; do
               STATUS=$(gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-                --region ${{ secrets.GKE_ZONE }} \
+                --region ${{ secrets.GKE_REGION }} \
                 --project ${{ secrets.GCP_PROJECT_ID }} \
                 --format="value(status)")
               echo "Cluster status: $STATUS"
@@ -321,7 +325,7 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v1
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GKE_ZONE }}
+          location: ${{ secrets.GKE_REGION  }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: 🏗️ Create GPT Namespace
@@ -350,12 +354,14 @@ jobs:
           kubectl rollout restart deployment options-trader -n gpt || true
           kubectl rollout restart deployment futures-trader -n gpt || true
           kubectl rollout restart deployment main-runner -n gpt || true
+          kubectl rollout restart deploymenttrading-dashboard -n gpt || true
           
           echo "Waiting for deployments to be ready..."
           kubectl rollout status deployment stock-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment options-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment futures-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment main-runner -n gpt --timeout=300s || true
+          kubectl rollout restart deploymenttrading-dashboard -n gpt || true
 
       - name: 🔎 Verify Pods
         if: steps.check_cluster.outputs.exists == 'true'
