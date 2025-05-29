@@ -95,6 +95,10 @@ jobs:
           docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
           docker push $IMAGE_PREFIX/futures-trader:latest
 
+          docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=dashboard/app.py .
+          docker push $IMAGE_PREFIX/futures-trader:latest
+
+
   setup-gcs-buckets:
     name: 🪣 Setup GCS Buckets
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
@@ -350,12 +354,14 @@ jobs:
           kubectl rollout restart deployment options-trader -n gpt || true
           kubectl rollout restart deployment futures-trader -n gpt || true
           kubectl rollout restart deployment main-runner -n gpt || true
+          kubectl rollout restart deploymenttrading-dashboard -n gpt || true
           
           echo "Waiting for deployments to be ready..."
           kubectl rollout status deployment stock-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment options-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment futures-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment main-runner -n gpt --timeout=300s || true
+          kubectl rollout restart deploymenttrading-dashboard -n gpt || true
 
       - name: 🔎 Verify Pods
         if: steps.check_cluster.outputs.exists == 'true'
