@@ -9,6 +9,7 @@ from runner.firestore_client import FirestoreClient
 from runner.gpt_self_improvement_monitor import run_gpt_reflection
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
+from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
 from runner.market_monitor import MarketMonitor
 from runner.openai_manager import OpenAIManager
 from runner.strategy_selector import StrategySelector
@@ -28,10 +29,19 @@ def initialize_memory(logger):
     embed_logs_for_today()
 
 
-def initialize_cognitive_system(logger):
+def initialize_cognitive_system(logger, enhanced_logger=None):
     """Initialize cognitive system with memory reconstruction"""
     try:
         logger.log_event("[COGNITIVE] Initializing cognitive system...")
+        
+        if enhanced_logger:
+            enhanced_logger.log_event(
+                "Cognitive system initialization started",
+                LogLevel.INFO,
+                LogCategory.SYSTEM,
+                data={'component': 'cognitive_system'},
+                source="cognitive_init"
+            )
         
         # Create cognitive system with automatic memory loading
         cognitive_system = create_cognitive_system(
@@ -57,6 +67,18 @@ def initialize_cognitive_system(logger):
         health_status = cognitive_system._perform_health_checks()
         logger.log_event(f"[COGNITIVE] Health check results: {health_status}")
         
+        if enhanced_logger:
+            enhanced_logger.log_event(
+                "Cognitive system health check completed",
+                LogLevel.INFO,
+                LogCategory.SYSTEM,
+                data={
+                    'health_status': health_status,
+                    'all_healthy': all(health_status.values())
+                },
+                source="cognitive_health"
+            )
+        
         if not all(health_status.values()):
             logger.log_event(f"[COGNITIVE] Warning: Some health checks failed: {health_status}")
         else:
@@ -70,18 +92,50 @@ def initialize_cognitive_system(logger):
         
     except Exception as e:
         logger.log_event(f"[COGNITIVE] Failed to initialize cognitive system: {e}")
+        if enhanced_logger:
+            enhanced_logger.log_event(
+                "Cognitive system initialization failed",
+                LogLevel.ERROR,
+                LogCategory.SYSTEM,
+                data={'error': str(e)},
+                source="cognitive_init"
+            )
         return None
 
 
 def main():
     """Main orchestrator function that coordinates all trading activities"""
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    # Initialize enhanced logger for Firestore and GCS logging
+    session_id = f"main_runner_{int(time.time())}"
+    enhanced_logger = create_enhanced_logger(
+        session_id=session_id,
+        enable_gcs=True,
+        enable_firestore=True
+    )
+    
+    # Initialize basic logger for backward compatibility
     logger = Logger(today_date)
     create_daily_folders(today_date)
+    
+    # Log startup with enhanced logger
+    enhanced_logger.log_event(
+        "GPT Runner+ Orchestrator Started",
+        LogLevel.INFO,
+        LogCategory.SYSTEM,
+        data={
+            'session_id': session_id,
+            'date': today_date,
+            'startup_time': datetime.datetime.now().isoformat()
+        },
+        source="main_orchestrator"
+    )
+    
     logger.log_event("✅ GPT Runner+ Orchestrator Started")
 
     # Initialize cognitive system first for memory reconstruction
-    cognitive_system = initialize_cognitive_system(logger)
+    cognitive_system = initialize_cognitive_system(logger, enhanced_logger)
 
     # Init memory + RAG sync
     initialize_memory(logger)

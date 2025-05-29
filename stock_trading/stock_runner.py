@@ -12,6 +12,7 @@ from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
+from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import simulate_exit
 
@@ -111,7 +112,33 @@ def get_realtime_stock_data(symbols):
 
 def run_stock_trading_bot():
     today_date = datetime.now().strftime("%Y-%m-%d")
+    
+    # Initialize enhanced logger for Firestore and GCS logging
+    session_id = f"stock_trader_{int(time.time())}"
+    enhanced_logger = create_enhanced_logger(
+        session_id=session_id,
+        enable_gcs=True,
+        enable_firestore=True
+    )
+    
+    # Initialize basic logger for backward compatibility
     logger = Logger(today_date)
+    
+    # Log startup with enhanced logger
+    enhanced_logger.log_event(
+        "Stock Trading Bot Started",
+        LogLevel.INFO,
+        LogCategory.SYSTEM,
+        data={
+            'session_id': session_id,
+            'date': today_date,
+            'bot_type': 'stock-trader',
+            'startup_time': datetime.now().isoformat()
+        },
+        bot_type="stock-trader",
+        source="stock_bot_startup"
+    )
+    
     logger.log_event("[BOOT] Starting Stock Trading Bot...")
 
     # Initialize Firestore client to fetch daily plan
@@ -123,17 +150,46 @@ def run_stock_trading_bot():
         logger.log_event(
             "[ERROR] No daily plan found in Firestore. Using default strategy."
         )
+        enhanced_logger.log_event(
+            "No daily plan found, using default strategy",
+            LogLevel.WARNING,
+            LogCategory.STRATEGY,
+            data={'fallback_strategy': 'vwap'},
+            bot_type="stock-trader",
+            source="strategy_selection"
+        )
         strategy_name = "vwap"  # Default fallback
     else:
         # Extract the stock strategy from the plan
         strategy_tuple = daily_plan.get("stocks", "vwap")
         strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
         logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
+        
+        enhanced_logger.log_event(
+            "Daily strategy plan loaded",
+            LogLevel.INFO,
+            LogCategory.STRATEGY,
+            data={
+                'strategy': strategy_name,
+                'daily_plan': daily_plan
+            },
+            strategy=strategy_name,
+            bot_type="stock-trader",
+            source="strategy_selection"
+        )
 
         # Log market sentiment from the plan
         sentiment = daily_plan.get("market_sentiment", {})
         if sentiment:
             logger.log_event(f"[SENTIMENT] Market sentiment from plan: {sentiment}")
+            enhanced_logger.log_event(
+                "Market sentiment analysis loaded",
+                LogLevel.INFO,
+                LogCategory.MARKET_DATA,
+                data={'market_sentiment': sentiment},
+                bot_type="stock-trader",
+                source="market_analysis"
+            )
 
     wait_until_market_opens(logger)
 
@@ -149,27 +205,109 @@ def run_stock_trading_bot():
 
         while is_market_open():
             logger.log_event("[ACTIVE] Market open, scanning for trades...")
+            enhanced_logger.log_event(
+                "Market scan cycle started",
+                LogLevel.DEBUG,
+                LogCategory.SYSTEM,
+                data={'scan_time': datetime.now().isoformat()},
+                bot_type="stock-trader",
+                source="trading_loop"
+            )
+            
             try:
                 if strategy:
                     trade_signal = strategy.analyze()
                     if trade_signal:
                         logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
+                        enhanced_logger.log_event(
+                            "Trade signal generated",
+                            LogLevel.INFO,
+                            LogCategory.TRADE,
+                            data={
+                                'trade_signal': trade_signal,
+                                'strategy': strategy_name,
+                                'signal_time': datetime.now().isoformat()
+                            },
+                            strategy=strategy_name,
+                            symbol=trade_signal.get('symbol') if isinstance(trade_signal, dict) else None,
+                            bot_type="stock-trader",
+                            source="strategy_analysis"
+                        )
                         # Trade execution call here
                         # For production, uncomment:
                         # execute_trade(trade_signal, kite, logger)
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
+                        enhanced_logger.log_event(
+                            "No trade signal generated",
+                            LogLevel.DEBUG,
+                            LogCategory.STRATEGY,
+                            data={
+                                'strategy': strategy_name,
+                                'scan_time': datetime.now().isoformat()
+                            },
+                            strategy=strategy_name,
+                            bot_type="stock-trader",
+                            source="strategy_analysis"
+                        )
                 else:
                     logger.log_event("[ERROR] Strategy not loaded.")
+                    enhanced_logger.log_event(
+                        "Strategy not loaded error",
+                        LogLevel.ERROR,
+                        LogCategory.ERROR,
+                        data={'attempted_strategy': strategy_name},
+                        bot_type="stock-trader",
+                        source="strategy_error"
+                    )
             except Exception as e:
                 logger.log_event(f"[ERROR] Strategy loop exception: {e}")
+                enhanced_logger.log_event(
+                    "Strategy loop exception",
+                    LogLevel.ERROR,
+                    LogCategory.ERROR,
+                    data={
+                        'error': str(e),
+                        'strategy': strategy_name,
+                        'error_time': datetime.now().isoformat()
+                    },
+                    strategy=strategy_name,
+                    bot_type="stock-trader",
+                    source="trading_loop"
+                )
             time.sleep(60)
 
         logger.log_event("[CLOSE] Market closed. Sleeping to prevent CrashLoop.")
+        enhanced_logger.log_event(
+            "Market closed - bot shutting down",
+            LogLevel.INFO,
+            LogCategory.SYSTEM,
+            data={
+                'shutdown_time': datetime.now().isoformat(),
+                'reason': 'market_closed'
+            },
+            bot_type="stock-trader",
+            source="bot_shutdown"
+        )
+        
+        # Graceful shutdown of enhanced logger
+        enhanced_logger.shutdown()
         sys.exit(0)
 
     except Exception as e:
         logger.log_event(f"[FATAL] Bot crashed: {e}")
+        enhanced_logger.log_event(
+            "Bot fatal error",
+            LogLevel.CRITICAL,
+            LogCategory.ERROR,
+            data={
+                'error': str(e),
+                'crash_time': datetime.now().isoformat()
+            },
+            bot_type="stock-trader",
+            source="fatal_error"
+        )
+        enhanced_logger.shutdown()
         sys.exit(1)
 
 
