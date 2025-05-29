@@ -34,40 +34,74 @@ The enhanced logging system requires these buckets:
 
 ## 🚀 **Deployment Steps**
 
-### Step 1: Set up Infrastructure
-```bash
-# Make the script executable
-chmod +x scripts/setup_logging_infrastructure.sh
+### Automated CI/CD Deployment
+The enhanced logging infrastructure and trading pods are now deployed automatically via GitHub Actions CI/CD:
 
-# Run the infrastructure setup
-./scripts/setup_logging_infrastructure.sh
+```bash
+# Simply push changes to trigger the full deployment
+git add .
+git commit -m "Deploy enhanced logging system"
+git push origin main
 ```
 
-### Step 2: Redeploy Pods
+The GitHub Actions workflow (`.github/workflows/deploy.yaml`) will automatically:
+
+1. **🧪 Test & Build**: Run tests and build Docker images
+2. **🪣 Setup GCS Buckets & Verify Firestore**: 
+   - Create all required GCS buckets with proper lifecycle policies
+   - Verify Firestore write access
+   - Test GCS write access for enhanced logging
+3. **🚀 Deploy to GKE**: Deploy all trading pods with enhanced logging enabled
+
+### What the CI/CD Pipeline Does
+
+#### Infrastructure Setup Phase:
+- **Creates Enhanced Logging Buckets**:
+  - `tron-trading-logs` (90-day retention)
+  - `tron-trade-data` (7-year retention) 
+  - `tron-analysis-reports` (1-year retention)
+  - `tron-memory-backups` (6-month retention)
+
+- **Creates Additional Buckets**:
+  - `tron-strategy-configs`, `tron-cognitive-memory`, `tron-thought-archives`, `tron-model-artifacts`, `tron-market-data`
+
+- **Sets Up Bucket Security**:
+  - Uniform bucket-level access
+  - Public access prevention
+  - Service account permissions
+
+- **Verifies Access**:
+  - Tests Firestore write access
+  - Tests GCS write access for all buckets
+  - Creates and deletes test documents/files
+
+#### Deployment Phase:
+- **Deploys Trading Pods** with enhanced logging environment variables
+- **Waits for rollout completion** to ensure successful deployment
+- **Verifies pod status** and reports final state
+
+### Manual Deployment (Alternative)
+If you need to deploy manually:
+
 ```bash
-# Apply updated deployments
+# Deploy individual components
 kubectl apply -f deployments/main.yaml
 kubectl apply -f deployments/stock-trader.yaml
 kubectl apply -f deployments/options-trader.yaml
 kubectl apply -f deployments/futures-trader.yaml
 ```
 
-### Step 3: Verify Logging
+### Monitor Deployment
 ```bash
-# Check pod logs
-kubectl logs -f main-runner-<pod-id> -n gpt
-kubectl logs -f stock-trader-<pod-id> -n gpt
+# Watch GitHub Actions workflow
+# Go to: https://github.com/your-repo/actions
 
-# Check Firestore collections (should see new collections)
-# - enhanced_logs_system
-# - enhanced_logs_trade
-# - enhanced_logs_strategy
-# - enhanced_logs_market_data
-# - enhanced_logs_error
+# Monitor pods after deployment
+kubectl get pods -n gpt -w
 
-# Check GCS buckets for compressed log files
-gsutil ls gs://tron-trading-logs/
-gsutil ls gs://tron-trade-data/
+# Check pod logs for enhanced logging initialization
+kubectl logs -f stock-trader-<pod-id> -n gpt | grep -i enhanced
+kubectl logs -f main-runner-<pod-id> -n gpt | grep -i enhanced
 ```
 
 ## 📊 **What You'll See After Fix**

@@ -100,7 +100,7 @@ jobs:
 
 
   setup-gcs-buckets:
-    name: 🪣 Setup GCS Buckets
+    name: 🪣 Setup GCS Buckets & Verify Firestore
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
 
@@ -131,34 +131,105 @@ jobs:
           gcloud auth list
           gsutil version -l
 
-      - name: 🪣 Create GCS Buckets
+      - name: 🪣 Create Enhanced Logging GCS Buckets
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         run: |
-          # Define bucket names and their retention policies
-          declare -A BUCKETS=(
-            ["tron-trading-logs"]="90"
-            ["tron-trade-data"]="2555"
-            ["tron-strategy-configs"]=""
-            ["tron-cognitive-memory"]=""
-            ["tron-thought-archives"]="365"
-            ["tron-analysis-reports"]=""
-            ["tron-memory-backups"]="180"
-            ["tron-model-artifacts"]=""
-            ["tron-market-data"]="30"
+          echo "🚀 TRON Enhanced Logging Infrastructure Setup"
+          echo "=============================================="
+          
+          # Enhanced Logging Buckets (required for the enhanced logger)
+          declare -A ENHANCED_BUCKETS=(
+            ["tron-trading-logs"]="90"      # System and application logs
+            ["tron-trade-data"]="2555"      # Trade execution data (7 years)
+            ["tron-analysis-reports"]="365" # Performance metrics and analysis
+            ["tron-memory-backups"]="180"   # Cognitive system backups (6 months)
+          )
+          
+          # Additional Buckets (existing ones)
+          declare -A ADDITIONAL_BUCKETS=(
+            ["tron-strategy-configs"]=""    # Trading strategy configurations
+            ["tron-cognitive-memory"]=""    # Cognitive memory snapshots
+            ["tron-thought-archives"]="365" # Thought journal archives
+            ["tron-model-artifacts"]=""     # ML model artifacts
+            ["tron-market-data"]="30"       # Market data cache
           )
           
           REGION="asia-south1"
           SERVICE_ACCOUNT="gpt-runner-sa@autotrade-453303.iam.gserviceaccount.com"
           
-          echo "🚀 Creating GCS buckets in region: $REGION"
+          echo "🎯 Creating Enhanced Logging Buckets..."
+          echo "======================================"
           
-          for bucket in "${!BUCKETS[@]}"; do
-            echo "🔨 Processing bucket: $bucket"
+          # Process Enhanced Logging buckets first (these are critical)
+          for bucket in "${!ENHANCED_BUCKETS[@]}"; do
+            echo "🔨 Processing ENHANCED bucket: $bucket"
             
             # Check if bucket already exists
             if gsutil ls -b "gs://$bucket" &>/dev/null; then
-              echo "⚠️ Bucket $bucket already exists, skipping creation"
+              echo "✅ Bucket $bucket already exists"
+            else
+              echo "✨ Creating bucket: $bucket"
+              
+              # Create bucket with uniform bucket-level access and public access prevention
+              if gsutil mb -p ${{ secrets.GCP_PROJECT_ID }} -c STANDARD -l $REGION "gs://$bucket"; then
+                echo "✅ Successfully created bucket: $bucket"
+                
+                # Enable uniform bucket-level access
+                gsutil uniformbucketlevelaccess set on "gs://$bucket"
+                
+                # Enforce public access prevention
+                gsutil pap set enforced "gs://$bucket"
+              else
+                echo "❌ Failed to create bucket: $bucket"
+                exit 1
+              fi
+            fi
+            
+            # Add service account as storage.objectAdmin
+            echo "🔐 Adding service account permissions to $bucket"
+            gsutil iam ch serviceAccount:$SERVICE_ACCOUNT:roles/storage.objectAdmin "gs://$bucket"
+            
+            # Set retention policy
+            retention_days="${ENHANCED_BUCKETS[$bucket]}"
+            if [ -n "$retention_days" ]; then
+              echo "📅 Setting $retention_days-day retention policy for $bucket"
+              
+              # Create temporary lifecycle policy file
+              cat > /tmp/lifecycle-$bucket.json <<EOF
+          {
+            "lifecycle": {
+              "rule": [
+                {
+                  "action": {"type": "Delete"},
+                  "condition": {"age": $retention_days}
+                }
+              ]
+            }
+          }
+          EOF
+              
+              # Apply lifecycle policy
+              gsutil lifecycle set /tmp/lifecycle-$bucket.json "gs://$bucket"
+              rm /tmp/lifecycle-$bucket.json
+              
+              echo "✅ Applied $retention_days-day retention policy to $bucket"
+            fi
+            
+            echo "✅ Enhanced bucket setup completed: $bucket"
+            echo ""
+          done
+          
+          echo "📦 Creating Additional Buckets..."
+          echo "==============================="
+          
+          # Process additional buckets
+          for bucket in "${!ADDITIONAL_BUCKETS[@]}"; do
+            echo "🔨 Processing additional bucket: $bucket"
+            
+            # Check if bucket already exists
+            if gsutil ls -b "gs://$bucket" &>/dev/null; then
+              echo "✅ Bucket $bucket already exists"
             else
               echo "✨ Creating bucket: $bucket"
               
@@ -179,7 +250,7 @@ jobs:
             gsutil iam ch serviceAccount:$SERVICE_ACCOUNT:roles/storage.objectAdmin "gs://$bucket"
             
             # Set retention policy if specified
-            retention_days="${BUCKETS[$bucket]}"
+            retention_days="${ADDITIONAL_BUCKETS[$bucket]}"
             if [ -n "$retention_days" ]; then
               echo "📅 Setting $retention_days-day retention policy for $bucket"
               
@@ -216,57 +287,93 @@ jobs:
           
           echo "🎉 All GCS buckets have been set up successfully!"
 
-      - name: 🔍 Verify Bucket Setup
+      - name: 🔥 Verify Firestore Access
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         run: |
-          echo "📋 Verifying bucket configuration..."
+          echo "🔥 Testing Firestore Access for Enhanced Logging..."
+          echo "================================================="
           
-          BUCKETS=(
+          # Install Python dependencies for Firestore test
+          pip install google-cloud-firestore
+          
+          # Test Firestore write access using Python
+          python3 << 'EOF'
+          import os
+          from google.cloud import firestore
+          import datetime
+          
+          try:
+              print("🔗 Connecting to Firestore...")
+              db = firestore.Client()
+              
+              print("📝 Testing write access...")
+              test_doc = db.collection('enhanced_logs_system').document('github_action_test')
+              test_doc.set({
+                  'test': True,
+                  'timestamp': datetime.datetime.now(),
+                  'setup_source': 'github_actions_cicd',
+                  'status': 'testing_enhanced_logging_access',
+                  'buckets_verified': [
+                      'tron-trading-logs',
+                      'tron-trade-data', 
+                      'tron-analysis-reports',
+                      'tron-memory-backups'
+                  ]
+              })
+              
+              print("🗑️ Cleaning up test document...")
+              test_doc.delete()
+              
+              print("✅ Firestore write access verified successfully!")
+              print("✅ Enhanced logging infrastructure is ready!")
+              
+          except Exception as e:
+              print(f"❌ Firestore access test failed: {e}")
+              exit(1)
+          EOF
+
+      - name: 🧪 Test GCS Write Access for Enhanced Logging
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+        run: |
+          echo "🧪 Testing GCS Write Access for Enhanced Logging..."
+          echo "=================================================="
+          
+          ENHANCED_BUCKETS=(
             "tron-trading-logs"
-            "tron-trade-data" 
-            "tron-strategy-configs"
-            "tron-cognitive-memory"
-            "tron-thought-archives"
+            "tron-trade-data"
             "tron-analysis-reports"
             "tron-memory-backups"
-            "tron-model-artifacts"
-            "tron-market-data"
           )
           
-          for bucket in "${BUCKETS[@]}"; do
-            echo "🔍 Checking bucket: $bucket"
+          # Create test file
+          test_file="/tmp/enhanced_logging_test.txt"
+          echo "Enhanced logging test file created by GitHub Actions" > "$test_file"
+          echo "Timestamp: $(date)" >> "$test_file"
+          echo "Purpose: Verify write access for enhanced logging system" >> "$test_file"
+          
+          for bucket in "${ENHANCED_BUCKETS[@]}"; do
+            echo "🧪 Testing write access for $bucket..."
             
-            # Check if bucket exists and get basic info
-            if gsutil ls -L -b "gs://$bucket" &>/dev/null; then
-              echo "✅ Bucket $bucket exists"
-              
-              # Check uniform bucket-level access
-              if gsutil uniformbucketlevelaccess get "gs://$bucket" | grep -q "Enabled: True"; then
-                echo "  ✅ Uniform bucket-level access: Enabled"
-              else
-                echo "  ❌ Uniform bucket-level access: Disabled"
-              fi
-              
-              # Check public access prevention
-              if gsutil pap get "gs://$bucket" | grep -q "Enforced"; then
-                echo "  ✅ Public access prevention: Enforced"
-              else
-                echo "  ❌ Public access prevention: Not enforced"
-              fi
-              
-              # Check lifecycle policy
-              if gsutil lifecycle get "gs://$bucket" &>/dev/null; then
-                echo "  ✅ Lifecycle policy: Configured"
-              else
-                echo "  ℹ️ Lifecycle policy: Not configured"
-              fi
-              
+            if gsutil cp "$test_file" "gs://${bucket}/cicd_test_$(date +%s).txt" &>/dev/null; then
+              echo "✅ Write access verified for $bucket"
+              # Clean up test file
+              gsutil rm "gs://${bucket}/cicd_test_*.txt" &>/dev/null || true
             else
-              echo "❌ Bucket $bucket does not exist"
+              echo "❌ Write access failed for $bucket"
+              exit 1
             fi
-            echo ""
           done
+          
+          rm -f "$test_file"
+          
+          echo ""
+          echo "🎉 Enhanced Logging Infrastructure Verification Complete!"
+          echo "======================================================="
+          echo "✅ All required GCS buckets created and accessible"
+          echo "✅ Firestore write access verified"  
+          echo "✅ Enhanced logging system is ready for deployment"
 
   deploy-to-prod:
     name: 🚀 Deploy to GKE
