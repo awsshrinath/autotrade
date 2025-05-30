@@ -92,9 +92,23 @@ class GCSLogger:
                 bucket = self.client.bucket(bucket_name)
                 
                 if not bucket.exists():
-                    # Create bucket
-                    bucket = self.client.create_bucket(bucket_name)
-                    print(f"Created GCS bucket: {bucket_name}")
+                    # Create bucket in asia-south1 region with proper labels
+                    bucket = self.client.create_bucket(
+                        bucket_name, 
+                        location='asia-south1',  # Force asia-south1 region
+                        labels={
+                            'environment': 'production',
+                            'system': 'tron-trading',
+                            'purpose': bucket_name.split('-')[-1],  # e.g., 'logs', 'archives'
+                            'region': 'asia-south1'
+                        }
+                    )
+                    print(f"Created GCS bucket: {bucket_name} in asia-south1")
+                    
+                # Ensure bucket is in correct region
+                bucket.reload()
+                if bucket.location != 'asia-south1':
+                    print(f"Warning: Bucket {bucket_name} is in {bucket.location}, not asia-south1")
                 
                 # Set lifecycle policy
                 lifecycle_rule = {
