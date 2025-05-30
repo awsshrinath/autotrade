@@ -7,6 +7,7 @@ Now uses the new runner.logging module for cost-optimized storage
 import datetime
 import json
 import os
+import time
 from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -495,4 +496,30 @@ class EnhancedLogger:
 # Backward compatibility aliases
 LogLevel = LegacyLogLevel
 LogCategory = LegacyLogCategory
-LogEntry = LegacyLogEntry 
+LogEntry = LegacyLogEntry
+
+
+# Factory function for backward compatibility
+def create_enhanced_logger(session_id: str = None, project_id: str = None, 
+                          enable_gcs: bool = True, enable_firestore: bool = True,
+                          bot_type: str = None) -> EnhancedLogger:
+    """
+    Factory function to create an EnhancedLogger instance
+    
+    Args:
+        session_id: Unique session identifier
+        project_id: Google Cloud project ID
+        enable_gcs: Whether to enable GCS logging
+        enable_firestore: Whether to enable Firestore logging
+        bot_type: Type of bot using the logger
+        
+    Returns:
+        EnhancedLogger instance
+    """
+    return EnhancedLogger(
+        session_id=session_id,
+        project_id=project_id, 
+        enable_gcs=enable_gcs,
+        enable_firestore=enable_firestore,
+        bot_type=bot_type
+    ) 

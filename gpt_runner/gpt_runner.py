@@ -9,7 +9,19 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from gpt_runner.rag.retriever import retrieve_similar_context
+# Try to import RAG functionality, fallback if not available
+try:
+    from gpt_runner.rag.retriever import retrieve_similar_context
+    RAG_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: RAG modules not available: {e}")
+    RAG_AVAILABLE = False
+    
+    def retrieve_similar_context(*args, **kwargs):
+        """Fallback function when RAG is not available"""
+        print("Warning: RAG not available - using empty context")
+        return []
+
 from runner.firestore_client import FirestoreClient, fetch_recent_trades
 from runner.gpt_self_improvement_monitor import run_gpt_reflection
 from runner.logger import Logger
