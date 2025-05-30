@@ -8,6 +8,70 @@ class VWAPStrategy(BaseStrategy):
     def __init__(self, kite, logger):
         super().__init__(kite, logger)
 
+    def analyze(self):
+        """
+        Analyze market and return a trade signal if found.
+        This method is called by the trading loop.
+        """
+        symbols = ["RELIANCE", "TCS", "INFY", "HDFCBANK"]
+        try:
+            to_date = datetime.now()
+            from_date = to_date - timedelta(minutes=30)
+            
+            for symbol in symbols:
+                try:
+                    token = self.kite.ltp([f"NSE:{symbol}"])[f"NSE:{symbol}"][
+                        "instrument_token"
+                    ]
+                    candles = self.kite.historical_data(
+                        token, from_date, to_date, "5minute"
+                    )
+                    if not candles or len(candles) < 5:
+                        continue
+                    
+                    vwap = calculate_vwap(candles)
+                    last_close = candles[-1]["close"]
+                    
+                    # Only generate signal if price is significantly away from VWAP
+                    deviation_pct = abs(last_close - vwap) / vwap * 100
+                    if deviation_pct < 0.5:  # Less than 0.5% deviation, no clear signal
+                        continue
+                    
+                    direction = "bullish" if last_close > vwap else "bearish"
+                    
+                    trade = {
+                        "symbol": symbol,
+                        "entry_price": last_close,
+                        "stop_loss": (
+                            last_close - 0.5
+                            if direction == "bullish"
+                            else last_close + 0.5
+                        ),
+                        "target": (
+                            last_close + 1.0
+                            if direction == "bullish"
+                            else last_close - 1.0
+                        ),
+                        "quantity": 10,
+                        "direction": direction,
+                        "strategy": "vwap",
+                        "confidence": min(deviation_pct / 2, 1.0),  # Higher deviation = higher confidence
+                        "vwap": vwap,
+                        "deviation_pct": deviation_pct
+                    }
+                    self.logger.log_event(f"[VWAP] Signal: {trade}")
+                    return trade  # Return first valid signal found
+                    
+                except Exception as e:
+                    self.logger.log_event(f"[VWAP][{symbol}] ERROR: {e}")
+            
+            # No valid signals found
+            return None
+            
+        except Exception as e:
+            self.logger.log_event(f"[VWAP][ERROR] Overall failure: {e}")
+            return None
+
     def find_trade_opportunities(self, market_data):
         """
         Called repeatedly to check for trade opportunities.

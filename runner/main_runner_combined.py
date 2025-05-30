@@ -1,9 +1,28 @@
 import datetime
 import os
 import time
+import sys
 
-from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
-from gpt_runner.rag.rag_worker import embed_logs_for_today
+# Add the project root to the Python path to ensure proper imports
+sys.path.insert(0, '/app')
+sys.path.insert(0, '/app/runner')
+sys.path.insert(0, '/app/gpt_runner')
+
+# Import from absolute paths to avoid conflicts
+try:
+    from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
+    from gpt_runner.rag.rag_worker import embed_logs_for_today
+except ImportError as e:
+    print(f"Warning: Could not import RAG modules: {e}")
+    # Define placeholder functions
+    def sync_firestore_to_faiss(*args, **kwargs):
+        print("RAG sync not available - using placeholder")
+        return None
+    
+    def embed_logs_for_today(*args, **kwargs):
+        print("RAG embedding not available - using placeholder")
+        return None
+
 from runner.common_utils import create_daily_folders
 from runner.firestore_client import FirestoreClient
 from runner.gpt_self_improvement_monitor import run_gpt_reflection

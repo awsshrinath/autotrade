@@ -73,6 +73,30 @@ def graceful_exit_if_off_hours(kite):
     exit(0)
 
 
+def wait_for_daily_plan(firestore_client, today_date, logger, max_wait_minutes=10):
+    """
+    Wait for the daily plan to be available, created by the main runner.
+    Returns the plan if found, None if timeout reached.
+    """
+    wait_interval = 30  # seconds
+    max_attempts = (max_wait_minutes * 60) // wait_interval
+    
+    for attempt in range(max_attempts):
+        daily_plan = firestore_client.fetch_daily_plan(today_date)
+        if daily_plan:
+            logger.log_event(f"[PLAN] Daily plan found after {attempt * wait_interval} seconds")
+            return daily_plan
+        
+        if attempt == 0:
+            logger.log_event(f"[WAIT] Daily plan not found, waiting for main runner to create it...")
+        
+        logger.log_event(f"[WAIT] Plan not available yet, retrying in {wait_interval}s... (attempt {attempt + 1}/{max_attempts})")
+        time.sleep(wait_interval)
+    
+    logger.log_event(f"[TIMEOUT] Daily plan not found after {max_wait_minutes} minutes, using fallback")
+    return None
+
+
 def run_options_trading_bot():
     today_date = datetime.now().strftime("%Y-%m-%d")
     logger = Logger(today_date)
@@ -81,13 +105,40 @@ def run_options_trading_bot():
     # Initialize Firestore client to fetch daily plan
     firestore_client = FirestoreClient(logger)
 
-    # Fetch today's trading plan from Firestore
-    daily_plan = firestore_client.fetch_daily_plan(today_date)
+    # Wait for daily plan to be created by main runner (with timeout)
+    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
+    
     if not daily_plan:
         logger.log_event(
-            "[ERROR] No daily plan found in Firestore. Using default strategy."
+            "[FALLBACK] No daily plan found even after waiting. Using intelligent fallback strategy."
         )
-        strategy_name = "scalp"  # Default fallback
+        
+        # Intelligent fallback for options
+        strategy_name = "scalp"  # Default for options
+        
+        # Try to get market sentiment independently for better fallback
+        try:
+            from runner.market_monitor import MarketMonitor
+            from runner.kiteconnect_manager import KiteConnectManager
+            
+            kite_manager = KiteConnectManager(logger)
+            kite_manager.set_access_token()
+            kite = kite_manager.get_kite_client()
+            
+            market_monitor = MarketMonitor(logger)
+            sentiment_data = market_monitor.get_market_sentiment(kite)
+            
+            # Use market sentiment to choose better fallback
+            vix = sentiment_data.get("INDIA VIX", 15)
+            if vix > 25:
+                strategy_name = "scalp"  # High volatility - scalping works well
+                logger.log_event(f"[FALLBACK] High VIX ({vix}), using scalp strategy")
+            else:
+                strategy_name = "scalp"  # Default for options
+                logger.log_event(f"[FALLBACK] VIX ({vix}), using scalp strategy")
+                
+        except Exception as e:
+            logger.log_event(f"[FALLBACK] Could not get market sentiment for fallback: {e}")
     else:
         # Extract the options strategy from the plan
         strategy_tuple = daily_plan.get("options", "scalp")

@@ -1,15 +1,22 @@
 import datetime
 import json
 import os
+from typing import Dict, Any, Optional, List
 
+# Import new optimized logging system
+try:
+    from runner.logging import TradingLogger, LogLevel, LogCategory
+    from runner.logging.log_types import TradeLogData, ErrorLogData
+    NEW_LOGGING_AVAILABLE = True
+except ImportError:
+    NEW_LOGGING_AVAILABLE = False
+
+# Legacy imports
 from runner.risk_governor import RiskGovernor
-from runner.cognitive_system import CognitiveSystem, create_cognitive_system
-from runner.thought_journal import DecisionType, ConfidenceLevel
-from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigger
-from runner.metacognition import DecisionOutcome
+from runner.cognitive.cognitive_system import CognitiveSystem, DecisionType, ConfidenceLevel, CognitiveState, StateTransitionTrigger
 
-# ✅ Initialize with limits
-risk_guard = RiskGovernor(max_daily_loss=500, max_trades=3, cutoff_time="15:00")
+# Initialize risk governor
+risk_guard = RiskGovernor()
 
 
 class TradeManager:
@@ -17,83 +24,119 @@ class TradeManager:
         self.logger = logger
         self.kite = kite
         self.firestore_client = firestore_client
-        self.open_positions = []
-        self.strategy_map = {}
-        
-        # Initialize cognitive system
         self.cognitive_system = cognitive_system
-        if self.cognitive_system is None:
-            try:
-                self.cognitive_system = create_cognitive_system(logger=self.logger)
-                if self.logger:
-                    self.logger.log_event("Cognitive system initialized for TradeManager")
-            except Exception as e:
-                if self.logger:
-                    self.logger.log_event(f"Failed to initialize cognitive system: {e}")
-                self.cognitive_system = None
+        self.open_positions = []
+        
+        # Initialize new optimized logger if available
+        if NEW_LOGGING_AVAILABLE:
+            self.trading_logger = TradingLogger(
+                session_id=f"trade_manager_{int(datetime.datetime.now().timestamp())}",
+                bot_type="trade-manager"
+            )
+            self.use_new_logging = True
+        else:
+            self.use_new_logging = False
+        
+        if self.logger:
+            self.logger.log_event("TradeManager initialized")
 
     def run_strategy_once(self, strategy_name, direction, bot_type):
         """
-        Run a strategy once and execute a trade if a signal is generated.
-
+        Run a strategy once and return the trade result.
+        
         Args:
-            strategy_name (str): The name of the strategy to run
-            direction (str): The direction of the trade (bullish or bearish)
-            bot_type (str): The type of bot (stock, options, futures)
-
+            strategy_name: Name of the strategy to run
+            direction: Trading direction (bullish/bearish)
+            bot_type: Type of bot (stock-trader, options-trader, etc.)
+        
         Returns:
-            dict: The executed trade or None if no trade was executed
+            Trade object if successful, None otherwise
         """
-        # Record cognitive thought about strategy selection
-        if self.cognitive_system:
-            self.cognitive_system.record_thought(
-                decision=f"Running {strategy_name} strategy for {bot_type}",
-                reasoning=f"Selected {strategy_name} strategy with {direction} direction for {bot_type} bot",
-                decision_type=DecisionType.STRATEGY_SELECTION,
-                confidence=ConfidenceLevel.MEDIUM,
-                market_context={
-                    'strategy': strategy_name,
-                    'direction': direction,
-                    'bot_type': bot_type
-                },
-                tags=['strategy_execution', strategy_name, bot_type]
-            )
-            
-            # Transition to analyzing state
-            self.cognitive_system.transition_state(
-                CognitiveState.ANALYZING,
-                StateTransitionTrigger.SIGNAL_DETECTED,
-                f"Analyzing {strategy_name} for {bot_type}"
-            )
+        try:
+            # Import strategy dynamically
+            if strategy_name == "orb":
+                from strategies.orb_strategy import ORBStrategy
+                strategy = ORBStrategy(self.kite, self.logger)
+            elif strategy_name == "range_reversal":
+                from strategies.range_reversal_strategy import RangeReversalStrategy
+                strategy = RangeReversalStrategy(self.kite, self.logger)
+            elif strategy_name == "vwap":
+                from strategies.vwap_strategy import VWAPStrategy
+                strategy = VWAPStrategy(self.kite, self.logger)
+            else:
+                error_msg = f"Unknown strategy: {strategy_name}"
+                if self.logger:
+                    self.logger.log_event(error_msg)
+                
+                # Log error with new system
+                if self.use_new_logging:
+                    self.trading_logger.log_error(
+                        ValueError(error_msg),
+                        context={'strategy_name': strategy_name, 'direction': direction, 'bot_type': bot_type},
+                        source="trade_manager"
+                    )
+                
+                return None
 
-        if strategy_name not in self.strategy_map:
-            if self.logger:
-                self.logger.log_event(
-                    f"[ERROR] Strategy {strategy_name} not found in strategy map"
-                )
-            
-            # Record cognitive thought about error
+            # Transition to analyzing state
             if self.cognitive_system:
-                self.cognitive_system.record_thought(
-                    decision=f"Strategy {strategy_name} not found",
-                    reasoning="Strategy mapping error detected",
+                self.cognitive_system.transition_state(
+                    CognitiveState.ANALYZING,
+                    StateTransitionTrigger.NEW_DATA_AVAILABLE,
+                    f"Analyzing {strategy_name} strategy for {direction} {bot_type}"
+                )
+
+            # Generate trade signal
+            trade_signal = strategy.analyze()
+
+            # Record cognitive thought about strategy analysis
+            if self.cognitive_system:
+                thought_id = self.cognitive_system.record_thought(
+                    decision=f"Strategy analysis completed for {strategy_name}",
+                    reasoning=f"Analyzed {strategy_name} strategy for {direction} direction in {bot_type} context",
                     decision_type=DecisionType.MARKET_ANALYSIS,
-                    confidence=ConfidenceLevel.VERY_HIGH,
-                    tags=['error', 'strategy_mapping']
+                    confidence=ConfidenceLevel.MEDIUM,
+                    market_context={
+                        'strategy': strategy_name,
+                        'direction': direction,
+                        'bot_type': bot_type,
+                        'signal_generated': trade_signal is not None
+                    },
+                    tags=['strategy_analysis', strategy_name, direction]
+                )
+
+        except Exception as e:
+            error_msg = f"Error running strategy {strategy_name}: {e}"
+            if self.logger:
+                self.logger.log_event(error_msg)
+            
+            # Log error with new system
+            if self.use_new_logging:
+                self.trading_logger.log_error(
+                    e,
+                    context={'strategy_name': strategy_name, 'direction': direction, 'bot_type': bot_type},
+                    source="trade_manager"
                 )
             
             return None
-
-        # Get the strategy function
-        strategy_func = self.strategy_map[strategy_name]
-
-        # Run the strategy to get a trade signal
-        trade_signal = strategy_func(symbol=bot_type, direction=direction)
 
         if not trade_signal:
             if self.logger:
                 self.logger.log_event(
                     f"[INFO] No trade signal generated by {strategy_name}"
+                )
+            
+            # Log strategy signal result with new system
+            if self.use_new_logging:
+                self.trading_logger.log_strategy_signal(
+                    strategy=strategy_name,
+                    symbol="N/A",
+                    signal_data={
+                        'result': 'no_signal',
+                        'direction': direction,
+                        'bot_type': bot_type,
+                        'timestamp': datetime.datetime.now().isoformat()
+                    }
                 )
             
             # Record cognitive thought about no signal
@@ -132,45 +175,55 @@ class TradeManager:
 
     def _execute_trade(self, trade_signal, bot_type, strategy_name=None):
         """
-        Execute a trade based on a trade signal.
-
+        Execute a trade based on the signal.
+        
         Args:
-            trade_signal (dict): The trade signal
-            bot_type (str): The type of bot (stock, options, futures)
-            strategy_name (str): The name of the strategy used
-
+            trade_signal: Dictionary containing trade parameters
+            bot_type: Type of bot executing the trade
+            strategy_name: Name of the strategy that generated the signal
+        
         Returns:
-            dict: The executed trade or None if the trade was not executed
+            Trade object if successful, None otherwise
         """
-        # Calculate confidence based on signal strength
-        signal_strength = trade_signal.get('confidence', 0.5)
-        confidence_level = self._map_signal_to_confidence(signal_strength)
-        
-        # Record cognitive thought about trade decision
-        if self.cognitive_system:
-            thought_id = self.cognitive_system.record_thought(
-                decision=f"Executing trade for {trade_signal.get('symbol', 'UNKNOWN')}",
-                reasoning=f"Signal strength: {signal_strength:.2f}, Entry: {trade_signal.get('entry_price')}, "
-                          f"Direction: {trade_signal.get('direction')}, Strategy: {strategy_name}",
-                decision_type=DecisionType.TRADE_ENTRY,
-                confidence=confidence_level,
-                market_context={
-                    'symbol': trade_signal.get('symbol'),
-                    'entry_price': trade_signal.get('entry_price'),
-                    'direction': trade_signal.get('direction'),
-                    'strategy': strategy_name,
-                    'bot_type': bot_type,
-                    'signal_strength': signal_strength
-                },
-                strategy_id=strategy_name,
-                tags=['trade_execution', bot_type, strategy_name or 'unknown']
-            )
-        
+        try:
+            # Record cognitive thought about trade decision
+            thought_id = None
+            confidence_level = None
+            if self.cognitive_system:
+                confidence_level = ConfidenceLevel.HIGH if trade_signal.get('confidence', 0.5) > 0.7 else ConfidenceLevel.MEDIUM
+                thought_id = self.cognitive_system.record_thought(
+                    decision=f"Executing trade for {trade_signal.get('symbol')}",
+                    reasoning=f"Strategy {strategy_name} generated signal with confidence {trade_signal.get('confidence', 'unknown')}",
+                    decision_type=DecisionType.TRADE_EXECUTION,
+                    confidence=confidence_level,
+                    market_context=trade_signal,
+                    trade_id=str(trade_signal.get('id', 'unknown')),
+                    tags=['trade_execution', strategy_name or 'unknown', trade_signal.get('symbol', 'unknown')]
+                )
+
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"Error in cognitive processing: {e}")
+            
+            if self.use_new_logging:
+                self.trading_logger.log_error(e, context={'trade_signal': trade_signal}, source="cognitive_system")
+
+        # Check risk management
         if not risk_guard.can_trade():
             if self.logger:
                 self.logger.log_event(
                     f"🚫 Trade blocked by RiskGovernor: {trade_signal['symbol']}"
                 )
+            
+            # Log risk block with new system
+            if self.use_new_logging:
+                error_data = ErrorLogData(
+                    error_id=f"risk_block_{int(datetime.datetime.now().timestamp())}",
+                    error_type="RiskManagementBlock",
+                    error_message=f"Trade blocked by RiskGovernor for {trade_signal.get('symbol')}",
+                    context={'trade_signal': trade_signal, 'risk_reason': 'risk_governor_block'}
+                )
+                self.trading_logger.firestore_logger.log_alert(error_data, severity="medium")
             
             # Record cognitive thought about blocked trade
             if self.cognitive_system:
@@ -207,7 +260,36 @@ class TradeManager:
             "confidence_level": confidence_level.value if self.cognitive_system else None
         }
 
-        # Log the trade
+        # Log the trade with new system
+        if self.use_new_logging:
+            try:
+                trade_log_data = TradeLogData(
+                    trade_id=trade.get('id', f"trade_{int(datetime.datetime.now().timestamp())}"),
+                    symbol=trade.get('symbol', 'UNKNOWN'),
+                    strategy=strategy_name or trade.get('strategy', 'unknown'),
+                    bot_type=bot_type,
+                    direction=trade.get('direction', 'unknown'),
+                    quantity=trade.get('quantity', 0),
+                    entry_price=trade.get('entry_price', 0.0),
+                    stop_loss=trade.get('stop_loss'),
+                    target=trade.get('target'),
+                    status="open",
+                    entry_time=datetime.datetime.now(),
+                    confidence_level=trade.get('confidence'),
+                    metadata={
+                        'mode': trade.get('mode'),
+                        'cognitive_thought_id': thought_id,
+                        'timestamp': trade.get('timestamp')
+                    }
+                )
+                
+                self.trading_logger.log_trade_entry(trade_log_data, urgent=True)
+                
+            except Exception as e:
+                if self.logger:
+                    self.logger.log_event(f"Error logging trade with new system: {e}")
+
+        # Log to Firestore (legacy)
         if self.firestore_client:
             try:
                 date_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -244,48 +326,42 @@ class TradeManager:
 
         return trade
 
-    def _map_signal_to_confidence(self, signal_strength):
-        """Map signal strength (0-1) to ConfidenceLevel enum"""
-        if signal_strength >= 0.8:
-            return ConfidenceLevel.VERY_HIGH
-        elif signal_strength >= 0.65:
-            return ConfidenceLevel.HIGH
-        elif signal_strength >= 0.4:
-            return ConfidenceLevel.MEDIUM
-        elif signal_strength >= 0.2:
-            return ConfidenceLevel.LOW
-        else:
-            return ConfidenceLevel.VERY_LOW
-
     def analyze_trade_outcome(self, trade):
         """Analyze trade outcome using cognitive system"""
-        if not self.cognitive_system or not trade:
+        if not self.cognitive_system:
             return
         
         try:
             # Determine outcome
-            if trade.get('status') == 'target_hit':
-                outcome = DecisionOutcome.SUCCESS
-            elif trade.get('status') == 'stop_loss_hit':
-                outcome = DecisionOutcome.FAILURE
-            elif trade.get('pnl', 0) > 0:
-                outcome = DecisionOutcome.PARTIAL_SUCCESS
+            pnl = trade.get('pnl', 0)
+            if pnl > 0:
+                outcome = self.cognitive_system.decision_analysis.TradeOutcome.PROFIT
+            elif pnl < 0:
+                outcome = self.cognitive_system.decision_analysis.TradeOutcome.LOSS
             else:
-                outcome = DecisionOutcome.FAILURE
+                outcome = self.cognitive_system.decision_analysis.TradeOutcome.BREAKEVEN
             
-            # Get initial confidence from trade
-            confidence_level = trade.get('confidence_level', 3)
-            initial_confidence = confidence_level / 5.0  # Convert to 0-1 scale
+            # Get initial confidence
+            initial_confidence = trade.get('confidence_level')
+            if isinstance(initial_confidence, str):
+                confidence_map = {
+                    'VERY_LOW': 0.1, 'LOW': 0.3, 'MEDIUM': 0.5, 
+                    'HIGH': 0.7, 'VERY_HIGH': 0.9
+                }
+                initial_confidence = confidence_map.get(initial_confidence, 0.5)
+            elif initial_confidence is None:
+                initial_confidence = 0.5
             
             # Calculate time to outcome
-            if trade.get('hold_duration'):
-                duration_str = trade['hold_duration']
-                if 'mins' in duration_str:
-                    time_to_outcome = float(duration_str.split()[0])
-                else:
-                    time_to_outcome = 0.0
-            else:
-                time_to_outcome = 0.0
+            entry_time = trade.get('entry_time')
+            exit_time = trade.get('exit_time')
+            time_to_outcome = 0
+            if entry_time and exit_time:
+                if isinstance(entry_time, str):
+                    entry_time = datetime.datetime.fromisoformat(entry_time)
+                if isinstance(exit_time, str):
+                    exit_time = datetime.datetime.fromisoformat(exit_time)
+                time_to_outcome = (exit_time - entry_time).total_seconds() / 60  # minutes
             
             # Analyze the decision
             analysis_id = self.cognitive_system.analyze_decision(
@@ -304,6 +380,39 @@ class TradeManager:
                 },
                 time_to_outcome=time_to_outcome
             )
+            
+            # Log trade outcome with new system
+            if self.use_new_logging:
+                try:
+                    trade_log_data = TradeLogData(
+                        trade_id=trade.get('id', f"trade_{int(datetime.datetime.now().timestamp())}"),
+                        symbol=trade.get('symbol', 'UNKNOWN'),
+                        strategy=trade.get('strategy', 'unknown'),
+                        bot_type=trade.get('bot_type', 'unknown'),
+                        direction=trade.get('direction', 'unknown'),
+                        quantity=trade.get('quantity', 0),
+                        entry_price=trade.get('entry_price', 0.0),
+                        stop_loss=trade.get('stop_loss'),
+                        target=trade.get('target'),
+                        exit_price=trade.get('exit_price'),
+                        status="closed",
+                        pnl=trade.get('pnl'),
+                        entry_time=datetime.datetime.fromisoformat(trade.get('entry_time')) if trade.get('entry_time') else None,
+                        exit_time=datetime.datetime.fromisoformat(trade.get('exit_time')) if trade.get('exit_time') else None,
+                        exit_reason=trade.get('exit_reason'),
+                        confidence_level=trade.get('confidence'),
+                        metadata={
+                            'analysis_id': analysis_id,
+                            'outcome': outcome.value if hasattr(outcome, 'value') else str(outcome),
+                            'time_to_outcome_minutes': time_to_outcome
+                        }
+                    )
+                    
+                    self.trading_logger.log_trade_exit(trade_log_data, trade.get('exit_reason', 'Unknown'))
+                    
+                except Exception as e:
+                    if self.logger:
+                        self.logger.log_event(f"Error logging trade outcome with new system: {e}")
             
             # Record reflection thought
             self.cognitive_system.record_thought(
@@ -327,6 +436,9 @@ class TradeManager:
         except Exception as e:
             if self.logger:
                 self.logger.log_event(f"Failed to analyze trade outcome: {e}")
+            
+            if self.use_new_logging:
+                self.trading_logger.log_error(e, context={'trade': trade}, source="trade_analysis")
 
 
 def execute_trade(trade, paper_mode=True):
