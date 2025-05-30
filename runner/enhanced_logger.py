@@ -13,8 +13,8 @@ from enum import Enum
 
 # Import the new optimized logging system
 try:
-    from runner.logging import TradingLogger, LogLevel, LogCategory, LogType
-    from runner.logging.log_types import TradeLogData, CognitiveLogData, ErrorLogData
+    from runner.enhanced_logging import TradingLogger, LogLevel, LogCategory, LogType
+    from runner.enhanced_logging.log_types import TradeLogData, CognitiveLogData, ErrorLogData
     NEW_LOGGING_AVAILABLE = True
 except ImportError:
     NEW_LOGGING_AVAILABLE = False

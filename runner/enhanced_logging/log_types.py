@@ -170,4 +170,39 @@ class ErrorLogData:
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
+        return self.__dict__
+
+
+@dataclass
+class SystemMetricsData:
+    """System performance metrics data"""
+    metric_id: str
+    metric_name: str
+    metric_value: float
+    metric_unit: str
+    component: str
+    timestamp: datetime.datetime
+    metadata: Optional[Dict[str, Any]] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary"""
+        result = self.__dict__.copy()
+        if isinstance(result.get('timestamp'), datetime.datetime):
+            result['timestamp'] = result['timestamp'].isoformat()
+        return result
+
+
+@dataclass 
+class PerformanceLogData:
+    """Performance metrics log data"""
+    metric_id: str
+    bot_type: str
+    metric_type: str
+    metric_value: float
+    benchmark: Optional[float] = None
+    period: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary"""
         return self.__dict__ 
