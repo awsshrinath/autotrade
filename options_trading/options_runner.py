@@ -119,8 +119,8 @@ def run_options_trading_bot():
         # Try to get market sentiment independently for better fallback
         try:
             from runner.market_monitor import MarketMonitor
-            from runner.kiteconnect_manager import KiteConnectManager
             
+            # Initialize Kite connection for fallback analysis
             kite_manager = KiteConnectManager(logger)
             kite_manager.set_access_token()
             kite = kite_manager.get_kite_client()
@@ -153,7 +153,12 @@ def run_options_trading_bot():
     wait_until_market_opens(logger)
 
     try:
-        kite = KiteConnectManager(logger).get_kite_client()
+        # Initialize Kite connection
+        kite_manager = KiteConnectManager(logger)
+        kite_manager.set_access_token()
+        kite = kite_manager.get_kite_client()
+        
+        # Load the strategy
         strategy = load_strategy(strategy_name, kite, logger)
 
         if not strategy:
