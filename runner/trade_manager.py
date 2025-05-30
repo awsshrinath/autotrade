@@ -15,19 +15,29 @@ except ImportError:
 
 # Legacy imports
 from runner.risk_governor import RiskGovernor
-from runner.cognitive.cognitive_system import CognitiveSystem, DecisionType, ConfidenceLevel, CognitiveState, StateTransitionTrigger
+from runner.cognitive_system import CognitiveSystem
+from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigger
+from runner.thought_journal import DecisionType, ConfidenceLevel
 
-# Initialize risk governor
-risk_guard = RiskGovernor()
+# Initialize risk governor with default values
+risk_guard = None  # Initialize later in TradeManager __init__
 
 
 class TradeManager:
-    def __init__(self, logger=None, kite=None, firestore_client=None, cognitive_system=None):
+    def __init__(self, logger=None, kite=None, firestore_client=None, cognitive_system=None, 
+                 max_daily_loss=5000, max_trades=10, cutoff_time="15:00"):
         self.logger = logger
         self.kite = kite
         self.firestore_client = firestore_client
         self.cognitive_system = cognitive_system
         self.open_positions = []
+        
+        # Initialize risk governor with proper parameters
+        self.risk_guard = RiskGovernor(
+            max_daily_loss=max_daily_loss,
+            max_trades=max_trades,
+            cutoff_time=cutoff_time
+        )
         
         # Initialize new optimized logger if available
         if NEW_LOGGING_AVAILABLE:
@@ -211,7 +221,7 @@ class TradeManager:
                 self.trading_logger.log_error(e, context={'trade_signal': trade_signal}, source="cognitive_system")
 
         # Check risk management
-        if not risk_guard.can_trade():
+        if not self.risk_guard.can_trade():
             if self.logger:
                 self.logger.log_event(
                     f"🚫 Trade blocked by RiskGovernor: {trade_signal['symbol']}"
@@ -219,26 +229,28 @@ class TradeManager:
             
             # Log risk block with new system
             if self.use_new_logging:
-                error_data = ErrorLogData(
-                    error_id=f"risk_block_{int(datetime.datetime.now().timestamp())}",
-                    error_type="RiskManagementBlock",
-                    error_message=f"Trade blocked by RiskGovernor for {trade_signal.get('symbol')}",
-                    context={'trade_signal': trade_signal, 'risk_reason': 'risk_governor_block'}
+                self.trading_logger.log_risk_management_event(
+                    event_type="trade_blocked",
+                    reason="risk_governor_limit",
+                    trade_signal=trade_signal
                 )
-                self.trading_logger.firestore_logger.log_alert(error_data, severity="medium")
             
-            # Record cognitive thought about blocked trade
+            # Record cognitive thought about risk prevention
             if self.cognitive_system:
                 self.cognitive_system.record_thought(
                     decision="Trade blocked by risk management",
-                    reasoning="RiskGovernor prevented trade execution due to risk limits",
-                    decision_type=DecisionType.RISK_ASSESSMENT,
-                    confidence=ConfidenceLevel.VERY_HIGH,
-                    market_context={
-                        'blocked_symbol': trade_signal.get('symbol'),
-                        'reason': 'risk_governor_block'
-                    },
-                    tags=['risk_management', 'trade_blocked']
+                    reasoning=f"RiskGovernor prevented trade for {trade_signal.get('symbol')} due to risk limits",
+                    decision_type=DecisionType.RISK_MANAGEMENT,
+                    confidence=ConfidenceLevel.HIGH,
+                    market_context=trade_signal,
+                    tags=['risk_blocked', 'trade_prevention']
+                )
+                
+                # Transition to risk_mitigation state
+                self.cognitive_system.transition_state(
+                    CognitiveState.RISK_MITIGATION,
+                    StateTransitionTrigger.RISK_BREACH,
+                    "Trade blocked by risk governor"
                 )
             
             return None
@@ -309,7 +321,7 @@ class TradeManager:
             )
 
         # Update the risk governor
-        risk_guard.update_trade(0)  # Initial placeholder for PnL
+        self.risk_guard.update_trade(0)  # Initial placeholder for PnL
 
         # Store trade details in cognitive memory
         if self.cognitive_system:
@@ -443,8 +455,9 @@ class TradeManager:
                 self.trading_logger.log_error(e, context={'trade': trade}, source="trade_analysis")
 
 
-def execute_trade(trade, paper_mode=True):
-    if not risk_guard.can_trade():
+def execute_trade(trade, paper_mode=True, risk_governor=None):
+    """Execute a trade with optional risk management"""
+    if risk_governor and not risk_governor.can_trade():
         print(f"🚫 Trade blocked by RiskGovernor: {trade['symbol']}")
         return
 
@@ -465,10 +478,11 @@ def execute_trade(trade, paper_mode=True):
         f"Qty: {trade['quantity']} | Entry: {trade['entry_price']} | SL: {trade['stop_loss']} | Target: {trade['target']}"
     )
 
-    risk_guard.update_trade(0)  # Initial placeholder for PnL
+    if risk_governor:
+        risk_governor.update_trade(0)  # Initial placeholder for PnL
 
 
-def simulate_exit(trade, candles):
+def simulate_exit(trade, candles, risk_governor=None):
     try:
         # ✅ Guard against incomplete trades
         required_keys = [
@@ -557,8 +571,9 @@ def simulate_exit(trade, candles):
         with open(log_path, "a") as f:
             f.write(json.dumps(trade) + "\n")
 
-        # ✅ Update RiskGovernor PnL
-        risk_guard.update_trade(trade["pnl"])
+        # ✅ Update RiskGovernor PnL if available
+        if risk_governor:
+            risk_governor.update_trade(trade["pnl"])
 
         print(
             f"[EXIT-{trade['mode'].upper()}] {trade['symbol']} - {status.upper()} at {exit_price} | PnL: {trade['pnl']} | Held: {trade['hold_duration']}"

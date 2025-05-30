@@ -3,7 +3,19 @@ from datetime import datetime
 
 import tiktoken
 
-from gpt_runner.rag.retriever import retrieve_similar_context
+# Try to import RAG functionality, fallback if not available
+try:
+    from gpt_runner.rag.retriever import retrieve_similar_context
+    RAG_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: RAG modules not available: {e}")
+    RAG_AVAILABLE = False
+    
+    def retrieve_similar_context(*args, **kwargs):
+        """Fallback function when RAG is not available"""
+        print("Warning: RAG not available - using empty context")
+        return []
+
 from mcp.context_builder import build_mcp_context
 from mcp.prompt_template import build_prompts
 from mcp.response_parser import parse_gpt_response

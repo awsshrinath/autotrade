@@ -168,7 +168,12 @@ def run_futures_trading_bot():
     wait_until_market_opens(logger)
 
     try:
-        kite = KiteConnectManager(logger).get_kite_client()
+        # Initialize Kite connection
+        kite_manager = KiteConnectManager(logger)
+        kite_manager.set_access_token()
+        kite = kite_manager.get_kite_client()
+        
+        # Load the strategy
         strategy = load_strategy(strategy_name, kite, logger)
 
         if not strategy:
