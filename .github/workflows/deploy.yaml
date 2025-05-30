@@ -95,7 +95,7 @@ jobs:
           docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
           docker push $IMAGE_PREFIX/futures-trader:latest
 
-          docker build -t $IMAGE_PREFIX/trading-dashboard:latest --build-arg RUNNER_SCRIPT=dashboard/app.py .
+          docker build -f dashboard/Dockerfile -t $IMAGE_PREFIX/trading-dashboard:latest .
           docker push $IMAGE_PREFIX/trading-dashboard:latest
 
 
