@@ -6,7 +6,32 @@ Supports both paper trading (simulated capital) and live trading (real balance)
 import asyncio
 import json
 import os
-from config.config_manager import get_trading_config
+import sys
+
+# Add project root to path for proper imports
+sys.path.insert(0, '/app' if os.path.exists('/app') else '.')
+
+# Try to import config_manager with fallback
+try:
+    from config.config_manager import get_trading_config
+except ImportError:
+    try:
+        # Fallback path
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+        from config.config_manager import get_trading_config
+    except ImportError:
+        # Create a fallback function
+        def get_trading_config():
+            class FallbackConfig:
+                paper_trade = True
+                default_capital = 100000
+                max_daily_loss_pct = 2.0
+                max_daily_loss = None
+                stock_position_limit = 0.1
+                option_position_limit = 0.05
+                future_position_limit = 0.15
+            return FallbackConfig()
+
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta

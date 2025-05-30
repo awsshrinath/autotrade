@@ -95,7 +95,20 @@ def main():
     for module, statement in dashboard_tests:
         test_import(module, statement, critical=False)
     
-    # Test 6: Main runner imports
+    # Test 6: Configuration system
+    print("\n⚙️ Configuration System:")
+    config_tests = [
+        ("config package", "import config"),
+        ("config_manager", "from config.config_manager import get_trading_config"),
+        ("runner config", "from runner.config import PAPER_TRADE"),
+        ("portfolio manager", "from runner.capital.portfolio_manager import PortfolioManager"),
+    ]
+    
+    for module, statement in config_tests:
+        if not test_import(module, statement, critical=True):
+            all_critical_passed = False
+    
+    # Test 7: Main runner imports
     print("\n🎯 Main Runner:")
     main_tests = [
         ("main_runner_combined", "from runner.main_runner_combined import main"),

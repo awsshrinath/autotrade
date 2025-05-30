@@ -3,18 +3,82 @@ Enhanced Configuration Module
 Now uses file-based configuration instead of environment variables
 """
 
-from config.config_manager import (
-    get_config,
-    get_trading_config,
-    get_paper_trade,
-    get_default_capital,
-    get_max_daily_loss,
-    get_position_limits,
-)
+import os
+import sys
+
+# Add project root to path for proper imports
+sys.path.insert(0, '/app' if os.path.exists('/app') else '.')
+
+# Try to import config_manager with fallback
+try:
+    from config.config_manager import (
+        get_config,
+        get_trading_config,
+        get_paper_trade,
+        get_default_capital,
+        get_max_daily_loss,
+        get_position_limits,
+    )
+    CONFIG_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Could not import config_manager: {e}")
+    CONFIG_AVAILABLE = False
+    
+    # Create fallback functions
+    class FallbackConfig:
+        paper_trade = True
+        default_capital = 100000
+        log_level = "INFO"
+        scalp_config = {
+            "min_price": 100,
+            "max_price": 120,
+            "sl_buffer": 30,
+            "target_buffer": 60,
+            "quantity": 75,
+        }
+        environment = "development"
+        max_daily_loss = 1000
+        max_daily_loss_pct = 2.0
+        stock_position_limit = 0.1
+        option_position_limit = 0.05
+        future_position_limit = 0.15
+        margin_utilization_limit = 0.8
+        max_volatility_threshold = 0.05
+        min_trade_value = 1000
+        api_rate_limit = 3
+        api_timeout = 10
+        monitoring_interval = 30
+        backup_frequency = 300
+        auto_square_off_time = "15:20"
+        alerts_email_enabled = False
+        alerts_slack_enabled = False
+        alerts_webhook_url = ""
+    
+    def get_config():
+        return FallbackConfig()
+    
+    def get_trading_config():
+        return FallbackConfig()
+    
+    def get_paper_trade():
+        return True
+    
+    def get_default_capital():
+        return 100000
+    
+    def get_max_daily_loss():
+        return 1000
+    
+    def get_position_limits():
+        return {"stock": 0.1, "option": 0.05, "future": 0.15}
 
 # Initialize configuration
-_config_manager = get_config()
-_trading_config = get_trading_config()
+if CONFIG_AVAILABLE:
+    _config_manager = get_config()
+    _trading_config = get_trading_config()
+else:
+    _config_manager = get_config()
+    _trading_config = get_trading_config()
 
 # Backward compatibility with old config.py interface
 PAPER_TRADE = _trading_config.paper_trade

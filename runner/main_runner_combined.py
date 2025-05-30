@@ -25,7 +25,20 @@ except ImportError as e:
 
 from runner.common_utils import create_daily_folders
 from runner.firestore_client import FirestoreClient
-from runner.gpt_self_improvement_monitor import run_gpt_reflection
+
+# Handle potential circular import with gpt_self_improvement_monitor
+try:
+    from runner.gpt_self_improvement_monitor import run_gpt_reflection
+    GPT_REFLECTION_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: GPT reflection not available due to import issue: {e}")
+    GPT_REFLECTION_AVAILABLE = False
+    
+    def run_gpt_reflection(*args, **kwargs):
+        """Fallback function when GPT reflection is not available"""
+        print("Warning: GPT reflection functionality not available")
+        return None
+
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
