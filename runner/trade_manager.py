@@ -1,12 +1,14 @@
 import datetime
 import json
 import os
+import time
 from typing import Dict, Any, Optional, List
+from dataclasses import asdict
 
 # Import new optimized logging system
 try:
-    from runner.logging import TradingLogger, LogLevel, LogCategory
-    from runner.logging.log_types import TradeLogData, ErrorLogData
+    from runner.enhanced_logging import TradingLogger, LogLevel, LogCategory
+    from runner.enhanced_logging.log_types import TradeLogData, ErrorLogData
     NEW_LOGGING_AVAILABLE = True
 except ImportError:
     NEW_LOGGING_AVAILABLE = False
