@@ -110,6 +110,65 @@ def get_realtime_stock_data(symbols):
     return data_list
 
 
+def wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger, max_wait_minutes=10):
+    """
+    Wait for the daily plan to be available, created by the main runner.
+    Returns the plan if found, None if timeout reached.
+    """
+    wait_interval = 30  # seconds
+    max_attempts = (max_wait_minutes * 60) // wait_interval
+    
+    for attempt in range(max_attempts):
+        daily_plan = firestore_client.fetch_daily_plan(today_date)
+        if daily_plan:
+            logger.log_event(f"[PLAN] Daily plan found after {attempt * wait_interval} seconds")
+            enhanced_logger.log_event(
+                "Daily plan retrieved successfully",
+                LogLevel.INFO,
+                LogCategory.STRATEGY,
+                data={
+                    'wait_time_seconds': attempt * wait_interval,
+                    'attempt_number': attempt + 1,
+                    'plan_found': True
+                },
+                bot_type="stock-trader",
+                source="plan_retrieval"
+            )
+            return daily_plan
+        
+        if attempt == 0:
+            logger.log_event(f"[WAIT] Daily plan not found, waiting for main runner to create it...")
+            enhanced_logger.log_event(
+                "Waiting for daily plan creation",
+                LogLevel.INFO,
+                LogCategory.STRATEGY,
+                data={
+                    'max_wait_minutes': max_wait_minutes,
+                    'wait_interval': wait_interval
+                },
+                bot_type="stock-trader",
+                source="plan_retrieval"
+            )
+        
+        logger.log_event(f"[WAIT] Plan not available yet, retrying in {wait_interval}s... (attempt {attempt + 1}/{max_attempts})")
+        time.sleep(wait_interval)
+    
+    logger.log_event(f"[TIMEOUT] Daily plan not found after {max_wait_minutes} minutes, using fallback")
+    enhanced_logger.log_event(
+        "Daily plan wait timeout, using fallback",
+        LogLevel.WARNING,
+        LogCategory.STRATEGY,
+        data={
+            'wait_time_minutes': max_wait_minutes,
+            'total_attempts': max_attempts,
+            'plan_found': False
+        },
+        bot_type="stock-trader",
+        source="plan_retrieval"
+    )
+    return None
+
+
 def run_stock_trading_bot():
     today_date = datetime.now().strftime("%Y-%m-%d")
     
@@ -144,21 +203,73 @@ def run_stock_trading_bot():
     # Initialize Firestore client to fetch daily plan
     firestore_client = FirestoreClient(logger)
 
-    # Fetch today's trading plan from Firestore
-    daily_plan = firestore_client.fetch_daily_plan(today_date)
+    # Wait for daily plan to be created by main runner (with timeout)
+    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger)
+    
     if not daily_plan:
         logger.log_event(
-            "[ERROR] No daily plan found in Firestore. Using default strategy."
+            "[FALLBACK] No daily plan found even after waiting. Using intelligent fallback strategy."
         )
         enhanced_logger.log_event(
-            "No daily plan found, using default strategy",
+            "No daily plan found, using intelligent fallback strategy",
             LogLevel.WARNING,
             LogCategory.STRATEGY,
-            data={'fallback_strategy': 'vwap'},
+            data={'fallback_strategy': 'vwap', 'reason': 'timeout_reached'},
             bot_type="stock-trader",
             source="strategy_selection"
         )
-        strategy_name = "vwap"  # Default fallback
+        
+        # Intelligent fallback: Use VWAP as it's most suitable for stock trading
+        strategy_name = "vwap"
+        
+        # Try to get market sentiment independently for better fallback
+        try:
+            from runner.market_monitor import MarketMonitor
+            from runner.kiteconnect_manager import KiteConnectManager
+            
+            kite_manager = KiteConnectManager(logger)
+            kite_manager.set_access_token()
+            kite = kite_manager.get_kite_client()
+            
+            market_monitor = MarketMonitor(logger)
+            sentiment_data = market_monitor.get_market_sentiment(kite)
+            
+            # Use market sentiment to choose better fallback
+            vix = sentiment_data.get("INDIA VIX", 15)
+            if vix > 20:
+                strategy_name = "range_reversal"  # High volatility
+                logger.log_event(f"[FALLBACK] High VIX ({vix}), using range_reversal strategy")
+            elif vix < 12:
+                strategy_name = "vwap"  # Low volatility
+                logger.log_event(f"[FALLBACK] Low VIX ({vix}), using vwap strategy")
+            else:
+                strategy_name = "vwap"  # Default
+                logger.log_event(f"[FALLBACK] Normal VIX ({vix}), using vwap strategy")
+                
+            enhanced_logger.log_event(
+                "Intelligent fallback strategy selected",
+                LogLevel.INFO,
+                LogCategory.STRATEGY,
+                data={
+                    'selected_strategy': strategy_name,
+                    'vix_value': vix,
+                    'market_sentiment': sentiment_data
+                },
+                strategy=strategy_name,
+                bot_type="stock-trader",
+                source="fallback_strategy_selection"
+            )
+            
+        except Exception as e:
+            logger.log_event(f"[FALLBACK] Could not get market sentiment for fallback: {e}")
+            enhanced_logger.log_event(
+                "Fallback market sentiment fetch failed",
+                LogLevel.WARNING,
+                LogCategory.ERROR,
+                data={'error': str(e), 'fallback_strategy': 'vwap'},
+                bot_type="stock-trader",
+                source="fallback_error"
+            )
     else:
         # Extract the stock strategy from the plan
         strategy_tuple = daily_plan.get("stocks", "vwap")
