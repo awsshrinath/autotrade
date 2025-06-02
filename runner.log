@@ -11,3 +11,1184 @@
 2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: compliance
 2025-06-02 11:12:44,044 - INFO - Configuration loaded from: base + production + local
 2025-06-02 11:12:44,044 - INFO - ConfigManager initialized - Environment: production, Paper Trade: False
+2025-06-02 13:15:08,515 - INFO - Loading faiss with AVX2 support.
+2025-06-02 13:15:08,550 - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-02 13:15:08,562 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-02 13:15:18,716 - WARNING - Unknown configuration key: technical_indicators
+2025-06-02 13:15:18,716 - WARNING - Unknown configuration key: options
+2025-06-02 13:15:18,717 - WARNING - Unknown configuration key: portfolio
+2025-06-02 13:15:18,718 - WARNING - Unknown configuration key: production
+2025-06-02 13:15:18,719 - WARNING - Unknown configuration key: performance
+2025-06-02 13:15:18,720 - WARNING - Unknown configuration key: circuit_breakers
+2025-06-02 13:15:18,721 - WARNING - Unknown configuration key: backup
+2025-06-02 13:15:18,723 - WARNING - Unknown configuration key: compliance
+2025-06-02 13:15:18,726 - INFO - Configuration loaded from: base + production + local
+2025-06-02 13:15:18,728 - INFO - ConfigManager initialized - Environment: production, Paper Trade: False
+2025-06-02 13:15:35,447 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:35,823 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:36,070 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:36,314 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:36,719 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:37,149 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:37,495 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:37,714 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:38,197 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:38,906 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:39,128 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:40,146 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:41,883 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:42,793 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:45,125 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:48,891 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:49,600 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:54,987 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:55,334 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:15:57,883 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:04,985 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:06,999 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:29,481 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C7609E0>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:37,915 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C792E40>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:38,076 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933C792E40>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:41,225 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:41,951 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:44,305 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:50,079 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:16:51,011 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:09,956 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:12,867 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D804230>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:13,615 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:14,002 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:14,253 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:14,568 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:14,937 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:15,164 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:15,709 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:15,988 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:16,673 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:17,444 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:18,611 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:18,959 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:20,862 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:22,856 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:25,445 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:26,783 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:31,723 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:36,066 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:37,543 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:39,168 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:43,437 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:17:44,405 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:18:03,714 - ERROR - AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x000002933D832360>" raised exception!
+Traceback (most recent call last):
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\grpc\_plugin_wrapping.py", line 105, in __call__
+    self._metadata_plugin(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 95, in __call__
+    callback(self._get_authorization_headers(context), None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\transport\grpc.py", line 81, in _get_authorization_headers
+    self._credentials.before_request(
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 239, in before_request
+    self._blocking_refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+    self.refresh(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 236, in refresh
+    self._update_token(request)
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 268, in _update_token
+    self.token, self.expiry = _make_iam_token_request(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MY PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\impersonated_credentials.py", line 83, in _make_iam_token_request
+    raise exceptions.RefreshError(_REFRESH_ERROR, response_body)
+google.auth.exceptions.RefreshError: ('Unable to acquire impersonated credentials', '{\n  "error": {\n    "code": 403,\n    "message": "Permission \'iam.serviceAccounts.getAccessToken\' denied on resource (or it may not exist).",\n    "status": "PERMISSION_DENIED",\n    "details": [\n      {\n        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n        "reason": "IAM_PERMISSION_DENIED",\n        "domain": "iam.googleapis.com",\n        "metadata": {\n          "permission": "iam.serviceAccounts.getAccessToken"\n        }\n      }\n    ]\n  }\n}\n')
+2025-06-02 13:27:12,911 - INFO - Loading faiss with AVX2 support.
+2025-06-02 13:27:12,939 - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-02 13:27:12,948 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-02 13:27:18,397 - WARNING - Unknown configuration key: technical_indicators
+2025-06-02 13:27:18,398 - WARNING - Unknown configuration key: options
+2025-06-02 13:27:18,399 - WARNING - Unknown configuration key: portfolio
+2025-06-02 13:27:18,403 - WARNING - Unknown configuration key: production
+2025-06-02 13:27:18,404 - WARNING - Unknown configuration key: performance
+2025-06-02 13:27:18,405 - WARNING - Unknown configuration key: circuit_breakers
+2025-06-02 13:27:18,406 - WARNING - Unknown configuration key: backup
+2025-06-02 13:27:18,407 - WARNING - Unknown configuration key: compliance
+2025-06-02 13:27:18,408 - INFO - Configuration loaded from: base + production + local
+2025-06-02 13:27:18,409 - INFO - ConfigManager initialized - Environment: production, Paper Trade: False
