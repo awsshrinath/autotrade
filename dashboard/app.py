@@ -14,23 +14,23 @@ import json
 from typing import Dict, List, Any, Optional
 
 # Dashboard components
-from .components.overview import OverviewPage
-from .components.live_trades import LiveTradesPage
-from .components.pnl_analysis import PnLAnalysisPage
-from .components.system_health import SystemHealthPage
-from .components.cognitive_insights import CognitiveInsightsPage
-from .components.risk_monitor import RiskMonitorPage
-from .components.strategy_performance import StrategyPerformancePage
+from dashboard.components.overview import OverviewPage
+from dashboard.components.live_trades import LiveTradesPage
+from dashboard.components.pnl_analysis import PnLAnalysisPage
+from dashboard.components.system_health import SystemHealthPage
+from dashboard.components.cognitive_insights import CognitiveInsightsPage
+from dashboard.components.risk_monitor import RiskMonitorPage
+from dashboard.components.strategy_performance import StrategyPerformancePage
 
 # Data providers
-from .data.trade_data_provider import TradeDataProvider
-from .data.system_data_provider import SystemDataProvider
-from .data.cognitive_data_provider import CognitiveDataProvider
+from dashboard.data.trade_data_provider import TradeDataProvider
+from dashboard.data.system_data_provider import SystemDataProvider
+from dashboard.data.cognitive_data_provider import CognitiveDataProvider
 
 # Utils
-from .utils.auth import authenticate_user
-from .utils.config import DashboardConfig
-from .utils.notifications import NotificationManager
+from dashboard.utils.auth import authenticate_user
+from dashboard.utils.config import DashboardConfig
+from dashboard.utils.notifications import NotificationManager
 
 
 class TradingDashboard:
