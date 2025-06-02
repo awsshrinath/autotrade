@@ -18,3 +18,8 @@ exported_*_config.*
 # Temporary files
 *.tmp
 *.temp
+
+# Service account keys (sensitive credentials)
+*-sa-key.json
+gcp-service-account-key.json
+service-account-*.json

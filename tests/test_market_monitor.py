@@ -1,4 +1,5 @@
-from runner.market_monitor import MarketMonitor
+from runner.market_data import MarketDataFetcher, TechnicalIndicators
+from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 
 
 class MockLogger:

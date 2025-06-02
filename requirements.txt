@@ -29,3 +29,8 @@ aiohttp>=3.8.0
 
 # 📋 Configuration Management
 PyYAML>=6.0
+
+# 🚀 Enhanced Dependencies for Modular Market Data & RAG System
+transformers>=4.21.0
+safetensors>=0.3.0
+tokenizers>=0.13.0

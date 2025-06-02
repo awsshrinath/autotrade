@@ -115,6 +115,9 @@ class EnhancedLogger:
         # Use new optimized logging system if available
         if NEW_LOGGING_AVAILABLE:
             self.trading_logger = TradingLogger(
+            # Ensure gcs_buffer exists for safe shutdown
+            if not hasattr(self.trading_logger, 'gcs_buffer'):
+                self.trading_logger.gcs_buffer = []
                 session_id=self.session_id,
                 bot_type=self.bot_type,
                 project_id=self.project_id
