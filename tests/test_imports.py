@@ -30,7 +30,8 @@ def test_imports():
     
     try:
         # Test 3: MarketMonitor with get_sentiment method
-        from runner.market_monitor import MarketMonitor
+        from runner.market_data import MarketDataFetcher, TechnicalIndicators
+        from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
         monitor = MarketMonitor()
         # Check if get_sentiment method exists
         if hasattr(monitor, 'get_sentiment'):

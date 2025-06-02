@@ -98,6 +98,106 @@ jobs:
           docker build -f dashboard/Dockerfile -t $IMAGE_PREFIX/trading-dashboard:latest .
           docker push $IMAGE_PREFIX/trading-dashboard:latest
 
+  setup-gcp-service-account:
+    name: 🔐 Setup GCP Service Account & Workload Identity
+    if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔐 Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: 🔧 Setup GCP Service Account
+        run: |
+          echo "🔐 Setting up GCP Service Account: gpt-runner-sa"
+          echo "=============================================="
+          
+          PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}"
+          SA_NAME="gpt-runner-sa"
+          SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
+          
+          # Check if service account exists
+          if gcloud iam service-accounts describe $SA_EMAIL --project=$PROJECT_ID &>/dev/null; then
+            echo "✅ Service account $SA_EMAIL already exists"
+          else
+            echo "🔨 Creating service account: $SA_EMAIL"
+            gcloud iam service-accounts create $SA_NAME \
+              --display-name="GPT Runner Service Account" \
+              --description="Service account for GPT trading system" \
+              --project=$PROJECT_ID
+            echo "✅ Service account created successfully"
+          fi
+          
+          echo "🔑 Configuring IAM roles for service account..."
+          
+          # Define required roles
+          ROLES=(
+            "roles/secretmanager.secretAccessor"
+            "roles/storage.admin"
+            "roles/datastore.user"
+            "roles/container.developer"
+            "roles/logging.logWriter"
+            "roles/monitoring.metricWriter"
+          )
+          
+          # Grant each role
+          for role in "${ROLES[@]}"; do
+            echo "🔧 Granting role: $role"
+            gcloud projects add-iam-policy-binding $PROJECT_ID \
+              --member="serviceAccount:$SA_EMAIL" \
+              --role="$role" \
+              --quiet || echo "⚠️ Role $role may already be assigned"
+          done
+          
+          echo "✅ IAM roles configured successfully"
+
+      - name: 🔗 Setup Workload Identity Binding
+        run: |
+          echo "🔗 Setting up Workload Identity binding..."
+          echo "========================================"
+          
+          PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}"
+          SA_EMAIL="gpt-runner-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+          K8S_SA="serviceAccount:${PROJECT_ID}.svc.id.goog[gpt/gpt-runner-sa]"
+          
+          echo "🔧 Binding Kubernetes SA to GCP SA..."
+          gcloud iam service-accounts add-iam-policy-binding \
+            $SA_EMAIL \
+            --role roles/iam.workloadIdentityUser \
+            --member "$K8S_SA" \
+            --project=$PROJECT_ID \
+            --quiet || echo "⚠️ Workload Identity binding may already exist"
+          
+          echo "✅ Workload Identity binding configured"
+
+      - name: 🔑 Create Service Account Key (for fallback)
+        run: |
+          echo "🔑 Creating service account key for fallback authentication..."
+          echo "=========================================================="
+          
+          PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}"
+          SA_EMAIL="gpt-runner-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+          
+          # Create a temporary key file
+          gcloud iam service-accounts keys create /tmp/gpt-runner-sa-key.json \
+            --iam-account=$SA_EMAIL \
+            --project=$PROJECT_ID
+          
+          echo "✅ Service account key created at /tmp/gpt-runner-sa-key.json"
+          
+          # Store the key content as a secret for later use in K8s
+          echo "📦 Preparing key for Kubernetes secret..."
+          KEY_CONTENT=$(base64 -w 0 /tmp/gpt-runner-sa-key.json)
+          echo "service_account_key_b64=$KEY_CONTENT" >> $GITHUB_OUTPUT
+          
+          # Clean up the file
+          rm -f /tmp/gpt-runner-sa-key.json
+          echo "🧹 Temporary key file cleaned up"
 
   setup-gcs-buckets:
     name: 🪣 Setup GCS Buckets & Verify Firestore
@@ -379,7 +479,7 @@ jobs:
     name: 🚀 Deploy to GKE
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
-    needs: [test-and-build, setup-gcs-buckets]  # Wait for both images and buckets
+    needs: [test-and-build, setup-gcs-buckets, setup-gcp-service-account]  # Wait for all prerequisites
 
     steps:
       - name: 📥 Checkout repository
@@ -444,35 +544,65 @@ jobs:
           # Wait for namespace to be ready
           kubectl wait --for=condition=Ready namespace/gpt --timeout=60s || true
 
-      - name: 📦 Apply Kubernetes Manifests
+      - name: 🔐 Apply Service Account and RBAC First
         if: steps.check_cluster.outputs.exists == 'true'
         run: |
-          echo "Applying Kubernetes manifests..."
-          kubectl apply -f deployments/
+          echo "🔐 Creating Kubernetes service account and RBAC..."
+          kubectl apply -f deployments/service-account.yaml
           
-          echo "Waiting for main-runner deployment to be ready..."
+          echo "⏳ Waiting for service account to be ready..."
+          kubectl wait --for=condition=Ready serviceaccount/gpt-runner-sa -n gpt --timeout=60s || true
+          
+          echo "✅ Service account and RBAC configured"
+
+      - name: 📦 Apply Remaining Kubernetes Manifests
+        if: steps.check_cluster.outputs.exists == 'true'
+        run: |
+          echo "📦 Applying remaining Kubernetes manifests..."
+          
+          # Apply all manifests except service-account.yaml (already applied)
+          kubectl apply -f deployments/main.yaml
+          kubectl apply -f deployments/stock-trader.yaml
+          kubectl apply -f deployments/options-trader.yaml
+          kubectl apply -f deployments/futures-trader.yaml
+          kubectl apply -f deployments/dashboard.yaml
+          
+          echo "⏳ Waiting for main-runner deployment to be ready..."
           kubectl rollout status deployment main-runner -n gpt --timeout=300s
 
-      - name: 🔄 Restart Bot Deployments
+      - name: 🔄 Restart All Deployments (force pod recreation)
         if: steps.check_cluster.outputs.exists == 'true'
         run: |
-          echo "Restarting deployments..."
+          echo "🔄 Restarting all deployments to ensure latest images..."
           kubectl rollout restart deployment stock-trader -n gpt || true
           kubectl rollout restart deployment options-trader -n gpt || true
           kubectl rollout restart deployment futures-trader -n gpt || true
           kubectl rollout restart deployment main-runner -n gpt || true
-          kubectl rollout restart deploymenttrading-dashboard -n gpt || true
+          kubectl rollout restart deployment trading-dashboard -n gpt || true
           
-          echo "Waiting for deployments to be ready..."
+          echo "⏳ Waiting for all deployments to be ready..."
           kubectl rollout status deployment stock-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment options-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment futures-trader -n gpt --timeout=300s || true
           kubectl rollout status deployment main-runner -n gpt --timeout=300s || true
-          kubectl rollout restart deploymenttrading-dashboard -n gpt || true
+          kubectl rollout status deployment trading-dashboard -n gpt --timeout=300s || true
 
-      - name: 🔎 Verify Pods
+      - name: 🔎 Verify Final Deployment Status
         if: steps.check_cluster.outputs.exists == 'true'
         run: |
-          echo "Final pod status:"
-          kubectl get pods -n gpt
-          kubectl get deployments -n gpt
+          echo "🔍 Final deployment verification..."
+          echo "=================================="
+          
+          echo "📊 Deployment Status:"
+          kubectl get deployments -n gpt -o wide
+          
+          echo ""
+          echo "📊 Pod Status:"
+          kubectl get pods -n gpt -o wide
+          
+          echo ""
+          echo "🔐 Service Account Status:"
+          kubectl get serviceaccount gpt-runner-sa -n gpt -o yaml
+          
+          echo ""
+          echo "✅ Deployment completed successfully!"

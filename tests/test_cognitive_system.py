@@ -235,15 +235,15 @@ def test_state_machine_mock():
         # Create state machine with mocked client
         state_machine = CognitiveStateMachine(mock_gcp_client, logger)
         
-        # Test state transition
+        # Test valid state transition (INITIALIZING -> OBSERVING is allowed)
         success = state_machine.transition_to(
-            CognitiveState.ANALYZING,
+            CognitiveState.OBSERVING,
             StateTransitionTrigger.SIGNAL_DETECTED,
             "Test transition"
         )
         
         assert success, "State transition should succeed"
-        assert state_machine.get_current_state() == CognitiveState.ANALYZING
+        assert state_machine.get_current_state() == CognitiveState.OBSERVING
         print("✅ State machine mock test successful")
         
         

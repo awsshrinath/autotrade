@@ -3,6 +3,7 @@
 # Manages OBSERVING, ANALYZING, EXECUTING states with automatic persistence across cluster recreations
 
 import datetime
+from datetime import timezone
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -83,7 +84,7 @@ class CognitiveStateMachine:
         
         # Current state tracking
         self.current_state: CognitiveState = CognitiveState.INITIALIZING
-        self.state_entry_time: datetime.datetime = datetime.datetime.utcnow()
+        self.state_entry_time: datetime.datetime = datetime.datetime.now(timezone.utc)
         self.previous_state: Optional[CognitiveState] = None
         self.state_context: Dict[str, Any] = {}
         
@@ -192,7 +193,7 @@ class CognitiveStateMachine:
                 self.logger.info(f"Restored cognitive state: {self.current_state.value}")
                 
                 # Check if state has been running too long (potential crash recovery)
-                current_duration = (datetime.datetime.utcnow() - self.state_entry_time).total_seconds() / 60
+                current_duration = (datetime.datetime.now(timezone.utc) - self.state_entry_time).total_seconds() / 60
                 max_duration = self.state_configs[self.current_state].max_duration_minutes
                 
                 if max_duration and current_duration > max_duration * 2:  # Double the max duration
@@ -205,7 +206,7 @@ class CognitiveStateMachine:
         except Exception as e:
             self.logger.error(f"Failed to load persistent state: {e}")
             self.current_state = CognitiveState.INITIALIZING
-            self.state_entry_time = datetime.datetime.utcnow()
+            self.state_entry_time = datetime.datetime.now(timezone.utc)
     
     def _persist_current_state(self):
         """Persist current state to Firestore"""
@@ -215,7 +216,7 @@ class CognitiveStateMachine:
                         'state_entry_time': self.state_entry_time,
                         'previous_state': self.previous_state.value if self.previous_state else None,
                     'state_context': self.state_context,
-                'last_updated': datetime.datetime.utcnow()
+                'last_updated': datetime.datetime.now(timezone.utc)
             }
             
             success = self.gcp_client.store_memory_item(
@@ -242,7 +243,7 @@ class CognitiveStateMachine:
             # Check state duration
             config = self.state_configs[self.current_state]
             if config.max_duration_minutes:
-                duration_minutes = (datetime.datetime.utcnow() - self.state_entry_time).total_seconds() / 60
+                duration_minutes = (datetime.datetime.now(timezone.utc) - self.state_entry_time).total_seconds() / 60
                 
                 if duration_minutes > config.max_duration_minutes:
                     self.logger.warning(f"State timeout detected for {self.current_state.value}")
@@ -268,7 +269,7 @@ class CognitiveStateMachine:
             return False
         
         # Calculate duration in current state
-        current_time = datetime.datetime.utcnow()
+        current_time = datetime.datetime.now(timezone.utc)
         duration_seconds = (current_time - self.state_entry_time).total_seconds()
         
         # Execute exit actions for current state
@@ -318,7 +319,7 @@ class CognitiveStateMachine:
     
     def _force_state_transition(self, new_state: CognitiveState, trigger: StateTransitionTrigger):
         """Force state transition without validation (for error recovery)"""
-        current_time = datetime.datetime.utcnow()
+        current_time = datetime.datetime.now(timezone.utc)
         duration_seconds = (current_time - self.state_entry_time).total_seconds()
         
         transition = StateTransition(
@@ -406,7 +407,7 @@ class CognitiveStateMachine:
     
     def get_state_duration(self) -> float:
         """Get duration in current state (minutes)"""
-        return (datetime.datetime.utcnow() - self.state_entry_time).total_seconds() / 60
+        return (datetime.datetime.now(timezone.utc) - self.state_entry_time).total_seconds() / 60
     
     def get_state_context(self) -> Dict[str, Any]:
         """Get current state context"""
@@ -424,7 +425,7 @@ class CognitiveStateMachine:
     def get_state_history(self, hours: int = 24) -> List[StateTransition]:
         """Get state transition history from Firestore"""
         try:
-            cutoff_time = datetime.datetime.utcnow() - datetime.timedelta(hours=hours)
+            cutoff_time = datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=hours)
             
             transitions_data = self.gcp_client.query_memory_collection(
                         'state_transitions',
@@ -491,7 +492,7 @@ class CognitiveStateMachine:
         self.logger.warning("Performing emergency state machine reset")
         
         self.current_state = CognitiveState.INITIALIZING
-        self.state_entry_time = datetime.datetime.utcnow()
+        self.state_entry_time = datetime.datetime.now(timezone.utc)
         self.previous_state = None
         self.state_context = {}
         
@@ -499,11 +500,11 @@ class CognitiveStateMachine:
         
         # Record emergency reset
         emergency_transition = StateTransition(
-                    id=f"emergency_reset_{int(datetime.datetime.utcnow().timestamp())}",
+                    id=f"emergency_reset_{int(datetime.datetime.now(timezone.utc).timestamp())}",
                     from_state="unknown",
                     to_state=CognitiveState.INITIALIZING.value,
                     trigger=StateTransitionTrigger.ERROR_DETECTED.value,
-                    timestamp=datetime.datetime.utcnow(),
+                    timestamp=datetime.datetime.now(timezone.utc),
                     duration_seconds=0,
                     market_context={},
                     reason="Emergency state machine reset",
@@ -537,7 +538,7 @@ class CognitiveStateMachine:
                 health['duration_valid'] = True
             
             # Test persistence
-            test_data = {'test': True, 'timestamp': datetime.datetime.utcnow()}
+            test_data = {'test': True, 'timestamp': datetime.datetime.now(timezone.utc)}
             success = self.gcp_client.store_memory_item('cognitive_state', 'health_test', test_data)
             if success:
                 self.gcp_client.delete_memory_item('cognitive_state', 'health_test')

@@ -5,7 +5,7 @@ import os
 import datetime
 import time
 
-from runner.market_monitor import MarketMonitor
+from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 from runner.strategy_selector import StrategySelector
 from runner.trade_manager import TradeManager
 from runner.logger import Logger
@@ -15,7 +15,7 @@ from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
 from runner.utils import create_daily_folders
 from runner.openai_manager import OpenAIManager
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.market_data_fetcher import MarketDataFetcher
+from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.firestore_client import FirestoreClient
 
 

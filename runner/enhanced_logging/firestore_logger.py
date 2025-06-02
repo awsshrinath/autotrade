@@ -17,6 +17,7 @@ Cost optimization:
 """
 
 import datetime
+from datetime import timezone
 import time
 import uuid
 from typing import Dict, Any, List, Optional
@@ -110,7 +111,7 @@ class FirestoreLogger:
         doc_data = {
             **trade_data.to_dict(),
             'last_updated': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=7),  # 1 week TTL
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=7),  # 1 week TTL
             'urgent': urgent
         }
         
@@ -128,7 +129,7 @@ class FirestoreLogger:
             **position_data,
             'position_id': position_id,
             'last_updated': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=7)
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=7)
         }
         
         self._add_to_batch(FirestoreCollections.LIVE_POSITIONS, position_id, doc_data)
@@ -148,7 +149,7 @@ class FirestoreLogger:
             'alert_id': alert_id,
             'severity': severity,
             'timestamp': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=7),
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=7),
             'acknowledged': False,
             'resolved': False
         }
@@ -169,7 +170,7 @@ class FirestoreLogger:
             'decision_id': decision_id,
             'bot_type': bot_type,
             'timestamp': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=14)  # 2 weeks for cognitive data
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=14)  # 2 weeks for cognitive data
         }
         
         # Store in live collection for real-time access
@@ -189,7 +190,7 @@ class FirestoreLogger:
             **status_data,
             'bot_type': bot_type,
             'last_heartbeat': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # 1 hour TTL for status
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(hours=1)  # 1 hour TTL for status
         }
         
         doc_ref = self.db.collection(FirestoreCollections.LIVE_SYSTEM_STATUS).document(bot_type)
@@ -204,7 +205,7 @@ class FirestoreLogger:
             'bot_type': bot_type,
             'date': self.today,
             'last_updated': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=30)  # 30 days retention
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=30)  # 30 days retention
         }
         
         doc_ref = self.db.collection(FirestoreCollections.DAILY_SUMMARIES).document(summary_id)
@@ -219,7 +220,7 @@ class FirestoreLogger:
             'date': self.today,
             'reflection': reflection_text,
             'timestamp': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=30)
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=30)
         }
         
         doc_ref = self.db.collection(FirestoreCollections.DAILY_REFLECTIONS).document(reflection_id)
@@ -235,7 +236,7 @@ class FirestoreLogger:
             'bot_type': bot_type,
             'date': self.today,
             'timestamp': firestore.SERVER_TIMESTAMP,
-            'ttl': datetime.datetime.utcnow() + datetime.timedelta(days=30)
+            'ttl': datetime.datetime.now(timezone.utc) + datetime.timedelta(days=30)
         }
         
         self._add_to_batch(FirestoreCollections.DASHBOARD_METRICS, metric_id, doc_data)
@@ -303,7 +304,7 @@ class FirestoreLogger:
             FirestoreCollections.DASHBOARD_METRICS
         ]
         
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(timezone.utc)
         
         for collection_name in collections_to_clean:
             try:

@@ -42,7 +42,8 @@ except ImportError as e:
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
-from runner.market_monitor import MarketMonitor
+from runner.market_data import MarketDataFetcher, TechnicalIndicators
+from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 from runner.openai_manager import OpenAIManager
 from runner.strategy_selector import StrategySelector
 from runner.cognitive_system import create_cognitive_system, CognitiveSystem

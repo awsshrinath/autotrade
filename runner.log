@@ -1,0 +1,13 @@
+2025-06-02 11:12:04,438 - INFO - Loading faiss with AVX2 support.
+2025-06-02 11:12:05,046 - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-02 11:12:05,100 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-02 11:12:44,043 - WARNING - Unknown configuration key: technical_indicators
+2025-06-02 11:12:44,043 - WARNING - Unknown configuration key: options
+2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: portfolio
+2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: production
+2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: performance
+2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: circuit_breakers
+2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: backup
+2025-06-02 11:12:44,044 - WARNING - Unknown configuration key: compliance
+2025-06-02 11:12:44,044 - INFO - Configuration loaded from: base + production + local
+2025-06-02 11:12:44,044 - INFO - ConfigManager initialized - Environment: production, Paper Trade: False

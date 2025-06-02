@@ -455,9 +455,10 @@ class TradingLogger:
     def __del__(self):
         """Cleanup on destruction"""
         try:
-            self.shutdown()
-        except:
-            pass
+            if hasattr(self, 'gcs_buffer'):
+                self.shutdown()
+        except Exception:
+            pass  # Ignore errors during shutdown
 
 
 # Backward compatibility functions for existing code
