@@ -61,6 +61,22 @@ class LoggerAdapter:
         else:
             print(f"INFO: {message}")
     
+    def debug(self, message):
+        if hasattr(self.logger, 'debug'):
+            self.logger.debug(message)
+        elif hasattr(self.logger, 'log_event'):
+            self.logger.log_event(f"🔍 [DEBUG] {message}")
+        else:
+            print(f"DEBUG: {message}")
+    
+    def critical(self, message):
+        if hasattr(self.logger, 'critical'):
+            self.logger.critical(message)
+        elif hasattr(self.logger, 'log_event'):
+            self.logger.log_event(f"🚨 [CRITICAL] {message}")
+        else:
+            print(f"CRITICAL: {message}")
+    
     def log_event(self, message):
         if hasattr(self.logger, 'log_event'):
             self.logger.log_event(message)
@@ -91,9 +107,9 @@ class EnhancedCognitiveSystem:
             
         try:
             # Try to create the real cognitive system
+            # CognitiveSystem only accepts 'config' and 'logger' parameters
             self.cognitive_system = CognitiveSystem(
-                logger=self.logger, 
-                enhanced_logger=self.enhanced_logger
+                logger=self.logger  # Remove the enhanced_logger parameter that doesn't exist
             )
             self.available = True
             self.logger.info("Cognitive system initialized successfully")

@@ -482,4 +482,35 @@ class Logger:
         
         # Also print to console for backward compatibility
         timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp} {event_text}") 
+        print(f"{timestamp} {event_text}")
+    
+    # Add standard logging interface methods for compatibility
+    def error(self, message: str):
+        """Standard logging error method"""
+        self.trading_logger.log_system_event(f"❌ [ERROR] {message}")
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} ERROR: {message}")
+    
+    def warning(self, message: str):
+        """Standard logging warning method"""
+        self.trading_logger.log_system_event(f"⚠️ [WARNING] {message}")
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} WARNING: {message}")
+    
+    def info(self, message: str):
+        """Standard logging info method"""
+        self.trading_logger.log_system_event(f"ℹ️ [INFO] {message}")
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} INFO: {message}")
+    
+    def debug(self, message: str):
+        """Standard logging debug method"""
+        self.trading_logger.log_system_event(f"🔍 [DEBUG] {message}")
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} DEBUG: {message}")
+    
+    def critical(self, message: str):
+        """Standard logging critical method"""
+        self.trading_logger.log_system_event(f"🚨 [CRITICAL] {message}")
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} CRITICAL: {message}") 
