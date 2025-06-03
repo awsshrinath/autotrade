@@ -26,6 +26,8 @@ spec:
               cpu: "500m"
               memory: "512Mi"
           env:
+            - name: PAPER_TRADE
+              value: "true"
             - name: RUNNER_SCRIPT
               value: "runner/main_runner_combined.py"
             - name: GCP_PROJECT_ID

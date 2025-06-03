@@ -13,7 +13,7 @@ from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
-from runner.trade_manager import simulate_exit
+from runner.trade_manager import simulate_exit, execute_trade
 from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 
@@ -191,9 +191,15 @@ def run_futures_trading_bot():
                     trade_signal = strategy.analyze()
                     if trade_signal:
                         logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
-                        # Trade execution call here
-                        # For production, uncomment:
-                        # execute_trade(trade_signal, kite, logger)
+                        # Execute trade in both paper and live mode
+                        try:
+                            result = execute_trade(trade_signal, paper_mode=PAPER_TRADE)
+                            if result:
+                                logger.log_event(f"[SUCCESS] Futures trade executed successfully: {result}")
+                            else:
+                                logger.log_event(f"[FAILED] Futures trade execution failed")
+                        except Exception as trade_error:
+                            logger.log_event(f"[ERROR] Futures trade execution exception: {trade_error}")
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
                 else:

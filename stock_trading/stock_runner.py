@@ -14,7 +14,7 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
-from runner.trade_manager import simulate_exit
+from runner.trade_manager import simulate_exit, execute_trade
 from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 
@@ -346,9 +346,56 @@ def run_stock_trading_bot():
                             bot_type="stock-trader",
                             source="strategy_analysis"
                         )
-                        # Trade execution call here
-                        # For production, uncomment:
-                        # execute_trade(trade_signal, kite, logger)
+                        # Execute trade in both paper and live mode
+                        try:
+                            result = execute_trade(trade_signal, paper_mode=PAPER_TRADE)
+                            if result:
+                                logger.log_event(f"[SUCCESS] Trade executed successfully: {result}")
+                                enhanced_logger.log_event(
+                                    "Trade executed successfully",
+                                    LogLevel.INFO,
+                                    LogCategory.TRADE,
+                                    data={
+                                        'trade_result': result,
+                                        'paper_mode': PAPER_TRADE,
+                                        'execution_time': datetime.now().isoformat()
+                                    },
+                                    strategy=strategy_name,
+                                    symbol=trade_signal.get('symbol') if isinstance(trade_signal, dict) else None,
+                                    bot_type="stock-trader",
+                                    source="trade_execution"
+                                )
+                            else:
+                                logger.log_event(f"[FAILED] Trade execution failed")
+                                enhanced_logger.log_event(
+                                    "Trade execution failed",
+                                    LogLevel.WARNING,
+                                    LogCategory.TRADE,
+                                    data={
+                                        'trade_signal': trade_signal,
+                                        'paper_mode': PAPER_TRADE,
+                                        'failure_time': datetime.now().isoformat()
+                                    },
+                                    strategy=strategy_name,
+                                    symbol=trade_signal.get('symbol') if isinstance(trade_signal, dict) else None,
+                                    bot_type="stock-trader",
+                                    source="trade_execution"
+                                )
+                        except Exception as trade_error:
+                            logger.log_event(f"[ERROR] Trade execution exception: {trade_error}")
+                            enhanced_logger.log_event(
+                                "Trade execution exception",
+                                LogLevel.ERROR,
+                                LogCategory.ERROR,
+                                data={
+                                    'trade_error': str(trade_error),
+                                    'trade_signal': trade_signal,
+                                    'paper_mode': PAPER_TRADE
+                                },
+                                strategy=strategy_name,
+                                bot_type="stock-trader",
+                                source="trade_execution"
+                            )
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
                         enhanced_logger.log_event(
