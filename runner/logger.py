@@ -21,3 +21,23 @@ class Logger:
         print(
             f"{timestamp} {event_text}"
         )  # Also print to console for real-time monitoring
+
+    def error(self, message):
+        """Log error message - compatible with standard logging"""
+        self.log_event(f"❌ [ERROR] {message}")
+
+    def warning(self, message):
+        """Log warning message - compatible with standard logging"""
+        self.log_event(f"⚠️ [WARNING] {message}")
+
+    def info(self, message):
+        """Log info message - compatible with standard logging"""
+        self.log_event(f"ℹ️ [INFO] {message}")
+
+    def critical(self, message):
+        """Log critical message - compatible with standard logging"""
+        self.log_event(f"🚨 [CRITICAL] {message}")
+
+    def debug(self, message):
+        """Log debug message - compatible with standard logging"""
+        self.log_event(f"🔍 [DEBUG] {message}")
