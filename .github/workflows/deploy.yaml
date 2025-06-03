@@ -102,7 +102,6 @@ jobs:
     name: 🔐 Setup GCP Service Account & Workload Identity
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
-    continue-on-error: true  # Allow this job to fail without stopping the pipeline
 
     steps:
       - name: 📥 Checkout repository
@@ -176,98 +175,11 @@ jobs:
           
           echo "✅ Workload Identity binding configured"
 
-      - name: 🔍 Check Organization Policies
-        run: |
-          echo "🔍 Checking organization policies that might affect service account key creation..."
-          echo "==========================================================================="
-          
-          PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}"
-          
-          # Check if iam.disableServiceAccountKeyCreation is enforced
-          echo "🔧 Checking iam.disableServiceAccountKeyCreation constraint..."
-          if gcloud org-policies describe iam.disableServiceAccountKeyCreation --project=$PROJECT_ID --format="value(spec.rules[0].enforce)" 2>/dev/null | grep -q "TRUE"; then
-            echo "⚠️ Organization policy iam.disableServiceAccountKeyCreation is ENFORCED"
-            echo "   This means service account key creation is blocked by organization policy"
-            echo "   The system will rely on Workload Identity for authentication"
-          else
-            echo "✅ Service account key creation is allowed by organization policy"
-          fi
-          
-          echo ""
-          
-      - name: 🔑 Create Service Account Key (for fallback)
-        run: |
-          echo "🔑 Creating service account key for fallback authentication..."
-          echo "=========================================================="
-          
-          PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}"
-          SA_EMAIL="gpt-runner-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-          
-          # Check existing keys first
-          echo "🔍 Checking existing service account keys..."
-          EXISTING_KEYS=$(gcloud iam service-accounts keys list --iam-account=$SA_EMAIL --project=$PROJECT_ID --format="value(name)" --filter="keyType:USER_MANAGED" 2>/dev/null || echo "")
-          
-          if [ -n "$EXISTING_KEYS" ]; then
-            KEY_COUNT=$(echo "$EXISTING_KEYS" | wc -l)
-            echo "📊 Found $KEY_COUNT existing user-managed keys"
-            
-            # If we have 10 or more keys, delete the oldest ones
-            if [ "$KEY_COUNT" -ge 10 ]; then
-              echo "⚠️ Maximum key limit reached ($KEY_COUNT keys). Cleaning up oldest keys..."
-              # Delete all but the 5 newest keys to make room
-              KEYS_TO_DELETE=$(echo "$EXISTING_KEYS" | head -n $((KEY_COUNT - 5)))
-              for key in $KEYS_TO_DELETE; do
-                KEY_ID=$(basename "$key")
-                echo "🗑️ Deleting old key: $KEY_ID"
-                gcloud iam service-accounts keys delete "$KEY_ID" \
-                  --iam-account=$SA_EMAIL \
-                  --project=$PROJECT_ID \
-                  --quiet || echo "⚠️ Failed to delete key $KEY_ID"
-              done
-            fi
-          else
-            echo "✅ No existing user-managed keys found"
-          fi
-          
-          # Try to create a new key
-          echo "🔧 Attempting to create new service account key..."
-          if gcloud iam service-accounts keys create /tmp/gpt-runner-sa-key.json \
-            --iam-account=$SA_EMAIL \
-            --project=$PROJECT_ID 2>/dev/null; then
-            
-            echo "✅ Service account key created successfully"
-            
-            # Store the key content as a secret for later use in K8s
-            echo "📦 Preparing key for Kubernetes secret..."
-            KEY_CONTENT=$(base64 -w 0 /tmp/gpt-runner-sa-key.json)
-            echo "service_account_key_b64=$KEY_CONTENT" >> $GITHUB_OUTPUT
-            
-            # Clean up the file
-            rm -f /tmp/gpt-runner-sa-key.json
-            echo "🧹 Temporary key file cleaned up"
-            
-          else
-            echo "⚠️ Failed to create service account key - this might be due to:"
-            echo "   1. Organization policy constraints (iam.disableServiceAccountKeyCreation)"
-            echo "   2. Maximum key limit reached (10 keys per service account)"
-            echo "   3. Insufficient permissions"
-            echo ""
-            echo "🔄 This is not critical - the system will use Workload Identity instead"
-            echo "   Workload Identity is actually more secure than service account keys"
-            echo ""
-            echo "📝 If you need service account keys, you can:"
-            echo "   1. Check organization policies: gcloud org-policies describe iam.disableServiceAccountKeyCreation"
-            echo "   2. List existing keys: gcloud iam service-accounts keys list --iam-account=$SA_EMAIL"
-            echo "   3. Delete old keys manually if needed"
-            echo ""
-            echo "✅ Continuing deployment with Workload Identity only..."
-            echo "service_account_key_b64=" >> $GITHUB_OUTPUT
-          fi
-
   setup-gcs-buckets:
     name: 🪣 Setup GCS Buckets & Verify Firestore
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
+    needs: [setup-gcp-service-account]  # Restore dependency on service account setup
 
     steps:
       - name: 📥 Checkout repository
@@ -544,7 +456,7 @@ jobs:
     name: 🚀 Deploy to GKE
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
-    needs: [test-and-build, setup-gcs-buckets]  # Remove dependency on setup-gcp-service-account to allow deployment even if SA setup fails
+    needs: [test-and-build, setup-gcp-service-account, setup-gcs-buckets]  # Restore all original dependencies
 
     steps:
       - name: 📥 Checkout repository
@@ -554,54 +466,6 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: 🛠️ Ensure Service Account Setup (Fallback)
-        run: |
-          echo "🛠️ Ensuring service account setup as fallback..."
-          echo "==============================================="
-          
-          PROJECT_ID="${{ secrets.GCP_PROJECT_ID }}"
-          SA_NAME="gpt-runner-sa"
-          SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
-          
-          # Check if GCP service account exists, create if not
-          if ! gcloud iam service-accounts describe $SA_EMAIL --project=$PROJECT_ID &>/dev/null; then
-            echo "🔨 Creating GCP service account as fallback..."
-            gcloud iam service-accounts create $SA_NAME \
-              --display-name="GPT Runner Service Account" \
-              --description="Service account for GPT trading system" \
-              --project=$PROJECT_ID || echo "⚠️ Failed to create GCP service account"
-          else
-            echo "✅ GCP service account exists"
-          fi
-          
-          # Ensure basic IAM roles
-          echo "🔑 Ensuring basic IAM roles..."
-          BASIC_ROLES=(
-            "roles/secretmanager.secretAccessor"
-            "roles/storage.admin"
-            "roles/datastore.user"
-          )
-          
-          for role in "${BASIC_ROLES[@]}"; do
-            echo "🔧 Ensuring role: $role"
-            gcloud projects add-iam-policy-binding $PROJECT_ID \
-              --member="serviceAccount:$SA_EMAIL" \
-              --role="$role" \
-              --quiet 2>/dev/null || echo "⚠️ Role $role assignment may have failed"
-          done
-          
-          # Ensure Workload Identity binding
-          echo "🔗 Ensuring Workload Identity binding..."
-          K8S_SA="serviceAccount:${PROJECT_ID}.svc.id.goog[gpt/gpt-runner-sa]"
-          gcloud iam service-accounts add-iam-policy-binding \
-            $SA_EMAIL \
-            --role roles/iam.workloadIdentityUser \
-            --member "$K8S_SA" \
-            --project=$PROJECT_ID \
-            --quiet 2>/dev/null || echo "⚠️ Workload Identity binding may have failed"
-          
-          echo "✅ Service account fallback setup completed"
 
       - name: 🔎 Check if GKE Cluster Exists
         id: check_cluster
