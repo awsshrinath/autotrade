@@ -14,9 +14,16 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
-from runner.trade_manager import simulate_exit, execute_trade
+from runner.trade_manager import TradeManager, simulate_exit, execute_trade
 from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
+
+# Import paper trading components
+try:
+    from runner.paper_trader_integration import PaperTradingManager
+    PAPER_TRADING_AVAILABLE = True
+except ImportError:
+    PAPER_TRADING_AVAILABLE = False
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -187,93 +194,49 @@ def run_stock_trading_bot():
     
     # Log startup with enhanced logger
     enhanced_logger.log_event(
-        "Stock Trading Bot Started",
+        f"Stock Trading Bot Started - Paper Trade Mode: {PAPER_TRADE}",
         LogLevel.INFO,
         LogCategory.SYSTEM,
         data={
             'session_id': session_id,
             'date': today_date,
             'bot_type': 'stock-trader',
-            'startup_time': datetime.now().isoformat()
+            'startup_time': datetime.now().isoformat(),
+            'paper_trade_mode': PAPER_TRADE
         },
         bot_type="stock-trader",
         source="stock_bot_startup"
     )
-    
-    logger.log_event("[BOOT] Starting Stock Trading Bot...")
 
-    # Initialize Firestore client to fetch daily plan
+    # Initialize Firestore Client
     firestore_client = FirestoreClient(logger)
-
-    # Wait for daily plan to be created by main runner (with timeout)
-    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger)
     
-    if not daily_plan:
-        logger.log_event(
-            "[FALLBACK] No daily plan found even after waiting. Using intelligent fallback strategy."
+    # Initialize TradeManager with proper paper trading support
+    kite_manager = KiteConnectManager(logger)
+    if not PAPER_TRADE:
+        kite_manager.set_access_token()
+    kite = kite_manager.get_kite_client()
+    
+    trade_manager = TradeManager(
+        logger=logger,
+        kite=kite,
+        firestore_client=firestore_client
+    )
+    
+    # Initialize Paper Trading Manager if enabled
+    paper_trading_manager = None
+    if PAPER_TRADE and PAPER_TRADING_AVAILABLE:
+        paper_trading_manager = PaperTradingManager(
+            logger=logger,
+            firestore_client=firestore_client
         )
-        enhanced_logger.log_event(
-            "No daily plan found, using intelligent fallback strategy",
-            LogLevel.WARNING,
-            LogCategory.STRATEGY,
-            data={'fallback_strategy': 'vwap', 'reason': 'timeout_reached'},
-            bot_type="stock-trader",
-            source="strategy_selection"
-        )
-        
-        # Intelligent fallback: Use VWAP as it's most suitable for stock trading
-        strategy_name = "vwap"
-        
-        # Try to get market sentiment independently for better fallback
-        try:
-            from runner.market_monitor import MarketMonitor
-            from runner.kiteconnect_manager import KiteConnectManager
-            
-            kite_manager = KiteConnectManager(logger)
-            kite_manager.set_access_token()
-            kite = kite_manager.get_kite_client()
-            
-            market_monitor = MarketMonitor(logger)
-            sentiment_data = market_monitor.get_market_sentiment(kite)
-            
-            # Use market sentiment to choose better fallback
-            vix = sentiment_data.get("INDIA VIX", 15)
-            if vix > 20:
-                strategy_name = "range_reversal"  # High volatility
-                logger.log_event(f"[FALLBACK] High VIX ({vix}), using range_reversal strategy")
-            elif vix < 12:
-                strategy_name = "vwap"  # Low volatility
-                logger.log_event(f"[FALLBACK] Low VIX ({vix}), using vwap strategy")
-            else:
-                strategy_name = "vwap"  # Default
-                logger.log_event(f"[FALLBACK] Normal VIX ({vix}), using vwap strategy")
-                
-            enhanced_logger.log_event(
-                "Intelligent fallback strategy selected",
-                LogLevel.INFO,
-                LogCategory.STRATEGY,
-                data={
-                    'selected_strategy': strategy_name,
-                    'vix_value': vix,
-                    'market_sentiment': sentiment_data
-                },
-                strategy=strategy_name,
-                bot_type="stock-trader",
-                source="fallback_strategy_selection"
-            )
-            
-        except Exception as e:
-            logger.log_event(f"[FALLBACK] Could not get market sentiment for fallback: {e}")
-            enhanced_logger.log_event(
-                "Fallback market sentiment fetch failed",
-                LogLevel.WARNING,
-                LogCategory.ERROR,
-                data={'error': str(e), 'fallback_strategy': 'vwap'},
-                bot_type="stock-trader",
-                source="fallback_error"
-            )
-    else:
-        # Extract the stock strategy from the plan
+        logger.log_event("Paper Trading Manager initialized for stock trading")
+
+    # Strategy selection from daily plan or fallback
+    strategy_name = "vwap"  # Default strategy
+    
+    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger)
+    if daily_plan:
         strategy_tuple = daily_plan.get("stocks", "vwap")
         strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
         logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
@@ -307,7 +270,6 @@ def run_stock_trading_bot():
     wait_until_market_opens(logger)
 
     try:
-        kite = KiteConnectManager(logger).get_kite_client()
         strategy = load_strategy(strategy_name, kite, logger)
 
         if not strategy:
@@ -315,6 +277,9 @@ def run_stock_trading_bot():
                 f"[ERROR] Failed to load strategy: {strategy_name}. Falling back to vwap."
             )
             strategy = load_strategy("vwap", kite, logger)
+
+        # Track active trades for paper trading
+        active_paper_trades = []
 
         while is_market_open():
             logger.log_event("[ACTIVE] Market open, scanning for trades...")
@@ -346,10 +311,21 @@ def run_stock_trading_bot():
                             bot_type="stock-trader",
                             source="strategy_analysis"
                         )
-                        # Execute trade in both paper and live mode
+                        
+                        # Execute trade using appropriate manager
                         try:
-                            result = execute_trade(trade_signal, paper_mode=PAPER_TRADE)
+                            if PAPER_TRADE and paper_trading_manager:
+                                # Use paper trading manager
+                                result = paper_trading_manager.execute_trade(trade_signal, strategy_name)
+                            else:
+                                # Use TradeManager for live trading or fallback paper trading
+                                result = trade_manager._execute_trade(trade_signal, "stock-trader", strategy_name)
+                            
                             if result:
+                                # Track paper trades for simulation
+                                if PAPER_TRADE:
+                                    active_paper_trades.append(result)
+                                    
                                 logger.log_event(f"[SUCCESS] Trade executed successfully: {result}")
                                 enhanced_logger.log_event(
                                     "Trade executed successfully",
@@ -365,6 +341,10 @@ def run_stock_trading_bot():
                                     bot_type="stock-trader",
                                     source="trade_execution"
                                 )
+                                
+                                # Force GCS upload for successful trades
+                                enhanced_logger.flush_all()
+                                
                             else:
                                 logger.log_event(f"[FAILED] Trade execution failed")
                                 enhanced_logger.log_event(
@@ -410,6 +390,30 @@ def run_stock_trading_bot():
                             bot_type="stock-trader",
                             source="strategy_analysis"
                         )
+                        
+                    # Monitor paper trades for exit conditions
+                    if PAPER_TRADE and active_paper_trades:
+                        # Get current market data for monitoring
+                        try:
+                            # Create sample market data for paper trade monitoring
+                            from runner.paper_trader_integration import create_sample_market_data
+                            current_market_data = create_sample_market_data()
+                            
+                            # Monitor trades using paper trading manager
+                            if paper_trading_manager:
+                                paper_trading_manager.monitor_positions(current_market_data)
+                            
+                            # Also simulate exits using TradeManager
+                            for i, trade in enumerate(active_paper_trades[:]):
+                                if trade.get('status') == 'paper_open':
+                                    exit_result = trade_manager.simulate_trade_exit(trade, current_market_data)
+                                    if exit_result and exit_result.get('status') == 'paper_closed':
+                                        active_paper_trades[i] = exit_result
+                                        enhanced_logger.flush_all()  # Upload exit to GCS
+                                        
+                        except Exception as monitor_error:
+                            logger.log_event(f"[ERROR] Trade monitoring error: {monitor_error}")
+                            
                 else:
                     logger.log_event("[ERROR] Strategy not loaded.")
                     enhanced_logger.log_event(
@@ -444,7 +448,8 @@ def run_stock_trading_bot():
             LogCategory.SYSTEM,
             data={
                 'shutdown_time': datetime.now().isoformat(),
-                'reason': 'market_closed'
+                'reason': 'market_closed',
+                'final_paper_trades': len(active_paper_trades) if PAPER_TRADE else 0
             },
             bot_type="stock-trader",
             source="bot_shutdown"

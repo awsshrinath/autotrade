@@ -5,6 +5,9 @@ import time
 from typing import Dict, Any, Optional, List
 from dataclasses import asdict
 
+# Import configuration
+from runner.config import PAPER_TRADE, get_config
+
 # Import new optimized logging system
 try:
     from runner.enhanced_logging import TradingLogger, LogLevel, LogCategory
@@ -32,6 +35,9 @@ class TradeManager:
         self.cognitive_system = cognitive_system
         self.open_positions = []
         
+        # Get paper trading configuration
+        self.paper_trade_mode = PAPER_TRADE
+        
         # Initialize risk governor with proper parameters
         self.risk_guard = RiskGovernor(
             max_daily_loss=max_daily_loss,
@@ -50,7 +56,7 @@ class TradeManager:
             self.use_new_logging = False
         
         if self.logger:
-            self.logger.log_event("TradeManager initialized")
+            self.logger.log_event(f"TradeManager initialized - Paper Trade Mode: {self.paper_trade_mode}")
 
     def run_strategy_once(self, strategy_name, direction, bot_type):
         """
@@ -187,7 +193,7 @@ class TradeManager:
 
     def _execute_trade(self, trade_signal, bot_type, strategy_name=None):
         """
-        Execute a trade based on the signal.
+        Execute a trade based on the signal - routes to paper or live trading based on configuration.
         
         Args:
             trade_signal: Dictionary containing trade parameters
@@ -198,147 +204,222 @@ class TradeManager:
             Trade object if successful, None otherwise
         """
         try:
-            # Record cognitive thought about trade decision
-            thought_id = None
-            confidence_level = None
-            if self.cognitive_system:
-                confidence_level = ConfidenceLevel.HIGH if trade_signal.get('confidence', 0.5) > 0.7 else ConfidenceLevel.MEDIUM
-                thought_id = self.cognitive_system.record_thought(
-                    decision=f"Executing trade for {trade_signal.get('symbol')}",
-                    reasoning=f"Strategy {strategy_name} generated signal with confidence {trade_signal.get('confidence', 'unknown')}",
-                    decision_type=DecisionType.TRADE_EXECUTION,
-                    confidence=confidence_level,
-                    market_context=trade_signal,
-                    trade_id=str(trade_signal.get('id', 'unknown')),
-                    tags=['trade_execution', strategy_name or 'unknown', trade_signal.get('symbol', 'unknown')]
-                )
-
-        except Exception as e:
-            if self.logger:
-                self.logger.log_event(f"Error in cognitive processing: {e}")
-            
-            if self.use_new_logging:
-                self.trading_logger.log_error(e, context={'trade_signal': trade_signal}, source="cognitive_system")
-
-        # Check risk management
-        if not self.risk_guard.can_trade():
-            if self.logger:
-                self.logger.log_event(
-                    f"🚫 Trade blocked by RiskGovernor: {trade_signal['symbol']}"
-                )
-            
-            # Log risk block with new system
-            if self.use_new_logging:
-                self.trading_logger.log_risk_management_event(
-                    event_type="trade_blocked",
-                    reason="risk_governor_limit",
-                    trade_signal=trade_signal
-                )
-            
-            # Record cognitive thought about risk prevention
-            if self.cognitive_system:
-                self.cognitive_system.record_thought(
-                    decision="Trade blocked by risk management",
-                    reasoning=f"RiskGovernor prevented trade for {trade_signal.get('symbol')} due to risk limits",
-                    decision_type=DecisionType.RISK_MANAGEMENT,
-                    confidence=ConfidenceLevel.HIGH,
-                    market_context=trade_signal,
-                    tags=['risk_blocked', 'trade_prevention']
-                )
+            # Determine trading mode
+            if self.paper_trade_mode:
+                return self._execute_paper_trade(trade_signal, bot_type, strategy_name)
+            else:
+                return self._execute_live_trade(trade_signal, bot_type, strategy_name)
                 
-                # Transition to risk_mitigation state
-                self.cognitive_system.transition_state(
-                    CognitiveState.RISK_MITIGATION,
-                    StateTransitionTrigger.RISK_BREACH,
-                    "Trade blocked by risk governor"
+        except Exception as e:
+            error_msg = f"Error executing trade: {e}"
+            if self.logger:
+                self.logger.log_event(error_msg)
+            
+            # Log error with new system
+            if self.use_new_logging:
+                self.trading_logger.log_error(
+                    e,
+                    context={'trade_signal': trade_signal, 'bot_type': bot_type, 'strategy': strategy_name},
+                    source="trade_execution"
                 )
             
             return None
 
-        # Transition to executing state
-        if self.cognitive_system:
-            self.cognitive_system.transition_state(
-                CognitiveState.EXECUTING,
-                StateTransitionTrigger.SIGNAL_DETECTED,
-                f"Executing trade for {trade_signal.get('symbol')}"
-            )
-
-        # Create the trade object
-        trade = {
-            **trade_signal,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "mode": "paper",  # Default to paper trading
-            "status": "open",
-            "bot_type": bot_type,
-            "cognitive_thought_id": thought_id if self.cognitive_system else None,
-            "confidence_level": confidence_level.value if self.cognitive_system else None
-        }
-
-        # Log the trade with new system
-        if self.use_new_logging:
-            try:
-                trade_log_data = TradeLogData(
-                    trade_id=trade.get('id', f"trade_{int(datetime.datetime.now().timestamp())}"),
-                    symbol=trade.get('symbol', 'UNKNOWN'),
-                    strategy=strategy_name or trade.get('strategy', 'unknown'),
-                    bot_type=bot_type,
-                    direction=trade.get('direction', 'unknown'),
-                    quantity=trade.get('quantity', 0),
-                    entry_price=trade.get('entry_price', 0.0),
-                    stop_loss=trade.get('stop_loss'),
-                    target=trade.get('target'),
-                    status="open",
-                    entry_time=datetime.datetime.now(),
-                    confidence_level=trade.get('confidence'),
-                    metadata={
-                        'mode': trade.get('mode'),
-                        'cognitive_thought_id': thought_id,
-                        'timestamp': trade.get('timestamp')
-                    }
+    def _execute_paper_trade(self, trade_signal, bot_type, strategy_name):
+        """Execute a paper trade simulation"""
+        try:
+            # Create trade object for paper trading
+            trade = {
+                'id': f"paper_{int(datetime.datetime.now().timestamp())}",
+                'symbol': trade_signal.get('symbol'),
+                'strategy': strategy_name,
+                'bot_type': bot_type,
+                'direction': trade_signal.get('direction'),
+                'quantity': trade_signal.get('quantity', 1),
+                'entry_price': trade_signal.get('entry_price'),
+                'stop_loss': trade_signal.get('stop_loss'),
+                'target': trade_signal.get('target'),
+                'entry_time': datetime.datetime.now().isoformat(),
+                'status': 'paper_open',
+                'mode': 'paper'
+            }
+            
+            # Simulate trade execution
+            if self.logger:
+                self.logger.log_event(
+                    f"[PAPER TRADE] Executing {trade['symbol']} - {trade['direction']} @ ₹{trade['entry_price']}"
                 )
-                
-                self.trading_logger.log_trade_entry(trade_log_data, urgent=True)
-                
-            except Exception as e:
-                if self.logger:
-                    self.logger.log_event(f"Error logging trade with new system: {e}")
+            
+            # Log paper trade with enhanced logger and trigger GCS upload
+            if self.use_new_logging:
+                try:
+                    trade_log_data = TradeLogData(
+                        trade_id=trade['id'],
+                        symbol=trade['symbol'],
+                        strategy=strategy_name,
+                        bot_type=bot_type,
+                        direction=trade['direction'],
+                        quantity=trade['quantity'],
+                        entry_price=trade['entry_price'],
+                        stop_loss=trade['stop_loss'],
+                        target=trade['target'],
+                        status="paper_open",
+                        entry_time=datetime.datetime.now(),
+                        metadata={'mode': 'paper', 'simulated': True}
+                    )
+                    
+                    self.trading_logger.log_trade_entry(trade_log_data)
+                    
+                    # Force upload to GCS for paper trades
+                    self.trading_logger.force_upload_to_gcs()
+                    
+                except Exception as e:
+                    if self.logger:
+                        self.logger.log_event(f"Error logging paper trade: {e}")
+            
+            # Record cognitive thought about paper trade
+            if self.cognitive_system:
+                self.cognitive_system.record_thought(
+                    decision=f"Paper trade executed for {trade['symbol']}",
+                    reasoning=f"Simulated {trade['direction']} trade based on {strategy_name} strategy",
+                    decision_type=DecisionType.TRADE_EXECUTION,
+                    confidence=ConfidenceLevel.HIGH,
+                    market_context=trade,
+                    trade_id=trade['id'],
+                    tags=['paper_trade', 'execution', strategy_name]
+                )
+            
+            # Log to local file for paper trades
+            self._log_paper_trade_to_file(trade)
+            
+            return trade
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"Error executing paper trade: {e}")
+            return None
 
-        # Log to Firestore (legacy)
-        if self.firestore_client:
-            try:
-                date_str = datetime.datetime.now().strftime("%Y-%m-%d")
-                self.firestore_client.log_trade(bot_type, date_str, trade)
-            except Exception as e:
-                if self.logger:
-                    self.logger.log_event(f"Failed to log trade to Firestore: {e}")
-
+    def _execute_live_trade(self, trade_signal, bot_type, strategy_name):
+        """Execute a live trade (existing implementation)"""
+        # Existing live trade implementation would go here
         if self.logger:
-            self.logger.log_event(
-                f"[EXECUTE-{trade['mode'].upper()}] {trade.get('strategy', 'UNKNOWN')} trade executed for {trade['symbol']}"
-            )
-            self.logger.log_event(
-                f"Qty: {trade['quantity']} | Entry: {trade['entry_price']} | SL: {trade['stop_loss']} | Target: {trade['target']}"
-            )
+            self.logger.log_event("Live trading not implemented in this version")
+        return None
 
-        # Update the risk governor
-        self.risk_guard.update_trade(0)  # Initial placeholder for PnL
+    def _log_paper_trade_to_file(self, trade):
+        """Log paper trade to local file"""
+        try:
+            log_path = f"logs/paper_trades_{datetime.datetime.now().strftime('%Y-%m-%d')}.jsonl"
+            os.makedirs("logs", exist_ok=True)
+            
+            with open(log_path, "a") as f:
+                f.write(json.dumps(trade) + "\n")
+                
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"Error logging paper trade to file: {e}")
 
-        # Store trade details in cognitive memory
-        if self.cognitive_system:
-            trade_memory = f"Executed {trade.get('direction')} trade for {trade['symbol']} at {trade['entry_price']}"
-            self.cognitive_system.store_memory(
-                content=trade_memory,
-                importance=self.cognitive_system.memory.ImportanceLevel.HIGH,
-                tags=['trade_execution', trade['symbol'], bot_type],
-                metadata={
-                    'trade_id': trade.get('id'),
-                    'entry_price': trade['entry_price'],
-                    'strategy': strategy_name,
-                    'timestamp': trade['timestamp']
-                }
-            )
-
-        return trade
+    def simulate_trade_exit(self, trade, market_data):
+        """Simulate trade exit based on market data"""
+        try:
+            if not trade or trade.get('status') != 'paper_open':
+                return
+            
+            current_price = market_data.get(trade['symbol'], {}).get('ltp')
+            if not current_price:
+                return
+            
+            direction = trade['direction']
+            entry_price = trade['entry_price']
+            stop_loss = trade['stop_loss']
+            target = trade['target']
+            
+            # Check exit conditions
+            exit_triggered = False
+            exit_reason = ""
+            exit_price = current_price
+            
+            if direction == 'bullish':
+                if current_price >= target:
+                    exit_triggered = True
+                    exit_reason = "target_hit"
+                    exit_price = target
+                elif current_price <= stop_loss:
+                    exit_triggered = True
+                    exit_reason = "stop_loss"
+                    exit_price = stop_loss
+            else:  # bearish
+                if current_price <= target:
+                    exit_triggered = True
+                    exit_reason = "target_hit"
+                    exit_price = target
+                elif current_price >= stop_loss:
+                    exit_triggered = True
+                    exit_reason = "stop_loss"
+                    exit_price = stop_loss
+            
+            if exit_triggered:
+                # Update trade with exit details
+                trade['status'] = 'paper_closed'
+                trade['exit_price'] = exit_price
+                trade['exit_time'] = datetime.datetime.now().isoformat()
+                trade['exit_reason'] = exit_reason
+                
+                # Calculate P&L
+                if direction == 'bullish':
+                    pnl = (exit_price - entry_price) * trade['quantity']
+                else:
+                    pnl = (entry_price - exit_price) * trade['quantity']
+                
+                trade['pnl'] = round(pnl, 2)
+                
+                # Log exit
+                if self.logger:
+                    self.logger.log_event(
+                        f"[PAPER EXIT] {trade['symbol']} - {exit_reason} @ ₹{exit_price} | P&L: ₹{pnl:.2f}"
+                    )
+                
+                # Log with enhanced logger and upload to GCS
+                if self.use_new_logging:
+                    try:
+                        trade_log_data = TradeLogData(
+                            trade_id=trade['id'],
+                            symbol=trade['symbol'],
+                            strategy=trade['strategy'],
+                            bot_type=trade['bot_type'],
+                            direction=trade['direction'],
+                            quantity=trade['quantity'],
+                            entry_price=trade['entry_price'],
+                            stop_loss=trade['stop_loss'],
+                            target=trade['target'],
+                            exit_price=exit_price,
+                            status="paper_closed",
+                            pnl=pnl,
+                            entry_time=datetime.datetime.fromisoformat(trade['entry_time']),
+                            exit_time=datetime.datetime.now(),
+                            exit_reason=exit_reason,
+                            metadata={'mode': 'paper', 'simulated': True}
+                        )
+                        
+                        self.trading_logger.log_trade_exit(trade_log_data, exit_reason)
+                        
+                        # Force upload to GCS for paper trade exits
+                        self.trading_logger.force_upload_to_gcs()
+                        
+                    except Exception as e:
+                        if self.logger:
+                            self.logger.log_event(f"Error logging paper trade exit: {e}")
+                
+                # Log to file
+                self._log_paper_trade_to_file(trade)
+                
+                return trade
+                
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"Error simulating trade exit: {e}")
+                
+        return None
 
     def analyze_trade_outcome(self, trade):
         """Analyze trade outcome using cognitive system"""

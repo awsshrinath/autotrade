@@ -430,27 +430,42 @@ class TradingLogger:
         }
     
     def flush_all(self):
-        """Flush all pending logs immediately"""
-        self._flush_gcs_buffer()
-        self.firestore_logger.flush_batch()
-        self.gcs_logger.flush_batch()
-    
+        """Flush all pending data to storage"""
+        try:
+            self._flush_gcs_buffer()
+            self.firestore_logger.flush_batch()
+        except Exception as e:
+            print(f"Error flushing all logs: {e}")
+            self.metrics['errors'] += 1
+
+    def force_upload_to_gcs(self):
+        """Force immediate upload of all buffered data to GCS"""
+        try:
+            if self.gcs_buffer:
+                self._flush_gcs_buffer()
+                print(f"Force uploaded {len(self.gcs_buffer)} entries to GCS")
+            else:
+                print("No buffered entries to upload to GCS")
+        except Exception as e:
+            print(f"Error in force upload to GCS: {e}")
+            self.metrics['errors'] += 1
+
     def shutdown(self):
-        """Graceful shutdown"""
+        """Clean shutdown - flush all data and stop background tasks"""
         try:
             # Flush all pending data
             self.flush_all()
             
-            # Log shutdown
-            self.log_system_event("Trading logger shutdown", {
-                'metrics': self.get_metrics()
-            })
+            # Stop background thread gracefully (note: daemon thread will stop with main program)
             
-            # Final flush
-            self.flush_all()
+            # Final cleanup
+            self.run_cleanup()
+            
+            print(f"Trading logger shutdown complete. Final metrics: {self.get_metrics()}")
             
         except Exception as e:
-            print(f"Error during shutdown: {e}")
+            print(f"Error during logger shutdown: {e}")
+            self.metrics['errors'] += 1
     
     def __del__(self):
         """Cleanup on destruction"""
