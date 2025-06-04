@@ -159,22 +159,31 @@ class GCSLogger:
                                 break
                     
                     if needs_lifecycle_update:
-                        # Set lifecycle policy
-                        lifecycle_rule = {
-                            'action': {'type': 'Delete'},
-                            'condition': {'age': config['lifecycle_days']}
-                        }
+                        # FIXED: Use dictionary format for lifecycle rules (not objects)
+                        # This fixes the "'LifecycleRuleDelete' object has no attribute 'action'" error
                         
-                        # Transition to cheaper storage classes after 30 days
-                        transition_rule = {
-                            'action': {
-                                'type': 'SetStorageClass',
-                                'storageClass': config['storage_class']
-                            },
-                            'condition': {'age': 30}
-                        }
+                        lifecycle_rules = []
                         
-                        bucket.lifecycle_rules = [lifecycle_rule, transition_rule]
+                        # Add delete rule using dictionary format
+                        delete_rule = {
+                            "action": {"type": "Delete"},
+                            "condition": {"age": config['lifecycle_days']}
+                        }
+                        lifecycle_rules.append(delete_rule)
+                        
+                        # Add storage class transition rule (only if not ARCHIVE)
+                        if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                            transition_rule = {
+                                "action": {
+                                    "type": "SetStorageClass", 
+                                    "storageClass": config['storage_class']
+                                },
+                                "condition": {"age": 30}
+                            }
+                            lifecycle_rules.append(transition_rule)
+                        
+                        # Apply the rules using the working format
+                        bucket.lifecycle_rules = lifecycle_rules
                         bucket.patch()
                         
                         print(f"✅ Set lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
