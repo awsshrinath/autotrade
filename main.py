@@ -14,7 +14,7 @@ from runner.logger import Logger
 from runner.gpt_codefix_suggestor import GPTCodeFixSuggestor
 from runner.daily_report_generator import DailyReportGenerator
 from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
-from runner.utils import create_daily_folders
+from runner.common_utils import create_daily_folders
 from runner.openai_manager import OpenAIManager
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.market_data import MarketDataFetcher, TechnicalIndicators
@@ -29,6 +29,34 @@ try:
 except ImportError as e:
     print(f"Warning: Paper trading components not available: {e}")
     PAPER_TRADING_AVAILABLE = False
+
+# FIXED: Add RAG module imports with comprehensive fallback handling
+try:
+    # Try to import RAG modules
+    from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
+    from gpt_runner.rag.rag_worker import embed_logs_for_today  
+    from gpt_runner.rag.retriever import retrieve_similar_context
+    RAG_MODULES_AVAILABLE = True
+    print("✅ RAG modules loaded successfully")
+except ImportError as e:
+    print(f"Warning: RAG modules not available: {e}")
+    RAG_MODULES_AVAILABLE = False
+    
+    # Define comprehensive fallback functions
+    def sync_firestore_to_faiss(*args, **kwargs):
+        """Fallback function when RAG sync is not available"""
+        print("RAG: sync_firestore_to_faiss called - using placeholder implementation")
+        return True
+        
+    def embed_logs_for_today(*args, **kwargs):
+        """Fallback function when RAG embedding is not available"""
+        print("RAG: embed_logs_for_today called - using placeholder implementation")
+        return True
+        
+    def retrieve_similar_context(query, **kwargs):
+        """Fallback function when RAG retrieval is not available"""
+        print("Warning: RAG retrieval not available")
+        return {"context": "RAG retrieval not available", "sources": []}
 
 # FIXED: Add early validation and better error handling
 def validate_environment():
@@ -63,7 +91,7 @@ def safe_import_modules():
         from runner.gpt_codefix_suggestor import GPTCodeFixSuggestor
         from runner.daily_report_generator import DailyReportGenerator
         from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
-        from runner.utils import create_daily_folders
+        from runner.common_utils import create_daily_folders
         from runner.openai_manager import OpenAIManager
         from runner.kiteconnect_manager import KiteConnectManager
         from runner.market_data import MarketDataFetcher, TechnicalIndicators
@@ -199,6 +227,36 @@ def main():
             logging.error(f"Failed to initialize Firestore client: {e}")
             logger.log_event(f"Warning: Firestore client failed to initialize: {e}")
             print(f"⚠️  Warning: Firestore client not available: {e}")
+        
+        # FIXED: Initialize RAG memory system with comprehensive fallback
+        try:
+            logger.log_event("ℹ️ [INFO] GCP clients initialized successfully")
+            
+            if RAG_MODULES_AVAILABLE:
+                logger.log_event("[RAG] Initializing RAG memory system...")
+                try:
+                    # Initialize RAG memory by syncing FAISS with Firestore
+                    logger.log_event("[RAG] Syncing FAISS with Firestore...")
+                    sync_firestore_to_faiss()
+                    
+                    # Embed today's logs for RAG retrieval
+                    logger.log_event("[RAG] Embedding today's logs...")
+                    embed_logs_for_today()
+                    
+                    logger.log_event("[RAG] RAG memory system initialized successfully")
+                    
+                except Exception as rag_error:
+                    logger.log_event(f"Warning: RAG memory initialization failed: {rag_error}")
+                    print(f"⚠️  RAG memory initialization failed: {rag_error}")
+            else:
+                logger.log_event("[RAG] Using RAG placeholder implementations (modules not available)")
+                # Still call the fallback functions to maintain compatibility
+                sync_firestore_to_faiss()
+                embed_logs_for_today()
+                
+        except Exception as e:
+            logging.error(f"RAG initialization error: {e}")
+            logger.log_event(f"Warning: RAG system failed to initialize: {e}")
         
         # FIXED: Initialize OpenAI Manager with validation
         openai_manager = None

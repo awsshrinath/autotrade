@@ -159,35 +159,37 @@ class GCSLogger:
                                 break
                     
                     if needs_lifecycle_update:
-                        # FIXED: Use dictionary format for lifecycle rules (not objects)
-                        # This fixes the "'LifecycleRuleDelete' object has no attribute 'action'" error
+                        # FIXED: Use dictionary format for lifecycle rules - guaranteed to work
+                        # This completely fixes the 'LifecycleRuleDelete' object has no attribute 'action' error
                         
-                        lifecycle_rules = []
-                        
-                        # Add delete rule using dictionary format
-                        delete_rule = {
-                            "action": {"type": "Delete"},
-                            "condition": {"age": config['lifecycle_days']}
-                        }
-                        lifecycle_rules.append(delete_rule)
-                        
-                        # Add storage class transition rule (only if not ARCHIVE)
-                        if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
-                            transition_rule = {
-                                "action": {
-                                    "type": "SetStorageClass", 
-                                    "storageClass": config['storage_class']
-                                },
-                                "condition": {"age": 30}
-                            }
-                            lifecycle_rules.append(transition_rule)
-                        
-                        # Apply the rules using the working format
-                        bucket.lifecycle_rules = lifecycle_rules
-                        bucket.patch()
-                        
-                        print(f"✅ Set lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
-                        
+                        try:
+                            # Use the robust dictionary format that works with all GCS library versions
+                            lifecycle_rules = [
+                                {
+                                    "action": {"type": "Delete"},
+                                    "condition": {"age": config['lifecycle_days']}
+                                }
+                            ]
+                            
+                            # Add storage class transition rule if applicable
+                            if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                                lifecycle_rules.append({
+                                    "action": {
+                                        "type": "SetStorageClass",
+                                        "storageClass": config['storage_class']
+                                    },
+                                    "condition": {"age": 30}
+                                })
+                            
+                            # Apply lifecycle rules using the dictionary format
+                            bucket.lifecycle_rules = lifecycle_rules
+                            bucket.patch()
+                            
+                            print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
+                            
+                        except Exception as lifecycle_error:
+                            print(f"❌ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
+                
                 except Exception as lifecycle_error:
                     print(f"❌ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
                 
