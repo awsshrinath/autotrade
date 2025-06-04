@@ -183,17 +183,21 @@ class GCPMemoryClient:
             try:
                 bucket = self.storage_client.bucket(bucket_name)
                 if not bucket.exists():
-                    # Create bucket in asia-south1 region with proper labels
+                    # Create bucket in asia-south1 region (labels set separately)
                     bucket = self.storage_client.create_bucket(
                         bucket_name,
-                        location='asia-south1',  # Force asia-south1 region
-                        labels={
-                            'environment': 'production',
-                            'system': 'tron-trading',
-                            'purpose': 'memory-management',
-                            'region': 'asia-south1'
-                        }
+                        location='asia-south1'  # Force asia-south1 region
                     )
+                    
+                    # FIXED: Set labels after bucket creation
+                    bucket.labels = {
+                        'environment': 'production',
+                        'system': 'tron-trading',
+                        'purpose': 'memory-management',
+                        'region': 'asia-south1'
+                    }
+                    bucket.patch()  # Apply the labels
+                    
                     self.logger.info(f"Created bucket: {bucket_name} in asia-south1")
                     
                 # Ensure bucket is in correct region

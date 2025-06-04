@@ -95,18 +95,23 @@ class GCSLogger:
                 bucket_exists = bucket.exists()
                 
                 if not bucket_exists:
-                    # Create bucket in asia-south1 region with proper labels
+                    # Create bucket in asia-south1 region (labels set separately)
                     try:
+                        # FIXED: Create bucket without labels parameter
                         bucket = self.client.create_bucket(
                             bucket_name, 
-                            location='asia-south1',  # Force asia-south1 region
-                            labels={
-                                'environment': 'production',
-                                'system': 'tron-trading',
-                                'purpose': bucket_name.split('-')[-1],  # e.g., 'logs', 'archives'
-                                'region': 'asia-south1'
-                            }
+                            location='asia-south1'  # Force asia-south1 region
                         )
+                        
+                        # FIXED: Set labels after bucket creation
+                        bucket.labels = {
+                            'environment': 'production',
+                            'system': 'tron-trading',
+                            'purpose': bucket_name.split('-')[-1],  # e.g., 'logs', 'archives'
+                            'region': 'asia-south1'
+                        }
+                        bucket.patch()  # Apply the labels
+                        
                         print(f"✅ Created GCS bucket: {bucket_name} in asia-south1")
                     except Exception as create_error:
                         print(f"❌ Failed to create bucket {bucket_name}: {create_error}")

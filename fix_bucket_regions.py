@@ -323,14 +323,17 @@ echo "✅ Migration script completed!"
                 print(f"  ✨ Creating {bucket_name} in {self.target_region}...")
                 new_bucket = self.client.create_bucket(
                     bucket_name,
-                    location=self.target_region,
-                    labels={
-                        'environment': 'production',
-                        'system': 'tron-trading',
-                        'purpose': bucket_name.split('-')[-1],
-                        'region': self.target_region
-                    }
+                    location=self.target_region
                 )
+                
+                # FIXED: Set labels after bucket creation
+                new_bucket.labels = {
+                    'environment': 'production',
+                    'system': 'tron-trading',
+                    'purpose': bucket_name.split('-')[-1],
+                    'region': self.target_region
+                }
+                new_bucket.patch()  # Apply the labels
                 
                 print(f"  ✅ Created {bucket_name} in {self.target_region}")
                 success_count += 1
