@@ -15,40 +15,42 @@ spec:
     spec:
       serviceAccountName: gpt-runner-sa
       containers:
-        - name: main-runner
-          image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
-          command: ["/app/entrypoint.sh"]
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "256Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
-          env:
-            - name: PAPER_TRADE
-              value: "true"
-            - name: RUNNER_SCRIPT
-              value: "runner/main_runner_combined.py"
-            - name: GCP_PROJECT_ID
-              value: "autotrade-453303"
-            - name: ENVIRONMENT
-              value: "prod"
-            - name: GCS_LOGS_BUCKET
-              value: "tron-trading-logs"
-            - name: GCS_TRADES_BUCKET
-              value: "tron-trade-data"
-            - name: GCS_PERFORMANCE_BUCKET
-              value: "tron-analysis-reports"
-            - name: GCS_BACKUPS_BUCKET
-              value: "tron-memory-backups"
-            - name: ENHANCED_LOGGING_BUFFER_SIZE
-              value: "50"
-            - name: ENHANCED_LOGGING_FLUSH_INTERVAL
-              value: "30"
-            - name: ENHANCED_LOGGING_ENABLE_GCS
-              value: "true"
-            - name: ENHANCED_LOGGING_ENABLE_FIRESTORE
-              value: "true"
-
-
+      - name: main-runner
+        image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
+        command: ["/app/entrypoint.sh"]
+        
+        # Optimized resource configuration (based on current usage)
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Environment variables (using improved main runner)
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: RUNNER_SCRIPT
+          value: "runner/main_runner_improved.py"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: ENVIRONMENT
+          value: "prod"
+        - name: GCS_LOGS_BUCKET
+          value: "tron-trading-logs"
+        - name: GCS_TRADES_BUCKET
+          value: "tron-trade-data"
+        - name: GCS_PERFORMANCE_BUCKET
+          value: "tron-analysis-reports"
+        - name: GCS_BACKUPS_BUCKET
+          value: "tron-memory-backups"
+        - name: ENHANCED_LOGGING_BUFFER_SIZE
+          value: "50"
+        - name: ENHANCED_LOGGING_FLUSH_INTERVAL
+          value: "30"
+        - name: ENHANCED_LOGGING_ENABLE_GCS
+          value: "true"
+        - name: ENHANCED_LOGGING_ENABLE_FIRESTORE
+          value: "true" 
