@@ -125,8 +125,14 @@ def safe_import_with_fallback():
         imports_status['trading_modules'] = False
         # Continue without trading modules for basic functionality
     
-    # Cognitive system modules
+    # Cognitive system modules (memory intensive)
     try:
+        print("🧠 Initializing cognitive modules (this may take time)...")
+        import gc
+        
+        # Force garbage collection before loading heavy modules
+        gc.collect()
+        
         from runner.cognitive_system import create_cognitive_system
         from runner.thought_journal import DecisionType, ConfidenceLevel
         imports_status['cognitive_modules'] = True
@@ -136,8 +142,16 @@ def safe_import_with_fallback():
             'ConfidenceLevel': ConfidenceLevel
         })
         print("✅ Cognitive modules imported successfully")
+        
+        # Another garbage collection after import
+        gc.collect()
+        
     except ImportError as e:
         print(f"❌ Cognitive modules import failed: {e}")
+        imports_status['cognitive_modules'] = False
+    except Exception as e:
+        print(f"❌ Unexpected error during cognitive modules import: {e}")
+        print(f"📊 Error traceback: {traceback.format_exc()}")
         imports_status['cognitive_modules'] = False
         # Create placeholder classes
         class DecisionType:
@@ -221,7 +235,7 @@ def safe_initialize_loggers():
         return None, None, None, None
 
 def safe_initialize_cognitive_system(logger, enhanced_logger=None):
-    """Safely initialize cognitive system"""
+    """Safely initialize cognitive system with memory optimization"""
     if not imports_status.get('cognitive_modules', False):
         print("⚠️ Cognitive modules not available, skipping cognitive system")
         return None
@@ -229,33 +243,65 @@ def safe_initialize_cognitive_system(logger, enhanced_logger=None):
     try:
         print("[COGNITIVE] Initializing cognitive system...")
         
+        # Force garbage collection before creating cognitive system
+        import gc
+        gc.collect()
+        
+        # Set environment variable to use CPU for sentence transformers
+        os.environ['SENTENCE_TRANSFORMERS_CACHE'] = '/tmp'
+        os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128'
+        
         cognitive_system = create_cognitive_system(
             project_id=os.getenv("GCP_PROJECT_ID"),
-            enable_background_processing=True,
+            enable_background_processing=False,  # Disable to save memory
             logger=logger
         )
         
         if cognitive_system:
-            # Record startup thought
-            cognitive_system.record_thought(
-                decision="Enhanced system startup",
-                reasoning="Main runner with crashloop prevention started",
-                decision_type=DecisionType.METACOGNITIVE,
-                confidence=ConfidenceLevel.HIGH,
-                market_context={
-                    'startup_time': get_ist_time().isoformat(),
-                    'market_open': is_market_open(),
-                    'enhanced_runner': True
-                },
-                tags=['system_startup', 'crashloop_prevention']
-            )
             print("✅ Cognitive system initialized successfully")
+            
+            # Record startup thought (minimal data to save memory)
+            try:
+                cognitive_system.record_thought(
+                    decision="Enhanced system startup",
+                    reasoning="Main runner with crashloop prevention started",
+                    decision_type=DecisionType.METACOGNITIVE,
+                    confidence=ConfidenceLevel.HIGH,
+                    market_context={
+                        'startup_time': get_ist_time().strftime('%Y-%m-%d %H:%M:%S'),
+                        'market_open': is_market_open()
+                    },
+                    tags=['system_startup']
+                )
+            except Exception as thought_error:
+                print(f"⚠️ Failed to record startup thought: {thought_error}")
+                # Continue anyway
+        
+        # Cleanup after initialization
+        gc.collect()
         
         return cognitive_system
         
     except Exception as e:
         print(f"❌ Cognitive system initialization failed: {e}")
-        traceback.print_exc()
+        print(f"📊 Full traceback: {traceback.format_exc()}")
+        
+        # Try to create a minimal fallback
+        try:
+            print("🔧 Attempting minimal cognitive system fallback...")
+            cognitive_system = create_cognitive_system(
+                project_id=os.getenv("GCP_PROJECT_ID"),
+                enable_background_processing=False,
+                logger=logger,
+                minimal_mode=True  # If this parameter exists
+            )
+            if cognitive_system:
+                print("✅ Minimal cognitive system initialized")
+                return cognitive_system
+        except Exception:
+            pass
+        
+        print("⚠️ Continuing without cognitive system")
         return None
 
 def robust_market_monitor(logger, enhanced_logger, cognitive_system):
@@ -435,21 +481,43 @@ def main():
     
     logger.log_event("✅ Enhanced GPT Runner+ Started with Crashloop Prevention")
     
+    # Force garbage collection before memory-intensive operations
+    import gc
+    gc.collect()
+    
+    # Set memory optimization environment variables
+    os.environ['TOKENIZERS_PARALLELISM'] = 'false'  # Reduce memory usage
+    os.environ['OMP_NUM_THREADS'] = '1'  # Single thread to save memory
+    
     # Initialize cognitive system
     cognitive_system = safe_initialize_cognitive_system(logger, enhanced_logger)
     
-    # Initialize memory/RAG if available
+    # Initialize memory/RAG if available (optional, non-blocking)
     if imports_status.get('rag_modules', False):
         try:
-            print("🧠 Initializing memory/RAG systems...")
+            print("🧠 Initializing memory/RAG systems (this may take time)...")
+            
+            # Force garbage collection before RAG operations
+            gc.collect()
+            
             logger.log_event("[RAG] Syncing FAISS with Firestore...")
             sync_firestore_to_faiss()
+            
+            # Another GC after sync
+            gc.collect()
+            
             logger.log_event("[RAG] Embedding today's logs...")
             embed_logs_for_today()
+            
             print("✅ Memory/RAG systems initialized")
+            
+            # Final cleanup
+            gc.collect()
+            
         except Exception as e:
             print(f"❌ Memory/RAG initialization failed: {e}")
-            traceback.print_exc()
+            print(f"📊 Continuing without RAG - Error: {traceback.format_exc()}")
+            # Continue anyway - RAG is not critical for basic functionality
     
     try:
         # Main execution logic

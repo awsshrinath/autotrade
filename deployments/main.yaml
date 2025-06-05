@@ -19,13 +19,13 @@ spec:
         image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/gpt-runner:latest
         command: ["/app/entrypoint.sh"]
         
-        # Optimized resource configuration (based on current usage)
+        # Optimized resource configuration (increased for sentence transformer)
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "100m"
           limits:
-            memory: "512Mi"
+            memory: "1Gi"
             cpu: "500m"
         
         # Environment variables (using improved main runner)
@@ -33,7 +33,7 @@ spec:
         - name: PAPER_TRADE
           value: "true"
         - name: RUNNER_SCRIPT
-          value: "runner/main_runner_improved.py"
+          value: "runner/main_runner_lightweight.py"
         - name: GCP_PROJECT_ID
           value: "autotrade-453303"
         - name: ENVIRONMENT
