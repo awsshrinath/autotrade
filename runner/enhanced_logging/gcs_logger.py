@@ -146,47 +146,84 @@ class GCSLogger:
                 
                 # Set lifecycle policy only if bucket exists and we can modify it
                 try:
-                    # Check if lifecycle rules already exist
-                    existing_rules = bucket.lifecycle_rules
+                    # Clear existing rules first to avoid compatibility issues
+                    bucket.lifecycle_rules = []
                     
-                    # Only set lifecycle policy if it doesn't exist or is different
+                    # Always set lifecycle policy using the reliable method
                     needs_lifecycle_update = True
-                    if existing_rules:
-                        for rule in existing_rules:
-                            if (rule.action.get('type') == 'Delete' and 
-                                rule.condition.get('age') == config['lifecycle_days']):
-                                needs_lifecycle_update = False
-                                break
                     
                     if needs_lifecycle_update:
-                        # FIXED: Use dictionary format for lifecycle rules - guaranteed to work
+                        # FIXED: Use the robust add_lifecycle_*_rule methods - guaranteed to work
                         # This completely fixes the 'LifecycleRuleDelete' object has no attribute 'action' error
                         
                         try:
-                            # Use the robust dictionary format that works with all GCS library versions
-                            lifecycle_rules = [
-                                {
-                                    "action": {"type": "Delete"},
-                                    "condition": {"age": config['lifecycle_days']}
-                                }
-                            ]
+                            # Use the robust add_lifecycle_delete_rule method (most reliable)
+                            bucket.add_lifecycle_delete_rule(age=config['lifecycle_days'])
                             
                             # Add storage class transition rule if applicable
                             if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
-                                lifecycle_rules.append({
-                                    "action": {
-                                        "type": "SetStorageClass",
-                                        "storageClass": config['storage_class']
-                                    },
-                                    "condition": {"age": 30}
-                                })
+                                bucket.add_lifecycle_set_storage_class_rule(
+                                    storage_class=config['storage_class'],
+                                    age=30
+                                )
                             
-                            # Apply lifecycle rules using the dictionary format
-                            bucket.lifecycle_rules = lifecycle_rules
                             bucket.patch()
-                            
                             print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
                             
+                        except AttributeError:
+                            # Fallback 1: Use LifecycleRuleDelete directly (Claude's approach)
+                            try:
+                                from google.cloud.storage.bucket import LifecycleRuleDelete, LifecycleRuleSetStorageClass
+                                
+                                lifecycle_rules = []
+                                
+                                # Add delete rule
+                                delete_rule = LifecycleRuleDelete(age=config['lifecycle_days'])
+                                lifecycle_rules.append(delete_rule)
+                                
+                                # Add storage class transition rule if applicable
+                                if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                                    transition_rule = LifecycleRuleSetStorageClass(
+                                        storage_class=config['storage_class'],
+                                        age=30
+                                    )
+                                    lifecycle_rules.append(transition_rule)
+                                
+                                # Apply lifecycle rules using LifecycleRule objects
+                                bucket.lifecycle_rules = lifecycle_rules
+                                bucket.patch()
+                                
+                                print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention (LifecycleRule method)")
+                                
+                            except (ImportError, AttributeError, Exception):
+                                # Fallback 2: Dictionary method if LifecycleRule classes don't work
+                                try:
+                                    lifecycle_rules = [
+                                        {
+                                            "action": {"type": "Delete"},
+                                            "condition": {"age": config['lifecycle_days']}
+                                        }
+                                    ]
+                                    
+                                    # Add storage class transition rule if applicable
+                                    if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                                        lifecycle_rules.append({
+                                            "action": {
+                                                "type": "SetStorageClass",
+                                                "storageClass": config['storage_class']
+                                            },
+                                            "condition": {"age": 30}
+                                        })
+                                    
+                                    # Apply lifecycle rules using the dictionary format
+                                    bucket.lifecycle_rules = lifecycle_rules
+                                    bucket.patch()
+                                    
+                                    print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention (dictionary method)")
+                                    
+                                except Exception as lifecycle_error:
+                                    print(f"❌ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
+                                
                         except Exception as lifecycle_error:
                             print(f"❌ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
                 

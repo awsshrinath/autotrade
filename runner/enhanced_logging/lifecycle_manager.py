@@ -419,28 +419,74 @@ class LogLifecycleManager:
             try:
                 bucket = client.bucket(bucket_name)
                 
-                # Update lifecycle rules for cost optimization
-                lifecycle_rules = []
+                # Clear existing rules first to avoid compatibility issues
+                bucket.lifecycle_rules = []
                 
-                for transition in transitions:
-                    lifecycle_rules.append({
-                        'action': {
-                            'type': 'SetStorageClass',
-                            'storageClass': transition['storage_class']
-                        },
-                        'condition': {'age': transition['age_days']}
-                    })
-                
-                # Add deletion rule
-                if bucket_name in self.cleanup_policies['gcs']['delete_after_days']:
-                    delete_days = self.cleanup_policies['gcs']['delete_after_days'][bucket_name.replace('tron-', '').replace('-', '_')]
-                    lifecycle_rules.append({
-                        'action': {'type': 'Delete'},
-                        'condition': {'age': delete_days}
-                    })
-                
-                bucket.lifecycle_rules = lifecycle_rules
-                bucket.patch()
+                # Use the robust add_lifecycle_*_rule methods instead of direct assignment
+                try:
+                    # Add storage class transitions
+                    for transition in transitions:
+                        bucket.add_lifecycle_set_storage_class_rule(
+                            storage_class=transition['storage_class'],
+                            age=transition['age_days']
+                        )
+                    
+                    # Add deletion rule
+                    if bucket_name in self.cleanup_policies['gcs']['delete_after_days']:
+                        delete_days = self.cleanup_policies['gcs']['delete_after_days'][bucket_name.replace('tron-', '').replace('-', '_')]
+                        bucket.add_lifecycle_delete_rule(age=delete_days)
+                    
+                    bucket.patch()
+                    
+                except AttributeError:
+                    # Fallback 1: Use LifecycleRule objects directly (Claude's approach)
+                    try:
+                        from google.cloud.storage.bucket import LifecycleRuleDelete, LifecycleRuleSetStorageClass
+                        
+                        lifecycle_rules = []
+                        
+                        # Add storage class transitions using LifecycleRule objects
+                        for transition in transitions:
+                            transition_rule = LifecycleRuleSetStorageClass(
+                                storage_class=transition['storage_class'],
+                                age=transition['age_days']
+                            )
+                            lifecycle_rules.append(transition_rule)
+                        
+                        # Add deletion rule
+                        if bucket_name in self.cleanup_policies['gcs']['delete_after_days']:
+                            delete_days = self.cleanup_policies['gcs']['delete_after_days'][bucket_name.replace('tron-', '').replace('-', '_')]
+                            delete_rule = LifecycleRuleDelete(age=delete_days)
+                            lifecycle_rules.append(delete_rule)
+                        
+                        bucket.lifecycle_rules = lifecycle_rules
+                        bucket.patch()
+                        
+                        print(f"Optimized storage classes for {bucket_name} (LifecycleRule method)")
+                        
+                    except (ImportError, AttributeError, Exception):
+                        # Fallback 2: Dictionary method if LifecycleRule classes don't work
+                        lifecycle_rules = []
+                        
+                        for transition in transitions:
+                            lifecycle_rules.append({
+                                'action': {
+                                    'type': 'SetStorageClass',
+                                    'storageClass': transition['storage_class']
+                                },
+                                'condition': {'age': transition['age_days']}
+                            })
+                        
+                        # Add deletion rule
+                        if bucket_name in self.cleanup_policies['gcs']['delete_after_days']:
+                            delete_days = self.cleanup_policies['gcs']['delete_after_days'][bucket_name.replace('tron-', '').replace('-', '_')]
+                            lifecycle_rules.append({
+                                'action': {'type': 'Delete'},
+                                'condition': {'age': delete_days}
+                            })
+                        
+                        bucket.lifecycle_rules = lifecycle_rules
+                        bucket.patch()
                 
                 print(f"Optimized storage classes for {bucket_name}")
                 
