@@ -64,7 +64,7 @@ def safe_initialize_loggers():
         # Basic logger
         today_date = get_ist_time().strftime("%Y-%m-%d")
         create_daily_folders(today_date)
-        logger = Logger()
+        logger = Logger(today_date)
         
         # Enhanced logger
         session_id = f"lightweight_runner_{int(time.time())}"
