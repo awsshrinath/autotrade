@@ -49,4 +49,20 @@ node_modules/
 .DS_Store
 # Task files
 tasks.json
-tasks/ 
+tasks/
+
+# Log aggregator specific
+gpt_runner/log_aggregator/.env
+gpt_runner/log_aggregator/logs/
+gpt_runner/log_aggregator/.cache/
+gpt_runner/log_aggregator/test-results/
+gpt_runner/log_aggregator/.pytest_cache/
+gpt_runner/log_aggregator/.coverage
+gpt_runner/log_aggregator/htmlcov/
+
+# Redis dump files
+*.rdb
+
+# Kubernetes temp files
+*.kubeconfig
+*.k8s.yaml.tmp 
