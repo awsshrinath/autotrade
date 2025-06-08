@@ -101,6 +101,7 @@ Tron/
 |-------|-------------|
 | [📊 Dashboard Deployment](docs/TRADING_DASHBOARD_DEPLOYMENT.md) | Complete dashboard setup guide |
 | [🏗️ Project Structure](docs/PROJECT_STRUCTURE.md) | Detailed project organization |
+| [📁 File Organization](docs/FILE_ORGANIZATION.md) | File organization guidelines and rules |
 | [⚡ Quick Start](docs/QUICK_START_GUIDE.md) | Fast setup instructions |
 | [📝 Enhanced Logging](docs/ENHANCED_LOGGING_SYSTEM.md) | Logging infrastructure guide |
 | [⚙️ Configuration](docs/CONFIG_GUIDE.md) | System configuration details |
