@@ -11,6 +11,19 @@ from collections import defaultdict
 # Import from new modular structure using absolute imports
 from runner.market_data import MarketDataFetcher, TechnicalIndicators
 
+# 🚀 NEW: Real historical data imports
+try:
+    import yfinance as yf
+    YFINANCE_AVAILABLE = True
+except ImportError:
+    YFINANCE_AVAILABLE = False
+
+try:
+    import investpy
+    INVESTPY_AVAILABLE = True
+except ImportError:
+    INVESTPY_AVAILABLE = False
+
 
 class CorrelationMonitor:
     """Cross-market correlation analysis for multi-instrument trading"""
@@ -166,7 +179,10 @@ class MarketMonitor:
             'batch_size': 10,  # Max instruments per batch
             'rate_limit_delay': 1.0,  # Seconds between requests
             'exponential_backoff_base': 2.0,
-            'max_backoff_seconds': 30
+            'max_backoff_seconds': 30,
+            'use_real_data': True,  # Enable real data fetching
+            'alpha_vantage_api_key': os.getenv('ALPHA_VANTAGE_API_KEY'),
+            'data_source_priority': ['yfinance', 'alpha_vantage', 'investpy', 'kite', 'mock']
         }
         
         # 🚀 NEW: In-memory cache for historical data
@@ -220,6 +236,212 @@ class MarketMonitor:
         }
         if self.logger:
             self.logger.log_event(f"[CACHE STORE] Cached data for {cache_key}")
+
+    def _get_nifty_symbol_mapping(self, instrument_token):
+        """Map instrument tokens to real data source symbols"""
+        symbol_mapping = {
+            256265: '^NSEI',  # NIFTY 50 -> Yahoo Finance symbol
+            260105: '^NSEBANK',  # BANKNIFTY -> Yahoo Finance symbol  
+            264969: 'INDIA VIX',  # INDIA VIX
+            11924738: '^CNXIT',  # NIFTY IT
+            11924234: '^NSEBANK',  # NIFTY BANK
+            11924242: '^CNXFMCG',  # NIFTY FMCG
+            11924226: '^CNXAUTO',  # NIFTY AUTO
+            11924274: '^CNXPHARMA',  # NIFTY PHARMA
+            'NIFTY 50': '^NSEI',
+            'BANKNIFTY': '^NSEBANK',
+            'NIFTY BANK': '^NSEBANK',
+            'NIFTY IT': '^CNXIT',
+            'NIFTY AUTO': '^CNXAUTO',
+            'NIFTY FMCG': '^CNXFMCG',
+            'NIFTY PHARMA': '^CNXPHARMA'
+        }
+        
+        return symbol_mapping.get(instrument_token, '^NSEI')  # Default to NIFTY 50
+
+    def _fetch_yfinance_data(self, instrument_token, from_date, to_date, interval):
+        """Fetch historical data using Yahoo Finance (yfinance)"""
+        try:
+            if not YFINANCE_AVAILABLE:
+                raise ImportError("yfinance not available")
+            
+            # Map interval to yfinance format
+            interval_mapping = {
+                'minute': '1m',
+                '5minute': '5m', 
+                '15minute': '15m',
+                '1hour': '1h',
+                'day': '1d'
+            }
+            yf_interval = interval_mapping.get(interval, '5m')
+            
+            # Get symbol for yfinance
+            symbol = self._get_nifty_symbol_mapping(instrument_token)
+            
+            if self.logger:
+                self.logger.log_event(f"[YFINANCE] Fetching {symbol} from {from_date} to {to_date}, interval {yf_interval}")
+            
+            # Fetch data from yfinance
+            ticker = yf.Ticker(symbol)
+            df = ticker.history(start=from_date, end=to_date, interval=yf_interval)
+            
+            if df.empty:
+                raise ValueError(f"No data returned for {symbol}")
+            
+            # Standardize column names to match expected format
+            df = df.reset_index()
+            df.columns = [col.lower() for col in df.columns]
+            
+            # Rename columns to match expected format
+            column_mapping = {
+                'datetime': 'date',
+                'adj close': 'close'  # Use adjusted close as close price
+            }
+            df = df.rename(columns=column_mapping)
+            
+            # Ensure we have the required columns
+            required_columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+            df = df[required_columns]
+            
+            if self.logger:
+                self.logger.log_event(f"[YFINANCE SUCCESS] Fetched {len(df)} records for {symbol}")
+            
+            return df
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[YFINANCE ERROR] Failed to fetch data: {e}")
+            raise e
+
+    def _fetch_alpha_vantage_data(self, instrument_token, from_date, to_date, interval):
+        """Fetch historical data using Alpha Vantage API"""
+        try:
+            api_key = self.historical_config.get('alpha_vantage_api_key')
+            if not api_key:
+                raise ValueError("Alpha Vantage API key not configured")
+            
+            # Map instrument to Alpha Vantage symbol (limited for Indian indices)
+            # Alpha Vantage mainly supports US markets, so this is a fallback
+            symbol_mapping = {
+                256265: 'NIFTY',  # Limited support
+                'NIFTY 50': 'NIFTY'
+            }
+            
+            symbol = symbol_mapping.get(instrument_token, 'NIFTY')
+            
+            # Alpha Vantage function mapping
+            function_mapping = {
+                'minute': 'TIME_SERIES_INTRADAY',
+                '5minute': 'TIME_SERIES_INTRADAY', 
+                '15minute': 'TIME_SERIES_INTRADAY',
+                '1hour': 'TIME_SERIES_INTRADAY',
+                'day': 'TIME_SERIES_DAILY'
+            }
+            
+            function = function_mapping.get(interval, 'TIME_SERIES_INTRADAY')
+            
+            # Build API URL
+            url = f"https://www.alphavantage.co/query"
+            params = {
+                'function': function,
+                'symbol': symbol,
+                'apikey': api_key,
+                'datatype': 'json'
+            }
+            
+            if interval in ['minute', '5minute', '15minute', '1hour']:
+                params['interval'] = interval.replace('minute', 'min').replace('1hour', '60min')
+            
+            if self.logger:
+                self.logger.log_event(f"[ALPHA_VANTAGE] Fetching {symbol} with function {function}")
+            
+            response = requests.get(url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Check for API error messages
+            if 'Error Message' in data:
+                raise ValueError(f"Alpha Vantage error: {data['Error Message']}")
+            
+            if 'Note' in data:
+                raise ValueError(f"Alpha Vantage rate limit: {data['Note']}")
+            
+            # Extract time series data
+            time_series_key = None
+            for key in data.keys():
+                if 'Time Series' in key:
+                    time_series_key = key
+                    break
+            
+            if not time_series_key or time_series_key not in data:
+                raise ValueError("No time series data found in response")
+            
+            time_series = data[time_series_key]
+            
+            # Convert to DataFrame
+            records = []
+            for date_str, values in time_series.items():
+                record = {
+                    'date': pd.to_datetime(date_str),
+                    'open': float(values.get('1. open', 0)),
+                    'high': float(values.get('2. high', 0)),
+                    'low': float(values.get('3. low', 0)),
+                    'close': float(values.get('4. close', 0)),
+                    'volume': int(values.get('5. volume', 0))
+                }
+                records.append(record)
+            
+            df = pd.DataFrame(records)
+            df = df.sort_values('date').reset_index(drop=True)
+            
+            # Filter by date range
+            df = df[(df['date'] >= pd.to_datetime(from_date)) & 
+                   (df['date'] <= pd.to_datetime(to_date))]
+            
+            if self.logger:
+                self.logger.log_event(f"[ALPHA_VANTAGE SUCCESS] Fetched {len(df)} records for {symbol}")
+            
+            return df
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[ALPHA_VANTAGE ERROR] Failed to fetch data: {e}")
+            raise e
+
+    def _fetch_real_historical_data(self, instrument_token, from_date, to_date, interval):
+        """Fetch real historical data using prioritized data sources"""
+        if not self.historical_config.get('use_real_data', True):
+            raise ValueError("Real data fetching disabled")
+        
+        data_sources = self.historical_config.get('data_source_priority', ['yfinance', 'alpha_vantage', 'kite'])
+        last_error = None
+        
+        for source in data_sources:
+            if source == 'mock':
+                continue  # Skip mock for real data fetching
+            if source == 'kite' and not self.kite_client:
+                continue  # Skip kite if client not available
+                
+            try:
+                if self.logger:
+                    self.logger.log_event(f"[REAL_DATA] Trying {source} for {instrument_token}")
+                
+                if source == 'yfinance':
+                    return self._fetch_yfinance_data(instrument_token, from_date, to_date, interval)
+                elif source == 'alpha_vantage':
+                    return self._fetch_alpha_vantage_data(instrument_token, from_date, to_date, interval)
+                elif source == 'kite' and self.kite_client:
+                    return self._fetch_with_retry(instrument_token, from_date, to_date, interval)
+                    
+            except Exception as e:
+                last_error = e
+                if self.logger:
+                    self.logger.log_event(f"[REAL_DATA] {source} failed: {e}")
+                continue
+        
+        # If all real data sources fail, raise the last error
+        raise last_error or ValueError("All real data sources failed")
 
     def _fetch_with_retry(self, instrument_token, from_date, to_date, interval, attempt=1):
         """Fetch historical data with exponential backoff retry logic"""
@@ -287,9 +509,17 @@ class MarketMonitor:
                     batch_results[instrument_name] = cached_data
                     continue
                 
-                # Fetch from API with retry logic
-                if self.kite_client:
-                    df = self._fetch_with_retry(instrument_token, from_date, to_date, interval)
+                # 🚀 NEW: Try real data sources first, then fallback to Kite/mock
+                try:
+                    if self.historical_config.get('use_real_data', True):
+                        # Try real data sources first
+                        df = self._fetch_real_historical_data(instrument_token, from_date, to_date, interval)
+                    else:
+                        # Use original Kite logic if real data disabled
+                        if self.kite_client:
+                            df = self._fetch_with_retry(instrument_token, from_date, to_date, interval)
+                        else:
+                            raise ValueError("No data source available")
                     
                     if not df.empty:
                         # Store in cache
@@ -299,11 +529,30 @@ class MarketMonitor:
                         if self.logger:
                             self.logger.log_event(f"[WARNING] Empty data returned for {instrument_name}")
                         batch_results[instrument_name] = pd.DataFrame()
-                else:
-                    # Fallback to mock data if no kite client
+                        
+                except Exception as real_data_error:
                     if self.logger:
-                        self.logger.log_event(f"[FALLBACK] No kite client, generating mock data for {instrument_name}")
-                    batch_results[instrument_name] = self._generate_mock_data(from_date, to_date, interval)
+                        self.logger.log_event(f"[REAL_DATA_FALLBACK] Real data failed for {instrument_name}: {real_data_error}")
+                    
+                    # Fallback to Kite API if available
+                    if self.kite_client:
+                        try:
+                            df = self._fetch_with_retry(instrument_token, from_date, to_date, interval)
+                            if not df.empty:
+                                self._store_in_cache(cache_key, df)
+                                batch_results[instrument_name] = df
+                            else:
+                                batch_results[instrument_name] = pd.DataFrame()
+                        except Exception as kite_error:
+                            if self.logger:
+                                self.logger.log_event(f"[KITE_FALLBACK] Kite also failed for {instrument_name}: {kite_error}")
+                            # Final fallback to mock data
+                            batch_results[instrument_name] = self._generate_mock_data(from_date, to_date, interval)
+                    else:
+                        # Final fallback to mock data if no kite client
+                        if self.logger:
+                            self.logger.log_event(f"[MOCK_FALLBACK] No kite client, generating mock data for {instrument_name}")
+                        batch_results[instrument_name] = self._generate_mock_data(from_date, to_date, interval)
                 
                 # Rate limiting between requests
                 time.sleep(self.historical_config['rate_limit_delay'])

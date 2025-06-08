@@ -34,3 +34,8 @@ PyYAML>=6.0
 transformers>=4.21.0
 safetensors>=0.3.0
 tokenizers>=0.13.0
+
+# 📈 Real Historical Data Sources (Task 10)
+yfinance>=0.2.18
+investpy>=1.0.8
+alpha-vantage>=2.3.1
