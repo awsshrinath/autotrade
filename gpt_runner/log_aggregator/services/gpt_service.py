@@ -1,42 +1,34 @@
 """
-GPT service for log summarization and analysis.
-Handles OpenAI API integration, log processing, and caching.
+GPT-based log summarization service.
+Provides AI-powered analysis and summarization of log data using OpenAI's GPT models.
 """
 
-import asyncio
-import hashlib
 import json
-import logging
-import re
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Union
-import openai
+import hashlib
+from typing import Dict, List, Any, Optional
 import structlog
-import redis
-from redis.exceptions import RedisError
+from openai import AsyncOpenAI
 
 from ..utils.config import get_config
 
 logger = structlog.get_logger(__name__)
 
-
 class GPTLogService:
-    """Service for summarizing and analyzing logs using GPT models."""
+    """Service for GPT-powered log analysis and summarization."""
     
     def __init__(self):
         self.config = get_config()
         self.client = None
-        self.redis_client = None
         self._initialize_openai()
-        self._initialize_redis()
     
     def _initialize_openai(self):
-        """Initialize the OpenAI client."""
+        """Initialize OpenAI client."""
         try:
             if not self.config.openai_api_key:
-                raise ValueError("OpenAI API key not configured")
+                logger.warning("OpenAI API key not configured, GPT features will be disabled")
+                return
             
-            self.client = openai.AsyncOpenAI(
+            self.client = AsyncOpenAI(
                 api_key=self.config.openai_api_key,
                 timeout=self.config.openai_timeout
             )
@@ -45,39 +37,12 @@ class GPTLogService:
             
         except Exception as e:
             logger.error("Failed to initialize OpenAI client", error=str(e))
-            raise
-    
-    def _initialize_redis(self):
-        """Initialize Redis client for caching."""
-        try:
-            if not self.config.redis_url:
-                logger.warning("Redis URL not configured, caching will be disabled")
-                return
-            
-            self.redis_client = redis.from_url(
-                self.config.redis_url,
-                decode_responses=True,
-                socket_timeout=self.config.redis_timeout,
-                socket_connect_timeout=self.config.redis_timeout
-            )
-            
-            # Test connection
-            self.redis_client.ping()
-            
-            logger.info("Redis client initialized successfully")
-            
-        except RedisError as e:
-            logger.warning("Failed to initialize Redis client, caching disabled", error=str(e))
-            self.redis_client = None
-        except Exception as e:
-            logger.error("Unexpected error initializing Redis", error=str(e))
-            self.redis_client = None
-    
+            self.client = None
+
     async def test_connection(self) -> Dict[str, bool]:
-        """Test connections to OpenAI and Redis."""
+        """Test connections to OpenAI."""
         results = {
-            "openai": False,
-            "redis": False
+            "openai": False
         }
         
         # Test OpenAI connection
@@ -92,15 +57,6 @@ class GPTLogService:
         except Exception as e:
             logger.error("OpenAI connection test failed", error=str(e))
         
-        # Test Redis connection
-        if self.redis_client:
-            try:
-                self.redis_client.ping()
-                results["redis"] = True
-                logger.info("Redis connection test successful")
-            except Exception as e:
-                logger.error("Redis connection test failed", error=str(e))
-        
         return results
     
     def _generate_cache_key(self, content: str, summary_type: str, **kwargs) -> str:
@@ -114,34 +70,11 @@ class GPTLogService:
     
     async def _get_cached_summary(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get cached summary if available."""
-        if not self.redis_client:
-            return None
-        
-        try:
-            cached_data = self.redis_client.get(cache_key)
-            if cached_data:
-                summary_data = json.loads(cached_data)
-                logger.info("Retrieved cached summary", cache_key=cache_key)
-                return summary_data
-        except Exception as e:
-            logger.warning("Failed to retrieve cached summary", cache_key=cache_key, error=str(e))
-        
         return None
     
     async def _cache_summary(self, cache_key: str, summary_data: Dict[str, Any], ttl: int = 3600):
         """Cache the summary data."""
-        if not self.redis_client:
-            return
-        
-        try:
-            self.redis_client.setex(
-                cache_key,
-                ttl,
-                json.dumps(summary_data)
-            )
-            logger.info("Cached summary", cache_key=cache_key, ttl=ttl)
-        except Exception as e:
-            logger.warning("Failed to cache summary", cache_key=cache_key, error=str(e))
+        pass
     
     def _chunk_text(self, text: str, max_chunk_size: int = 8000) -> List[str]:
         """
@@ -392,48 +325,11 @@ Provide a structured analysis with specific examples from the logs."""
     
     async def get_cache_statistics(self) -> Dict[str, Any]:
         """Get cache statistics and health information."""
-        if not self.redis_client:
-            return {"cache_enabled": False}
-        
-        try:
-            info = self.redis_client.info()
-            
-            # Get cache keys related to our service
-            our_keys = self.redis_client.keys("gpt_summary:*")
-            
-            stats = {
-                "cache_enabled": True,
-                "redis_version": info.get("redis_version"),
-                "connected_clients": info.get("connected_clients"),
-                "used_memory_human": info.get("used_memory_human"),
-                "total_commands_processed": info.get("total_commands_processed"),
-                "our_cached_summaries": len(our_keys),
-                "uptime_in_seconds": info.get("uptime_in_seconds")
-            }
-            
-            logger.info("Cache statistics retrieved", cached_summaries=len(our_keys))
-            return stats
-            
-        except Exception as e:
-            logger.error("Failed to get cache statistics", error=str(e))
-            return {"cache_enabled": False, "error": str(e)}
+        return {"cache_enabled": False}
     
     async def clear_cache(self, pattern: str = "gpt_summary:*") -> int:
         """Clear cached summaries matching the pattern."""
-        if not self.redis_client:
-            return 0
-        
-        try:
-            keys = self.redis_client.keys(pattern)
-            if keys:
-                deleted = self.redis_client.delete(*keys)
-                logger.info("Cache cleared", pattern=pattern, deleted_keys=deleted)
-                return deleted
-            return 0
-            
-        except Exception as e:
-            logger.error("Failed to clear cache", pattern=pattern, error=str(e))
-            raise
+        return 0
 
 
 # Global service instance

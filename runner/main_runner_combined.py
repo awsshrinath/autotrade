@@ -49,6 +49,7 @@ from runner.strategy_selector import StrategySelector
 from runner.cognitive_system import create_cognitive_system, CognitiveSystem
 from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigger
 from runner.thought_journal import DecisionType, ConfidenceLevel
+from runner.enhanced_trade_manager import create_enhanced_trade_manager, TradeRequest
 
 # Load trading mode (PAPER or LIVE)
 PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
@@ -180,6 +181,15 @@ def main():
     kite_manager.set_access_token()
     kite = kite_manager.get_kite_client()
 
+    # Initialize the Enhanced Trade Manager
+    trade_manager = create_enhanced_trade_manager(
+        logger=logger, 
+        kite_manager=kite_manager, 
+        firestore_client=firestore_client,
+        cognitive_system=cognitive_system
+    )
+    trade_manager.start_trading_session()
+
     # Get market context
     market_monitor = MarketMonitor(logger)
     sentiment_data = market_monitor.get_market_sentiment(kite)
@@ -234,141 +244,32 @@ def main():
     firestore_client.store_daily_plan(plan)
     logger.log_event(f"✅ Strategy Plan Saved: {plan}")
 
-    # Wait until market opens at 9:15 AM IST
-    now = datetime.datetime.now()
-    market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
-    if now < market_open:
-        wait_minutes = int((market_open - now).total_seconds() / 60)
-        logger.log_event(
-            f"⏳ Waiting {wait_minutes} minutes until market opens at 9:15 AM IST..."
-        )
-        
-        # Record cognitive thought about waiting period
-        if cognitive_system:
-            cognitive_system.record_thought(
-                decision=f"Waiting for market open ({wait_minutes} minutes)",
-                reasoning="Market not yet open, cognitive system in standby mode",
-                decision_type=DecisionType.METACOGNITIVE,
-                confidence=ConfidenceLevel.HIGH,
-                market_context={'wait_minutes': wait_minutes, 'market_open_time': '9:15'},
-                tags=['market_wait', 'standby']
-            )
-            
-            # Transition to observing state during wait
-            cognitive_system.transition_state(
-                CognitiveState.OBSERVING,
-                StateTransitionTrigger.MARKET_OPEN,
-                "Waiting for market open"
-            )
-        
-        time.sleep((market_open - now).total_seconds())
+    # Main trading loop
+    while True:
+        now = datetime.datetime.now()
+        if now.hour >= 15 and now.minute >= 25:
+            logger.log_event("🛑 Market closed. Exiting main loop.")
+            break
 
-    # Record market open event
-    if cognitive_system:
-        cognitive_system.record_thought(
-            decision="Market opened - trading day begins",
-            reasoning="Market opening detected, transitioning to active trading mode",
-            decision_type=DecisionType.METACOGNITIVE,
-            confidence=ConfidenceLevel.HIGH,
-            market_context={'market_status': 'open', 'time': '9:15'},
-            tags=['market_open', 'trading_start']
-        )
-
-    # Note: In Kubernetes, we don't need to start bots manually
-    # The bots are deployed separately and will read the plan from Firestore
-    logger.log_event(
-        "🚀 Trading bots are running in separate pods and will read the plan from Firestore"
-    )
-
-    try:
-        # Monitor the market until close
-        while True:
-            time.sleep(60)
-            now = time.strftime("%H:%M")
-            if now >= "15:30":
-                logger.log_event("🔔 Market closed. Trading day complete.")
-
-                # Record market close cognitive thought
-                if cognitive_system:
-                    cognitive_system.record_thought(
-                        decision="Market closed - trading day ended",
-                        reasoning="Market closing detected at 15:30, initiating end-of-day procedures",
-                        decision_type=DecisionType.METACOGNITIVE,
-                        confidence=ConfidenceLevel.HIGH,
-                        market_context={'market_status': 'closed', 'time': '15:30'},
-                        tags=['market_close', 'trading_end']
-                    )
-                    
-                    # Transition to reflection state
-                    cognitive_system.transition_state(
-                        CognitiveState.REFLECTING,
-                        StateTransitionTrigger.MARKET_CLOSE,
-                        "Market closed, beginning daily reflection"
-                    )
-
-                # Run GPT self-improvement analysis
-                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
-                run_gpt_reflection()  # Run reflection for all bots
-                
-                # Generate cognitive performance analysis
-                if cognitive_system:
-                    logger.log_event("🧠 Generating cognitive performance analysis...")
-                    try:
-                        analysis_id = cognitive_system.metacognition.generate_performance_attribution(period_days=1)
-                        logger.log_event(f"✅ Cognitive analysis completed: {analysis_id}")
-                        
-                        # Get final cognitive summary
-                        final_summary = cognitive_system.get_cognitive_summary()
-                        logger.log_event(f"📊 Final cognitive summary: {final_summary}")
-                        
-                        # Record end-of-day reflection
-                        cognitive_system.record_thought(
-                            decision="Daily cognitive analysis completed",
-                            reasoning=f"Performance analysis generated: {analysis_id}",
-                            decision_type=DecisionType.PERFORMANCE_REVIEW,
-                            confidence=ConfidenceLevel.HIGH,
-                            market_context={'analysis_id': analysis_id},
-                            tags=['daily_summary', 'performance_analysis']
-                        )
-                        
-                    except Exception as e:
-                        logger.log_event(f"❌ Cognitive analysis failed: {e}")
-                
-                break
-
-    except KeyboardInterrupt:
-        logger.log_event("🛑 Interrupted manually. Stopping monitoring.")
-        
-        # Record manual interruption
-        if cognitive_system:
-            cognitive_system.record_thought(
-                decision="Manual interruption detected",
-                reasoning="System interrupted by user, performing emergency shutdown procedures",
-                decision_type=DecisionType.METACOGNITIVE,
-                confidence=ConfidenceLevel.HIGH,
-                market_context={'interruption_type': 'manual'},
-                tags=['emergency_stop', 'manual_interrupt']
-            )
-        
-        logger.log_event("🧠 Running GPT Reflection after manual stop...")
-        run_gpt_reflection()
-        
-        # Emergency cognitive analysis if possible
-        if cognitive_system:
+        if now.hour >= 9 and now.minute >= 15:
             try:
-                cognitive_system.metacognition.generate_performance_attribution(period_days=1)
-            except:
-                pass
-    
-    finally:
-        # Graceful cognitive system shutdown
-        if cognitive_system:
-            try:
-                logger.log_event("🧠 Shutting down cognitive system...")
-                cognitive_system.shutdown()
-                logger.log_event("✅ Cognitive system shutdown completed")
+                # Example of running a strategy. This would be driven by signals.
+                trade_manager.run_strategy_once(stock_strategy, "bullish", "stock")
             except Exception as e:
-                logger.log_event(f"❌ Cognitive system shutdown error: {e}")
+                logger.log_event(f"Error during trading loop: {e}")
+
+        time.sleep(60) # Wait for 1 minute before next cycle
+
+    # End of day processes
+    trade_manager.stop_trading_session()
+    
+    # Run GPT Self-Improvement Monitor after market hours
+    if GPT_REFLECTION_AVAILABLE:
+        run_gpt_reflection(today_date)
+
+    # Log shutdown
+    logger.log_event("✅ GPT Runner+ Orchestrator Shutdown")
+    enhanced_logger.log_event("GPT Runner+ Orchestrator Shutdown", LogLevel.INFO, LogCategory.SYSTEM)
 
 
 if __name__ == "__main__":

@@ -252,47 +252,34 @@ def test_state_machine_mock():
         assert False, f"State machine mock test failed: {e}"
 
 def test_trade_manager_integration():
-    """Test trade manager integration with cognitive system"""
-    print("\n🧪 Testing trade manager integration...")
+    """Test integration of cognitive system with trade manager"""
+    print("\n🧪 Testing Trade Manager integration...")
     
     try:
-        from runner.trade_manager import TradeManager
+        from runner.enhanced_trade_manager import create_enhanced_trade_manager
+        from runner.cognitive_system import create_cognitive_system
         
-        # Mock dependencies
         logger = Mock()
-        kite = Mock()
-        firestore_client = Mock()
         
-        # Create trade manager without cognitive system first
-        trade_manager = TradeManager(
+        # Test that TM can be created without a cognitive system
+        trade_manager = create_enhanced_trade_manager(logger=logger)
+        assert trade_manager.cognitive_system is not None # It creates its own now
+        print("✅ TradeManager created without explicit cognitive system")
+        
+        # Test that TM uses a provided cognitive system
+        cognitive_system = create_cognitive_system(logger=logger, enable_background_processing=False)
+        
+        trade_manager_with_cognitive = create_enhanced_trade_manager(
             logger=logger,
-            kite=kite,
-            firestore_client=firestore_client,
-            cognitive_system=None
+            cognitive_system=cognitive_system
         )
         
-        # Check that it initializes without cognitive system
-        assert trade_manager.cognitive_system is None
-        print("✅ Trade manager works without cognitive system")
-        
-        # Mock cognitive system
-        mock_cognitive_system = Mock()
-        mock_cognitive_system.record_thought.return_value = "thought-123"
-        
-        trade_manager_with_cognitive = TradeManager(
-            logger=logger,
-            kite=kite,
-            firestore_client=firestore_client,
-            cognitive_system=mock_cognitive_system
-        )
-        
-        assert trade_manager_with_cognitive.cognitive_system is not None
-        print("✅ Trade manager integration mock test successful")
-        
+        assert trade_manager_with_cognitive.cognitive_system == cognitive_system
+        print("✅ TradeManager created with explicit cognitive system")
         
     except Exception as e:
-        print(f"❌ Trade manager integration test failed: {e}")
-        assert False, f"Trade manager integration test failed: {e}"
+        print(f"❌ Trade Manager integration test failed: {e}")
+        assert False, f"Trade Manager integration test failed: {e}"
 
 def test_requirements():
     """Test that required packages are available"""

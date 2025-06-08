@@ -112,33 +112,26 @@ def test_paper_trading_integration():
         # Set paper trading mode
         os.environ['PAPER_TRADE'] = 'true'
         
-        from runner.config import PAPER_TRADE
-        print(f"✅ PAPER_TRADE flag loaded: {PAPER_TRADE}")
+        from runner.config import is_paper_trade
+        paper_trade_flag = is_paper_trade()
+        print(f"✅ is_paper_trade() returned: {paper_trade_flag}")
         
-        if not PAPER_TRADE:
-            print("❌ PAPER_TRADE should be True")
+        if not paper_trade_flag:
+            print("❌ is_paper_trade() should return True")
             return False
         
-        # Test TradeManager paper trading
-        from runner.trade_manager import TradeManager
+        # Test EnhancedTradeManager paper trading
+        from runner.enhanced_trade_manager import create_enhanced_trade_manager
         from runner.logger import Logger
         
         test_logger = Logger('test')
-        trade_manager = TradeManager(logger=test_logger)
+        trade_manager = create_enhanced_trade_manager(logger=test_logger)
         
-        print(f"✅ TradeManager paper mode: {trade_manager.paper_trade_mode}")
+        print(f"✅ EnhancedTradeManager paper mode from config: {trade_manager.config.paper_trade}")
         
-        if not trade_manager.paper_trade_mode:
-            print("❌ TradeManager should be in paper mode")
+        if not trade_manager.config.paper_trade:
+            print("❌ EnhancedTradeManager should be in paper mode based on its config")
             return False
-        
-        # Test paper trading manager
-        try:
-            from runner.paper_trader_integration import PaperTradingManager
-            paper_manager = PaperTradingManager(logger=test_logger)
-            print(f"✅ Paper Trading Manager created: {paper_manager.is_enabled}")
-        except ImportError:
-            print("⚠️ Paper Trading Manager not available (optional)")
         
         print("✅ Paper trading integration working")
         return True

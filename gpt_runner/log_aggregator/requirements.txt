@@ -1,29 +1,34 @@
-# FastAPI and core dependencies
+# Core FastAPI and web framework dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
-python-multipart==0.0.6
+pydantic-settings==2.1.0
 
-# Google Cloud Platform libraries
+# Google Cloud Platform dependencies
 google-cloud-storage==2.10.0
 google-cloud-firestore==2.13.1
-google-cloud-logging==3.8.0
+google-auth==2.23.4
 
 # Kubernetes client
 kubernetes==28.1.0
+
+# OpenAI for GPT summarization
+openai==1.3.7
+
+# Logging and monitoring
+structlog==23.2.0
+
+# HTTP client for external requests
+httpx==0.25.2
+
+# Data processing and utilities
+python-multipart==0.0.6
+python-json-logger==2.0.7
 
 # Authentication and security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
-
-# Caching
-redis==5.0.1
-async-lru==2.0.4
-
-# HTTP client for external API calls
-httpx==0.25.2
-aiofiles==23.2.1
 
 # Development and testing
 pytest==7.4.3
@@ -33,9 +38,5 @@ black==23.11.0
 isort==5.12.0
 flake8==6.1.0
 
-# OpenAI for log summarization
-openai==1.3.7
-
 # Monitoring and logging
-structlog==23.2.0
 prometheus-client==0.19.0 

@@ -244,10 +244,30 @@ class FirestoreClient:
             doc_ref = self.db.collection("performance_attribution").document()
             doc_ref.set(attribution_data)
             if self.logger:
-                self.logger.log_event(f"Performance attribution logged for period: {attribution_data.get('period_start')} to {attribution_data.get('period_end')}")
+                self.logger.log_event(f"Performance attribution logged")
         except Exception as e:
             if self.logger:
                 self.logger.log_event(f"[Firestore Error] log_performance_attribution failed: {e}")
+
+    def log_system_error(self, collection_name, error_type, error_message, error_details):
+        """Log system errors to Firestore for monitoring and debugging"""
+        try:
+            error_data = {
+                "error_type": error_type,
+                "error_message": error_message,
+                "error_details": error_details,
+                "timestamp": datetime.datetime.now().isoformat(),
+                "source": "system_error_handler"
+            }
+            doc_ref = self.db.collection(collection_name).document()
+            doc_ref.set(error_data)
+            if self.logger:
+                self.logger.log_event(f"System error logged to {collection_name}: {error_type}")
+        except Exception as e:
+            if self.logger:
+                self.logger.log_event(f"[Firestore Error] log_system_error failed: {e}")
+            # Fallback: print to console if Firestore logging fails
+            print(f"Failed to log system error to Firestore: {e}")
 
     def get_cognitive_summary(self, days_back=7):
         """Get a summary of cognitive system activity"""

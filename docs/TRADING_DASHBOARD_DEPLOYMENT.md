@@ -101,6 +101,7 @@ kubectl port-forward service/trading-dashboard-service 8501:8501 -n gpt
 
 # Open in your browser
 open http://localhost:8501
+
 ```
 
 ### Method 2: LoadBalancer (Production)

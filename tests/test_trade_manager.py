@@ -1,10 +1,15 @@
-from runner.trade_manager import TradeManager
+from runner.enhanced_trade_manager import create_enhanced_trade_manager, TradeRequest
 from unittest.mock import Mock, patch
 
 
 class MockLogger:
     def log_event(self, msg):
         print(f"[MOCK LOG] {msg}")
+
+
+class MockKiteManager:
+    def get_kite_client(self):
+        return MockKite()
 
 
 class MockKite:
@@ -38,20 +43,22 @@ class MockStrategy:
 
 
 def test_run_strategy_once():
-    kite = MockKite()
+    kite_manager = MockKiteManager()
     firestore = MockFirestoreClient()
-    trade_manager = TradeManager(
-        logger=MockLogger(), kite=kite, firestore_client=firestore
+    trade_manager = create_enhanced_trade_manager(
+        logger=MockLogger(), kite_manager=kite_manager, firestore_client=firestore
     )
+    trade_manager.start_trading_session()
     
     # Mock the strategy import at the module level where it's used
-    with patch('runner.trade_manager.VWAPStrategy', MockStrategy):
+    with patch('runner.enhanced_trade_manager.VWAPStrategy', MockStrategy):
         # Simulate a trade run with a known strategy
-        trade = trade_manager.run_strategy_once(
+        position_id = trade_manager.run_strategy_once(
             strategy_name="vwap", direction="bullish", bot_type="stock"
         )
         
         # Verify trade was created and position tracked
-        assert trade is not None, "Trade should be created"
-        assert len(trade_manager.open_positions) == 1, "Position should be tracked"
-        assert trade_manager.open_positions[0]['symbol'] == 'TEST'
+        assert position_id is not None, "Position should be created"
+        active_positions = trade_manager.get_active_positions()
+        assert len(active_positions) == 1, "Position should be tracked"
+        assert active_positions[0]['symbol'] == 'TEST'

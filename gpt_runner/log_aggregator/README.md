@@ -15,7 +15,7 @@ This service aggregates logs from:
 - GPT-powered log summarization
 - Real-time log monitoring capabilities
 - Authentication and authorization
-- Caching for performance optimization
+- Performance optimization
 - Integration with existing Streamlit dashboard
 
 ## API Endpoints
@@ -70,7 +70,6 @@ Configuration is managed through environment variables:
 - `GCS_BUCKET_NAME` - Default GCS bucket name
 - `FIRESTORE_PROJECT_ID` - Firestore project ID
 - `KUBERNETES_NAMESPACE` - Default Kubernetes namespace
-- `REDIS_URL` - Redis connection URL for caching
 - `LOG_LEVEL` - Logging level (default: INFO)
 
 ## Architecture
@@ -92,7 +91,6 @@ log_aggregator/
 │   └── log_models.py      # Request/response schemas
 └── utils/                 # Utility modules
     ├── auth.py           # Authentication utilities
-    ├── cache.py          # Caching utilities
     └── config.py         # Configuration management
 ```
 
@@ -139,3 +137,20 @@ The service is designed to be deployed as a Kubernetes pod in GKE. See the deplo
 2. Add tests for new functionality
 3. Update documentation for API changes
 4. Follow Python PEP 8 style guidelines 
+
+## Environment Variables
+
+The following environment variables are required:
+
+### Required
+- `GOOGLE_APPLICATION_CREDENTIALS` - Path to GCP service account JSON
+- `FIRESTORE_PROJECT_ID` - GCP project ID for Firestore
+- `GCS_BUCKET_NAME` - GCS bucket name for log storage
+- `OPENAI_API_KEY` - OpenAI API key for log summarization
+
+### Optional
+- `KUBERNETES_NAMESPACE` - Kubernetes namespace (default: "default")
+- `KUBERNETES_CONFIG_PATH` - Path to kubeconfig file
+- `LOG_LEVEL` - Logging level (default: "INFO")
+- `API_HOST` - API host (default: "0.0.0.0")
+- `API_PORT` - API port (default: 8000) 

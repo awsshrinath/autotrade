@@ -48,7 +48,27 @@ class LogAggregatorConfig(BaseSettings):
     openai_api_key: Optional[str] = Field(
         default=None,
         env="OPENAI_API_KEY",
-        description="OpenAI API key for log summarization"
+        description="OpenAI API key for GPT summarization"
+    )
+    openai_model: str = Field(
+        default="gpt-3.5-turbo",
+        env="OPENAI_MODEL",
+        description="OpenAI model to use for summarization"
+    )
+    openai_max_tokens: int = Field(
+        default=1000,
+        env="OPENAI_MAX_TOKENS",
+        description="Maximum tokens for OpenAI responses"
+    )
+    openai_temperature: float = Field(
+        default=0.3,
+        env="OPENAI_TEMPERATURE",
+        description="Temperature for OpenAI responses"
+    )
+    openai_timeout: int = Field(
+        default=30,
+        env="OPENAI_TIMEOUT",
+        description="Timeout for OpenAI API calls in seconds"
     )
     
     # Security Configuration
@@ -68,22 +88,7 @@ class LogAggregatorConfig(BaseSettings):
         description="JWT token expiration time in minutes"
     )
     
-    # Redis Configuration
-    redis_url: Optional[str] = Field(
-        default=None,
-        env="REDIS_URL",
-        description="Redis connection URL for caching"
-    )
-    redis_password: Optional[str] = Field(
-        default=None,
-        env="REDIS_PASSWORD",
-        description="Redis password"
-    )
-    cache_ttl_seconds: int = Field(
-        default=300,
-        env="CACHE_TTL_SECONDS",
-        description="Cache TTL in seconds"
-    )
+
     
     # Application Configuration
     log_level: str = Field(
@@ -209,9 +214,7 @@ def get_firestore_project_id() -> str:
     return config.firestore_project_id or "default-project"
 
 
-def is_redis_enabled() -> bool:
-    """Check if Redis caching is enabled."""
-    return config.redis_url is not None
+
 
 
 def get_log_prefixes() -> List[str]:

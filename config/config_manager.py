@@ -135,6 +135,12 @@ class ConfigManager:
         # Update configuration object
         self._update_config_from_dict(merged_config)
 
+        # Allow environment variable to override paper_trade
+        paper_trade_env = os.getenv("PAPER_TRADE", None)
+        if paper_trade_env is not None:
+            self.config.paper_trade = paper_trade_env.lower() in ["true", "1", "t"]
+            logging.info(f"Overriding paper_trade with environment variable: {self.config.paper_trade}")
+
         logging.info(f"Configuration loaded from: base + {self.environment} + local")
 
     def _load_config_file(self, filename: str) -> Optional[Dict]:
@@ -167,14 +173,6 @@ class ConfigManager:
                 setattr(self.config, normalized_key, value)
             else:
                 logging.warning(f"Unknown configuration key: {key}")
-
-    def _setup_logging(self):
-        """Set up logging based on configuration"""
-        log_level = getattr(logging, self.config.log_level.upper(), logging.INFO)
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
 
     def _setup_logging(self):
         """Set up logging based on configuration"""

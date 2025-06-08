@@ -1,0 +1,118 @@
+# Unified Log Monitoring System - Product Requirements Document
+
+## Project Overview
+Build a Python-based unified log monitoring system for the GPT Runner+ project that centralizes log collection from multiple sources (GCS, Firestore, GKE pods) and serves them through a dashboard interface.
+
+## Goals
+1. Centralize logs from:
+   - GCS buckets (trades/, reflections/, strategies/)
+   - Firestore collections (gpt_runner_trades, gpt_runner_reflections)  
+   - GKE pods (using Kubernetes API or Logging API)
+
+2. Provide real-time log monitoring and analysis capabilities
+3. Enable intelligent log summarization using GPT
+4. Integrate seamlessly with existing trade dashboard system
+5. Ensure scalability and performance for high-volume logging
+
+## Technical Requirements
+
+### Core Infrastructure
+- Python FastAPI service located in `gpt_runner/log_aggregator/`
+- Integration with existing Streamlit dashboard in `dashboard/`
+- Deployment as separate GKE pod via Kubernetes manifests
+- Authentication and authorization for API security
+
+### API Endpoints
+1. `/logs/gcs` - Returns logs from GCS bucket prefix with filtering
+2. `/logs/firestore` - Returns latest N documents from Firestore collections
+3. `/logs/pods` - Returns logs from Kubernetes pods by name/namespace
+4. `/logs/summary` - GPT-powered summarization of recent log content
+
+### Data Sources Integration
+- **GCS Integration**: Use `google-cloud-storage` library to access bucket logs
+- **Firestore Integration**: Use `google-cloud-firestore` for document retrieval
+- **Kubernetes Integration**: Use `google-cloud-logging` or `kubernetes` Python client
+
+### Dashboard Features
+- Multi-tab interface: GCS Logs | Firestore Logs | Pod Logs | GPT Summary
+- Filtering capabilities: source, severity, time range
+- Real-time updates and pagination
+- Performance monitoring and alerts
+
+### Performance Requirements
+- Support pagination for large log volumes
+- In-memory or Redis caching for recent logs
+- Filtering by log level and date ranges
+- Optimized API response times (<2 seconds for typical queries)
+
+## Implementation Architecture
+
+### FastAPI Service Structure
+```
+gpt_runner/log_aggregator/
+├── main.py                 # FastAPI application entry point
+├── routers/
+│   ├── gcs_logs.py        # GCS log endpoints
+│   ├── firestore_logs.py  # Firestore log endpoints
+│   ├── pod_logs.py        # Kubernetes pod log endpoints
+│   └── summary.py         # GPT summarization endpoints
+├── services/
+│   ├── gcs_service.py     # GCS integration logic
+│   ├── firestore_service.py # Firestore integration logic
+│   ├── k8s_service.py     # Kubernetes integration logic
+│   └── gpt_service.py     # GPT summarization logic
+├── models/
+│   └── log_models.py      # Pydantic models for API responses
+├── utils/
+│   ├── auth.py           # Authentication utilities
+│   ├── cache.py          # Caching utilities
+│   └── config.py         # Configuration management
+└── requirements.txt       # Python dependencies
+```
+
+### Dashboard Integration
+- Extend existing Streamlit dashboard in `dashboard/app.py`
+- New page component: `dashboard/components/log_monitor.py`
+- API client utilities: `dashboard/utils/log_api_client.py`
+- Enhanced navigation and UI components
+
+### Deployment Configuration
+- Kubernetes deployment: `deployments/log-aggregator.yaml`
+- Service configuration: `deployments/log-aggregator-service.yaml`
+- ConfigMap for environment variables
+- Proper resource limits and health checks
+
+## Security Requirements
+- Basic auth or token-based authentication for API endpoints
+- Environment variable management for GCP credentials
+- Secure handling of sensitive data in logs
+- Access control based on user roles
+
+## Monitoring & Alerting
+- Health check endpoints for service monitoring
+- Error rate tracking and alerting
+- Performance metrics collection
+- Optional Slack/email alerts for error spikes
+
+## Configuration Management
+- Environment variables for:
+  - GCP credentials and project settings
+  - Bucket names and Firestore collection names
+  - Kubernetes cluster configuration
+  - Cache settings and performance tuning
+  - Alert thresholds and notification settings
+
+## Success Criteria
+1. Successfully aggregate logs from all three sources (GCS, Firestore, GKE)
+2. Dashboard displays logs with filtering and search capabilities
+3. GPT summarization provides meaningful insights
+4. API response times meet performance requirements
+5. System handles current load without degrading existing dashboard performance
+6. Successful deployment and operation in GKE environment
+
+## Future Enhancements
+- Advanced log analysis and pattern detection
+- Automated anomaly detection
+- Integration with external monitoring tools
+- Custom alerting rules and escalation policies
+- Historical log archival and analysis capabilities 

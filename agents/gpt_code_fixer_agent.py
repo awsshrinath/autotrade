@@ -4,7 +4,30 @@ from datetime import datetime
 
 import tiktoken
 
-from gpt_runner.rag.retriever import retrieve_similar_context
+try:
+    from gpt_runner.rag.retriever import retrieve_similar_context
+    RAG_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: RAG modules not available: {e}")
+    RAG_AVAILABLE = False
+    # Log to Firestore
+    try:
+        from runner.firestore_client import FirestoreClient
+        firestore = FirestoreClient(logger=None)
+        firestore.log_system_error(
+            'rag_mcp_errors',
+            'RAG_IMPORT_FAILURE',
+            str(e),
+            str(e)
+        )
+    except Exception as log_e:
+        print(f"Could not log RAG import failure to Firestore: {log_e}")
+    
+    def retrieve_similar_context(*args, **kwargs):
+        """Fallback function when RAG is not available"""
+        print("Warning: RAG not available - using empty context")
+        return []
+
 from runner.firestore_client import FirestoreClient
 from runner.logger import Logger
 from runner.openai_manager import ask_gpt
@@ -85,8 +108,21 @@ def run_code_fixer(log_path="logs/gpt_runner.log"):
         )
         return
 
-    similar_context = retrieve_similar_context(trace["error"])
-    rag_notes = "\n".join(["- " + d.get("text", "") for d, _ in similar_context])
+    try:
+        similar_context = retrieve_similar_context(trace["error"])
+        rag_notes = "\n".join(["- " + d.get("text", "") for d, _ in similar_context])
+    except Exception as e:
+        logger.log_event(f"[FixAgent] RAG retrieve_similar_context failed: {e}")
+        rag_notes = "No similar context available"
+        try:
+            firestore.log_system_error(
+                'rag_mcp_errors',
+                'RAG_RUNTIME_FAILURE',
+                str(e),
+                f"Failed to retrieve context for error: {trace['error']}"
+            )
+        except Exception as log_e:
+            logger.log_event(f"Could not log RAG runtime failure to Firestore: {log_e}")
 
     prompt = f"""
 You're an AI developer assistant. Analyze the following Python function which

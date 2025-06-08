@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import traceback
 
 import tiktoken
 
@@ -10,6 +11,18 @@ try:
 except ImportError as e:
     print(f"Warning: RAG modules not available: {e}")
     RAG_AVAILABLE = False
+    # Log to Firestore
+    try:
+        from runner.firestore_client import FirestoreClient
+        firestore = FirestoreClient(logger=None)
+        firestore.log_system_error(
+            'rag_mcp_errors',
+            'RAG_IMPORT_FAILURE',
+            str(e),
+            traceback.format_exc()
+        )
+    except Exception as log_e:
+        print(f"Could not log RAG import failure to Firestore: {log_e}")
     
     def retrieve_similar_context(*args, **kwargs):
         """Fallback function when RAG is not available"""
@@ -50,11 +63,38 @@ class GPTSelfImprovementMonitor:
             return
 
         today_error_summary = "\n".join(error_lines[-10:])
-        similar_failures = retrieve_similar_context(today_error_summary)
-        rag_context = ["- " + d.get("text", "") for d, _ in similar_failures]
+        try:
+            similar_failures = retrieve_similar_context(today_error_summary)
+            rag_context = ["- " + d.get("text", "") for d, _ in similar_failures]
+        except Exception as e:
+            self.logger.log_event(f"[ERROR] RAG retrieve_similar_context failed: {e}")
+            rag_context = []
+            try:
+                self.firestore_client.log_system_error(
+                    'rag_mcp_errors',
+                    'RAG_RUNTIME_FAILURE',
+                    str(e),
+                    traceback.format_exc()
+                )
+            except Exception as log_e:
+                self.logger.log_event(f"Could not log RAG runtime failure to Firestore: {log_e}")
 
         for bot_name in bot_names:
-            context = build_mcp_context(bot_name=bot_name)
+            try:
+                context = build_mcp_context(bot_name=bot_name)
+            except Exception as e:
+                self.logger.log_event(f"[ERROR] MCP build_mcp_context failed: {e}")
+                context = {"bot_name": bot_name, "error": str(e)}
+                try:
+                    self.firestore_client.log_system_error(
+                        'rag_mcp_errors',
+                        'MCP_RUNTIME_FAILURE',
+                        str(e),
+                        traceback.format_exc()
+                    )
+                except Exception as log_e:
+                    self.logger.log_event(f"Could not log MCP runtime failure to Firestore: {log_e}")
+            
             context["retrieved_knowledge"] = rag_context
 
             system_prompt, user_prompt = build_prompts(context)
@@ -69,6 +109,7 @@ class GPTSelfImprovementMonitor:
                 {
                     "type": "mcp_fix",
                     "model": model,
+                    "input_tokens": len(user_prompt.split()),
                     "errors": error_lines[:5],
                     "context": context,
                     "suggestion": parsed,

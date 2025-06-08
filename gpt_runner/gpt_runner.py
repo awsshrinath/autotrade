@@ -4,6 +4,12 @@ This module provides functionality for analyzing trading logs, generating insigh
 and suggesting code improvements using GPT models.
 """
 
+import os
+import sys
+
+# Add project root to path BEFORE any other imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import json
 import logging
 from datetime import datetime, timedelta
@@ -16,6 +22,18 @@ try:
 except ImportError as e:
     print(f"Warning: RAG modules not available: {e}")
     RAG_AVAILABLE = False
+    # Log to Firestore
+    try:
+        from runner.firestore_client import FirestoreClient
+        firestore = FirestoreClient(logger=None)
+        firestore.log_system_error(
+            'rag_mcp_errors',
+            'RAG_IMPORT_FAILURE',
+            str(e),
+            str(e)
+        )
+    except Exception as log_e:
+        print(f"Could not log RAG import failure to Firestore: {log_e}")
     
     def retrieve_similar_context(*args, **kwargs):
         """Fallback function when RAG is not available"""
@@ -157,8 +175,23 @@ def generate_improvement_suggestions(
         Dictionary containing improvement suggestions
     """
     # Get similar context from RAG
-    similar_context = retrieve_similar_context(bot_name, limit=5)
-    context_text = "\n\n".join([item[0].get("text", "") for item in similar_context])
+    try:
+        similar_context = retrieve_similar_context(bot_name, limit=5)
+        context_text = "\n\n".join([item[0].get("text", "") for item in similar_context])
+    except Exception as e:
+        print(f"Warning: RAG retrieve_similar_context failed: {e}")
+        context_text = ""
+        try:
+            from runner.firestore_client import FirestoreClient
+            firestore = FirestoreClient(logger=None)
+            firestore.log_system_error(
+                'rag_mcp_errors',
+                'RAG_RUNTIME_FAILURE',
+                str(e),
+                f"Failed to retrieve context for {bot_name}"
+            )
+        except Exception as log_e:
+            print(f"Could not log RAG runtime failure to Firestore: {log_e}")
 
     # Create prompt for GPT
     system_prompt = """You are an expert trading system developer. Based on the analysis of trading logs and historical context, suggest specific code and strategy improvements. Focus on:

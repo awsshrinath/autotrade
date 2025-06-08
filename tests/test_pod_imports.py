@@ -64,7 +64,7 @@ def main():
         ("logger", "from runner.logger import Logger"),
         ("openai_manager", "from runner.openai_manager import OpenAIManager"),
         ("kiteconnect_manager", "from runner.kiteconnect_manager import KiteConnectManager"),
-        ("trade_manager", "from runner.trade_manager import TradeManager"),
+        ("enhanced_trade_manager", "from runner.enhanced_trade_manager import EnhancedTradeManager"),
         ("cognitive_system", "from runner.cognitive_system import CognitiveSystem"),
         ("cognitive_state_machine", "from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigger"),
         ("thought_journal", "from runner.thought_journal import DecisionType, ConfidenceLevel"),

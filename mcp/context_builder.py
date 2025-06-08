@@ -11,6 +11,12 @@ Data Sources:
 - RAG: Contextual knowledge retrieval from vector store
 """
 
+import os
+import sys
+
+# Add project root to path BEFORE any other imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
@@ -45,9 +51,21 @@ except ImportError as e:
 try:
     from gpt_runner.rag.retriever import retrieve_similar_context, retrieve_by_category
     RAG_AVAILABLE = True
-except ImportError:
-    print("Warning: RAG retrieval not available")
+except ImportError as e:
+    print(f"Warning: RAG retrieval not available: {e}")
     RAG_AVAILABLE = False
+    # Log to Firestore
+    try:
+        from runner.firestore_client import FirestoreClient
+        firestore = FirestoreClient(logger=None)
+        firestore.log_system_error(
+            'rag_mcp_errors',
+            'RAG_IMPORT_FAILURE',
+            str(e),
+            str(e)
+        )
+    except Exception as log_e:
+        print(f"Could not log RAG import failure to Firestore: {log_e}")
     
     def retrieve_similar_context(*args, **kwargs):
         return []
@@ -140,22 +158,36 @@ class EnhancedMCPContextBuilder:
             if context_request.get("include_rag", True) and RAG_AVAILABLE:
                 # Retrieve relevant context based on bot performance
                 query = f"trading performance for {bot_name} recent strategies"
-                rag_results = retrieve_similar_context(
-                    query=query,
-                    limit=5,
-                    bot_name=bot_name,
-                    session_id=self.session_id,
-                    context_type="performance_context"
-                )
-                retrieved_knowledge = [
-                    {
-                        "text": doc.get('text', ''),
-                        "metadata": doc.get('metadata', {}),
-                        "similarity": score
-                    }
-                    for doc, score in rag_results
-                ]
-                context_sources.append("rag_retrieval")
+                try:
+                    rag_results = retrieve_similar_context(
+                        query=query,
+                        limit=5,
+                        bot_name=bot_name,
+                        session_id=self.session_id,
+                        context_type="performance_context"
+                    )
+                    retrieved_knowledge = [
+                        {
+                            "text": doc.get('text', ''),
+                            "metadata": doc.get('metadata', {}),
+                            "similarity": score
+                        }
+                        for doc, score in rag_results
+                    ]
+                    context_sources.append("rag_retrieval")
+                except Exception as e:
+                    print(f"Warning: RAG retrieve_similar_context failed: {e}")
+                    retrieved_knowledge = []
+                    try:
+                        if self.firestore_client:
+                            self.firestore_client.log_system_error(
+                                'rag_mcp_errors',
+                                'RAG_RUNTIME_FAILURE',
+                                str(e),
+                                f"Failed to retrieve context for {bot_name}"
+                            )
+                    except Exception as log_e:
+                        print(f"Could not log RAG runtime failure to Firestore: {log_e}")
             
             # 5. Get historical data from GCS if requested
             historical_data = {}

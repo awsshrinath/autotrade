@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-aggregator
+  labels:
+    app: log-aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-aggregator
+  template:
+    metadata:
+      labels:
+        app: log-aggregator
+    spec:
+      containers:
+      - name: log-aggregator-api
+        image: __IMAGE_PATH__ # This will be replaced by the CI/CD pipeline
+        ports:
+        - containerPort: 8001
+        resources:
+          requests:
+            cpu: "250m" # 0.25 vCPU
+            memory: "256Mi" # 256 Mebibytes
+          limits:
+            cpu: "1000m" # 1 vCPU
+            memory: "1Gi"   # 1 Gibibyte
+        env:
+        # --- General Configuration ---
+        - name: LOG_LEVEL
+          value: "INFO" # Or from ConfigMap
+        - name: FASTAPI_HOST
+          value: "0.0.0.0"
+        - name: FASTAPI_PORT
+          value: "8001"
+        - name: API_PREFIX
+          value: "/api/v1"
+        - name: PROJECT_ID
+          value: "__GCP_PROJECT_ID__" # This will be replaced by the CI/CD pipeline
+        
+        # --- GCP Configuration ---
+        # For GOOGLE_APPLICATION_CREDENTIALS, it's best to use Workload Identity on GKE
+        # or mount a service account key from a Secret.
+        # If mounting from a secret:
+        # - name: GOOGLE_APPLICATION_CREDENTIALS
+        #   value: "/var/secrets/google/key.json" 
+        # volumes:
+        # - name: google-cloud-key
+        #   secret:
+        #     secretName: gcp-sa-key-secret # K8s secret containing the key.json
+        # volumeMounts:
+        # - name: google-cloud-key
+        #   mountPath: "/var/secrets/google"
+        #   readOnly: true
+        - name: GCS_BUCKET_NAME 
+          value: "__GCS_BUCKET_NAME__" # This will be replaced by the CI/CD pipeline
+
+        # --- Kubernetes Configuration (if service needs to interact with K8s API explicitly) ---
+        # K8S_IN_CLUSTER_AUTH is typically true when running inside GKE.
+        # K8S_CONFIG_PATH would not be needed if in-cluster auth is used.
+        - name: K8S_IN_CLUSTER_AUTH
+          value: "True" 
+        # - name: K8S_CONFIG_PATH 
+        #   value: "/root/.kube/config" # Only if using external kubeconfig
+
+        # --- OpenAI Configuration ---
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: log-aggregator-secrets
+              key: openai-api-key
+        - name: OPENAI_MODEL
+          value: "gpt-3.5-turbo"
+        - name: OPENAI_MAX_TOKENS
+          value: "1000"
+        - name: OPENAI_TEMPERATURE
+          value: "0.3"
+        - name: OPENAI_TIMEOUT
+          value: "30"
+
+        # --- Application Configuration ---
+
+        # --- Redis Configuration ---
+        # - name: REDIS_HOST
+        #   value: "__REDIS_HOST__" # This will be replaced by the CI/CD pipeline
+        # - name: REDIS_PORT
+        #   value: "6379" # Or your Redis port
+        # - name: REDIS_PASSWORD # If Redis is password protected
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: redis-credentials-secret
+        #       key: password
+        # - name: REDIS_CACHE_TTL_SECONDS
+        #   value: "3600" # Default cache TTL
+
+        # --- Authentication Configuration ---
+        - name: AUTH_ENABLED
+          value: "True" # Or "False", from ConfigMap
+        - name: API_KEY_HASH
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-api-key-secret # K8s secret storing the hashed API key
+              key: api_key_hash
+
+        # --- Performance/Other Settings ---
+        - name: GPT_MODEL_SUMMARIZATION
+          value: "gpt-3.5-turbo" # From ConfigMap
+        - name: GPT_MODEL_ANALYSIS
+          value: "gpt-4" # From ConfigMap
+        - name: MAX_LOG_CHUNK_SIZE_BYTES
+          value: "500000"
+        - name: MAX_RAW_LOG_SIZE_SUMMARIZATION_KB
+          value: "500"
+        
+        # Liveness and Readiness Probes
+        # Path should be directly to the /health endpoint on the container port
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 45
+          periodSeconds: 20
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 20
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+      # imagePullSecrets: # If using a private registry
+      # - name: your-image-pull-secret
