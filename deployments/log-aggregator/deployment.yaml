@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: log-aggregator
+  namespace: gpt  # Use existing namespace
   labels:
     app: log-aggregator
+    component: log-monitoring
 spec:
   replicas: 1
   selector:
@@ -13,56 +15,42 @@ spec:
     metadata:
       labels:
         app: log-aggregator
+        component: log-monitoring
     spec:
+      serviceAccountName: gpt-runner-sa  # Use existing service account with proper RBAC
       containers:
-      - name: log-aggregator-api
-        image: __IMAGE_PATH__ # This will be replaced by the CI/CD pipeline
+      - name: log-aggregator
+        image: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/log-aggregator:latest
         ports:
         - containerPort: 8001
+          name: http
         resources:
           requests:
-            cpu: "250m" # 0.25 vCPU
-            memory: "256Mi" # 256 Mebibytes
+            cpu: "200m"
+            memory: "512Mi"
           limits:
-            cpu: "1000m" # 1 vCPU
-            memory: "1Gi"   # 1 Gibibyte
+            cpu: "1000m"
+            memory: "2Gi"  # Higher memory for log processing
         env:
-        # --- General Configuration ---
-        - name: LOG_LEVEL
-          value: "INFO" # Or from ConfigMap
-        - name: FASTAPI_HOST
-          value: "0.0.0.0"
-        - name: FASTAPI_PORT
-          value: "8001"
-        - name: API_PREFIX
-          value: "/api/v1"
-        - name: PROJECT_ID
-          value: "__GCP_PROJECT_ID__" # This will be replaced by the CI/CD pipeline
-        
         # --- GCP Configuration ---
-        # For GOOGLE_APPLICATION_CREDENTIALS, it's best to use Workload Identity on GKE
-        # or mount a service account key from a Secret.
-        # If mounting from a secret:
-        # - name: GOOGLE_APPLICATION_CREDENTIALS
-        #   value: "/var/secrets/google/key.json" 
-        # volumes:
-        # - name: google-cloud-key
-        #   secret:
-        #     secretName: gcp-sa-key-secret # K8s secret containing the key.json
-        # volumeMounts:
-        # - name: google-cloud-key
-        #   mountPath: "/var/secrets/google"
-        #   readOnly: true
-        - name: GCS_BUCKET_NAME 
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/var/secrets/google/key.json"
+        - name: FIRESTORE_PROJECT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: FIRESTORE_PROJECT_ID
+        - name: GCS_BUCKET_NAME
           value: "__GCS_BUCKET_NAME__" # This will be replaced by the CI/CD pipeline
 
-        # --- Kubernetes Configuration (if service needs to interact with K8s API explicitly) ---
-        # K8S_IN_CLUSTER_AUTH is typically true when running inside GKE.
-        # K8S_CONFIG_PATH would not be needed if in-cluster auth is used.
-        - name: K8S_IN_CLUSTER_AUTH
-          value: "True" 
-        # - name: K8S_CONFIG_PATH 
-        #   value: "/root/.kube/config" # Only if using external kubeconfig
+        # --- Kubernetes Configuration ---
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: KUBERNETES_NAMESPACE
+        - name: KUBERNETES_CONFIG_PATH
+          value: ""  # Use in-cluster config
 
         # --- OpenAI Configuration ---
         - name: OPENAI_API_KEY
@@ -71,65 +59,102 @@ spec:
               name: log-aggregator-secrets
               key: openai-api-key
         - name: OPENAI_MODEL
-          value: "gpt-3.5-turbo"
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: OPENAI_MODEL
         - name: OPENAI_MAX_TOKENS
-          value: "1000"
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: OPENAI_MAX_TOKENS
         - name: OPENAI_TEMPERATURE
-          value: "0.3"
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: OPENAI_TEMPERATURE
         - name: OPENAI_TIMEOUT
-          value: "30"
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: OPENAI_TIMEOUT
 
         # --- Application Configuration ---
-
-        # --- Redis Configuration ---
-        # - name: REDIS_HOST
-        #   value: "__REDIS_HOST__" # This will be replaced by the CI/CD pipeline
-        # - name: REDIS_PORT
-        #   value: "6379" # Or your Redis port
-        # - name: REDIS_PASSWORD # If Redis is password protected
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: redis-credentials-secret
-        #       key: password
-        # - name: REDIS_CACHE_TTL_SECONDS
-        #   value: "3600" # Default cache TTL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: LOG_LEVEL
+        - name: API_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: API_HOST
+        - name: API_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: API_PORT
+        - name: API_PREFIX
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: API_PREFIX
+        - name: WORKERS
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: WORKERS
 
         # --- Authentication Configuration ---
-        - name: AUTH_ENABLED
-          value: "True" # Or "False", from ConfigMap
-        - name: API_KEY_HASH
+        - name: LOG_AGGREGATOR_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: fastapi-api-key-secret # K8s secret storing the hashed API key
-              key: api_key_hash
+              name: log-aggregator-secrets
+              key: secret-key
 
-        # --- Performance/Other Settings ---
-        - name: GPT_MODEL_SUMMARIZATION
-          value: "gpt-3.5-turbo" # From ConfigMap
-        - name: GPT_MODEL_ANALYSIS
-          value: "gpt-4" # From ConfigMap
-        - name: MAX_LOG_CHUNK_SIZE_BYTES
-          value: "500000"
-        - name: MAX_RAW_LOG_SIZE_SUMMARIZATION_KB
-          value: "500"
-        
-        # Liveness and Readiness Probes
-        # Path should be directly to the /health endpoint on the container port
+        # --- Performance Configuration ---
+        - name: MAX_LOG_ENTRIES
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: MAX_LOG_ENTRIES
+        - name: DEFAULT_PAGE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: DEFAULT_PAGE_SIZE
+        - name: MAX_PAGE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: log-aggregator-config
+              key: MAX_PAGE_SIZE
+
         livenessProbe:
           httpGet:
-            path: /health
+            path: /api/v1/health
             port: 8001
-          initialDelaySeconds: 45
-          periodSeconds: 20
+          initialDelaySeconds: 30
+          periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /health
+            path: /api/v1/health
             port: 8001
-          initialDelaySeconds: 20
-          periodSeconds: 15
+          initialDelaySeconds: 10
+          periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-      # imagePullSecrets: # If using a private registry
-      # - name: your-image-pull-secret
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+          readOnly: true
+        - name: logs-volume
+          mountPath: /app/logs
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: gcp-service-account-key
+      - name: logs-volume
+        emptyDir: {}

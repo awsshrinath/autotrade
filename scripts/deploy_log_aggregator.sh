@@ -33,8 +33,30 @@ sed -i "s|__GCS_BUCKET_NAME__|${GCS_BUCKET_NAME}|g" "${TMP_DEPLOYMENT_FILE}"
 
 echo "--- Deploying to GKE ---"
 gcloud container clusters get-credentials "${GKE_CLUSTER_NAME}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
-kubectl apply -f "${TMP_DEPLOYMENT_FILE}"
+
+# Apply infrastructure components in order
+echo "Applying ConfigMap..."
+kubectl apply -f deployments/log-aggregator/configmap.yaml
+
+echo "Applying NetworkPolicy..."
+kubectl apply -f deployments/log-aggregator/network-policy.yaml
+
+echo "Applying Service..."
 kubectl apply -f deployments/log-aggregator/service.yaml
+
+echo "Applying Deployment..."
+kubectl apply -f "${TMP_DEPLOYMENT_FILE}"
+
+echo "Applying Ingress..."
+kubectl apply -f deployments/log-aggregator/ingress.yaml
+
+echo "--- Waiting for deployment to be ready ---"
+kubectl rollout status deployment/log-aggregator -n gpt --timeout=300s
+
+echo "--- Checking service status ---"
+kubectl get pods -n gpt -l app=log-aggregator
+kubectl get services -n gpt -l app=log-aggregator
+kubectl get ingress -n gpt -l app=log-aggregator
 
 echo "--- Deployment Successful ---"
 kubectl get pods -l app=log-aggregator
