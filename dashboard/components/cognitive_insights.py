@@ -9,6 +9,7 @@ import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
+from dashboard.data.cognitive_data_provider import CognitiveDataProvider
 
 
 class CognitiveInsightsPage:
