@@ -143,7 +143,7 @@ class MetaCognition:
     Analyzes decision quality, detects biases, and tracks learning progress.
     """
     
-    def __init__(self, gcp_client: GCPMemoryClient, logger: logging.Logger = None):
+    def __init__(self, gcp_client, logger: logging.Logger = None):
         self.gcp_client = gcp_client
         self.logger = logger or logging.getLogger(__name__)
         

@@ -92,7 +92,7 @@ class CognitiveMemory:
     Handles working memory (7±2 items), short - term, long - term, and episodic memory.
     """
     
-    def __init__(self, gcp_client: GCPMemoryClient, logger: logging.Logger = None):
+    def __init__(self, gcp_client, logger: logging.Logger = None):
         self.gcp_client = gcp_client
         self.logger = logger or logging.getLogger(__name__)
         
@@ -135,7 +135,7 @@ class CognitiveMemory:
             self.logger.error(f"Failed to load memory state: {e}")
             self._memory_loaded = False
     
-    def _restore_from_snapshot(self, snapshot: MemorySnapshot):
+    def _restore_from_snapshot(self, snapshot):
         """Restore memory state from snapshot"""
         # Restore working memory cache
         self._working_memory_cache = [
@@ -506,14 +506,14 @@ class CognitiveMemory:
             # Get performance metrics (will be implemented in metacognition.py)
             performance_metrics = {}
             
-            snapshot = MemorySnapshot(
-                        timestamp=datetime.datetime.utcnow(),
-                        working_memory=working_memory,
-                        short_term_memory=short_term_data,
-                        cognitive_state=cognitive_state,
-                    recent_thoughts=recent_thoughts,
-                performance_metrics=performance_metrics
-            )
+            snapshot = {
+                'timestamp': datetime.datetime.utcnow(),
+                'working_memory': working_memory,
+                'short_term_memory': short_term_data,
+                'cognitive_state': cognitive_state,
+                'recent_thoughts': recent_thoughts,
+                'performance_metrics': performance_metrics
+            }
             
             self.gcp_client.store_memory_snapshot(snapshot)
         except Exception as e:
