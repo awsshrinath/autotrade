@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""
+Kubernetes-Native GCP Client
+
+This client is designed specifically for Kubernetes deployments where the pod
+runs with a service account that has the necessary GCP permissions.
+
+Unlike traditional GCP clients that use explicit credentials or impersonation,
+this client relies on the default service account attached to the pod.
+"""
+
+import logging
+import os
+from typing import Optional
+import google.auth
+from google.cloud import firestore, storage, secretmanager
+
+
+class K8sNativeGCPClient:
+    """GCP client that uses Kubernetes pod service account"""
+    
+    def __init__(self, project_id: str = None, logger: logging.Logger = None):
+        self.logger = logger or logging.getLogger(__name__)
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "autotrade-453303")
+        
+        # Initialize clients
+        self.credentials = None
+        self.discovered_project = None
+        self.firestore_client = None
+        self.storage_client = None
+        self.secret_client = None
+        
+        self._initialize_clients()
+    
+    def _initialize_clients(self):
+        """Initialize GCP clients using pod service account"""
+        
+        try:
+            # Get default credentials - this uses the pod's service account in K8s
+            self.credentials, self.discovered_project = google.auth.default()
+            
+            # Use discovered project if available
+            if self.discovered_project and not self.project_id:
+                self.project_id = self.discovered_project
+                
+            self._log_info(f"Using pod service account for project: {self.project_id}")
+            
+            # Initialize clients with the default credentials
+            self.firestore_client = firestore.Client(
+                project=self.project_id,
+                credentials=self.credentials
+            )
+            
+            self.storage_client = storage.Client(
+                project=self.project_id,
+                credentials=self.credentials
+            )
+            
+            self.secret_client = secretmanager.SecretManagerServiceClient(
+                credentials=self.credentials
+            )
+            
+            self._log_info("✅ All GCP clients initialized successfully")
+            
+        except Exception as e:
+            self._log_error(f"Failed to initialize GCP clients: {e}")
+            
+            # Fallback: Try without explicit credentials (minimal approach)
+            try:
+                self.firestore_client = firestore.Client(project=self.project_id)
+                self.storage_client = storage.Client(project=self.project_id)
+                self.secret_client = secretmanager.SecretManagerServiceClient()
+                
+                self._log_info("✅ GCP clients initialized with minimal configuration")
+                
+            except Exception as e2:
+                self._log_error(f"All GCP client initialization methods failed: {e2}")
+                # Continue with None clients - hybrid mode can handle this
+    
+    @property
+    def is_available(self) -> bool:
+        """Check if GCP clients are available"""
+        return (
+            self.firestore_client is not None and 
+            self.storage_client is not None and 
+            self.secret_client is not None
+        )
+    
+    def get_firestore_client(self) -> Optional[firestore.Client]:
+        """Get Firestore client"""
+        return self.firestore_client
+    
+    def get_storage_client(self) -> Optional[storage.Client]:
+        """Get Cloud Storage client"""
+        return self.storage_client
+    
+    def get_secret_client(self) -> Optional[secretmanager.SecretManagerServiceClient]:
+        """Get Secret Manager client"""
+        return self.secret_client
+    
+    def test_connectivity(self) -> dict:
+        """Test connectivity to GCP services"""
+        results = {
+            "firestore": False,
+            "storage": False,
+            "secrets": False,
+            "overall": False
+        }
+        
+        # Test Firestore
+        if self.firestore_client:
+            try:
+                # Quick test - list collections (minimal operation)
+                collections = list(self.firestore_client.collections())
+                results["firestore"] = True
+                self._log_info("✅ Firestore connectivity confirmed")
+            except Exception as e:
+                self._log_warning(f"⚠️ Firestore test failed: {e}")
+        
+        # Test Storage
+        if self.storage_client:
+            try:
+                # Quick test - list buckets (minimal operation)
+                buckets = list(self.storage_client.list_buckets(max_results=1))
+                results["storage"] = True
+                self._log_info("✅ Storage connectivity confirmed")
+            except Exception as e:
+                self._log_warning(f"⚠️ Storage test failed: {e}")
+        
+        # Test Secret Manager
+        if self.secret_client:
+            try:
+                # Quick test - list secrets (minimal operation)
+                parent = f"projects/{self.project_id}"
+                request = secretmanager.ListSecretsRequest(parent=parent)
+                secrets = list(self.secret_client.list_secrets(request=request, timeout=5))
+                results["secrets"] = True
+                self._log_info("✅ Secret Manager connectivity confirmed")
+            except Exception as e:
+                self._log_warning(f"⚠️ Secret Manager test failed: {e}")
+        
+        results["overall"] = all([results["firestore"], results["storage"], results["secrets"]])
+        return results
+    
+    def _log_info(self, message: str):
+        """Log info message"""
+        if hasattr(self.logger, 'log_event'):
+            self.logger.log_event(f"ℹ️ [K8sGCP] {message}")
+        else:
+            self.logger.info(f"[K8sGCP] {message}")
+    
+    def _log_warning(self, message: str):
+        """Log warning message"""
+        if hasattr(self.logger, 'log_event'):
+            self.logger.log_event(f"⚠️ [K8sGCP] {message}")
+        else:
+            self.logger.warning(f"[K8sGCP] {message}")
+    
+    def _log_error(self, message: str):
+        """Log error message"""
+        if hasattr(self.logger, 'log_event'):
+            self.logger.log_event(f"❌ [K8sGCP] {message}")
+        else:
+            self.logger.error(f"[K8sGCP] {message}")
+
+
+# Global instance for easy access
+_k8s_gcp_client = None
+
+def get_k8s_gcp_client(project_id: str = None, logger: logging.Logger = None) -> K8sNativeGCPClient:
+    """Get or create the global K8s GCP client instance"""
+    global _k8s_gcp_client
+    
+    if _k8s_gcp_client is None:
+        _k8s_gcp_client = K8sNativeGCPClient(project_id=project_id, logger=logger)
+    
+    return _k8s_gcp_client
+
+
+if __name__ == "__main__":
+    # Test the client
+    client = K8sNativeGCPClient()
+    print(f"Client available: {client.is_available}")
+    
+    if client.is_available:
+        results = client.test_connectivity()
+        print(f"Connectivity test results: {results}") 

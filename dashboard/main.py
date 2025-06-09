@@ -106,6 +106,7 @@ def render_sidebar():
         "💹 Live Trades": "trades", 
         "🧠 Cognitive Insights": "cognitive",
         "⚙️ System Health": "health",
+        "🔍 Log Monitor": "logs",
         "📈 Analytics": "analytics"
     }
     

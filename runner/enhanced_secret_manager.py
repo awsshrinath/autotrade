@@ -29,11 +29,12 @@ class EnhancedSecretManager:
         """Initialize Secret Manager client with multiple authentication methods"""
         
         # Multiple authentication methods for flexibility
+        # In Kubernetes, prioritize pod service account first
         self.auth_methods = [
-            self._auth_with_gcp_sa_key_env,      # GitHub secret
+            self._auth_with_default,             # Default pod service account (Kubernetes-native)
+            self._auth_with_gcp_sa_key_env,      # GitHub secret  
             self._auth_with_service_account_key,  # Local key file
             self._auth_with_environment,         # Environment-based
-            self._auth_with_default              # Default credentials
         ]
         
         for method in self.auth_methods:
@@ -141,22 +142,44 @@ class EnhancedSecretManager:
         return None
     
     def _auth_with_default(self):
-        """Try authentication with default credentials (without impersonation)"""
+        """Try authentication with default credentials (without impersonation) - Kubernetes-native"""
         
         try:
-            # Get default credentials but don't use impersonation
-            credentials, _ = default()
+            # In Kubernetes, use the default service account attached to the pod
+            # This should automatically work without any explicit credentials
+            import google.auth
             
-            # Create client with explicit credentials
+            # Get default credentials (this uses the pod's service account in K8s)
+            credentials, project = google.auth.default()
+            
+            # Create client with the default credentials (no impersonation)
             client = secretmanager.SecretManagerServiceClient(credentials=credentials)
             
+            # Update project ID if discovered from environment
+            if project and not self.project_id:
+                self.project_id = project
+                
             # Test the client
             self._test_client(client)
-            self._log_info("Using default credentials")
+            self._log_info(f"Using default pod service account credentials for project: {project or self.project_id}")
             return client
             
         except Exception as e:
-            self._log_warning(f"Default credentials failed: {e}")
+            self._log_warning(f"Default pod service account failed: {e}")
+            
+            # Fallback: Try explicit default without any configuration
+            try:
+                # Just create the client without any explicit credentials
+                # This relies entirely on the pod's service account
+                client = secretmanager.SecretManagerServiceClient()
+                
+                # Test the client
+                self._test_client(client)
+                self._log_info("Using minimal default credentials (pod service account)")
+                return client
+                
+            except Exception as e2:
+                self._log_warning(f"Minimal default credentials also failed: {e2}")
         
         return None
     

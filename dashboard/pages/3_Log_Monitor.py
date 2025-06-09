@@ -24,7 +24,9 @@ from dashboard.utils.log_api_client import LogAPIClient
 # Configuration for the API client (could be moved to a config file or Streamlit secrets)
 # Ensure your FastAPI service is running at this address.
 # The API_PREFIX from your FastAPI config should be part of this base_url.
-FASTAPI_BASE_URL = st.secrets.get("fastapi_base_url", "http://localhost:8001/api/v1") 
+# Try to get from environment variables first, then use default for GKE deployment
+import os
+FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "http://log-monitor-service:8001/api/v1") 
 
 # Initialize API client in session state to persist across reruns
 if 'log_api_client' not in st.session_state:
@@ -105,7 +107,7 @@ with st.sidebar:
 if not st.session_state.log_api_client and st.session_state.user_authenticated: # Edge case: user_auth true but client not set
     initialize_api_client(st.session_state.api_key) # Try to re-init
 
-if not st.session_state.user_authenticated and st.secrets.get("require_auth_globally", True):
+if not st.session_state.user_authenticated and os.environ.get("REQUIRE_AUTH_GLOBALLY", "True").lower() == "true":
      st.warning("Please provide a valid API Key in the sidebar to use the log monitoring features.")
      st.stop()
 

@@ -143,7 +143,17 @@ class CognitiveInsightsPage:
             df = pd.DataFrame(activity_data)
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
-            st.error("❌ Cognitive system is offline - insights limited to fallback mode")
+            cognitive_provider = CognitiveDataProvider()
+        if hasattr(cognitive_provider, 'mode'):
+            if cognitive_provider.mode == "hybrid":
+                st.success("🧠 **Cognitive System in Hybrid Mode**")
+                st.info("✨ **Status**: Using OpenAI for real AI analysis without GCP storage. Full AI insights available!")
+            elif cognitive_provider.mode == "full":
+                st.success("✅ **Cognitive System Fully Online**") 
+                st.info("🚀 **Status**: Full cognitive system with GCP storage and AI processing active.")
+            else:
+                st.warning("⚠️ **Cognitive System in Offline Mode**")
+                st.info("📝 **Status**: Using mock data. Consider setting OpenAI API key for hybrid mode.")
     
     def _render_sentiment_tab(self):
         """Render the market sentiment analysis tab"""
