@@ -27,7 +27,19 @@ class CognitiveInsightsPage:
         cognitive_summary = self.cognitive_data.get_cognitive_summary()
         system_available = cognitive_summary.get('system_status', {}).get('initialized', False)
         
-        if not system_available:
+        # Show appropriate status message based on mode
+        if hasattr(self.cognitive_data, 'mode'):
+            if self.cognitive_data.mode == "hybrid":
+                st.success("✨ Cognitive system is currently in hybrid mode. AI insights available!")
+            elif self.cognitive_data.mode == "full":
+                st.success("🚀 Cognitive system is fully operational with GCP storage.")
+            elif not system_available:
+                from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
+                if OPENAI_AVAILABLE:
+                    st.warning("⚠️ Cognitive system is currently offline but OpenAI is available. Showing AI-enhanced insights.")
+                else:
+                    st.warning("⚠️ Cognitive system is currently offline. Showing limited insights.")
+        elif not system_available:
             st.warning("⚠️ Cognitive system is currently offline. Showing limited insights.")
         
         # Main layout with tabs
@@ -144,17 +156,24 @@ class CognitiveInsightsPage:
             df = pd.DataFrame(activity_data)
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
-            cognitive_provider = CognitiveDataProvider()
-        if hasattr(cognitive_provider, 'mode'):
-            if cognitive_provider.mode == "hybrid":
-                st.success("🧠 **Cognitive System in Hybrid Mode**")
-                st.info("✨ **Status**: Using OpenAI for real AI analysis without GCP storage. Full AI insights available!")
-            elif cognitive_provider.mode == "full":
-                st.success("✅ **Cognitive System Fully Online**") 
-                st.info("🚀 **Status**: Full cognitive system with GCP storage and AI processing active.")
+            # Check cognitive data provider mode for better status display
+            if hasattr(self.cognitive_data, 'mode'):
+                if self.cognitive_data.mode == "hybrid":
+                    st.success("🧠 **Cognitive System in Hybrid Mode**")
+                    st.info("✨ **Status**: Using OpenAI for real AI analysis without GCP storage. Full AI insights available!")
+                elif self.cognitive_data.mode == "full":
+                    st.success("✅ **Cognitive System Fully Online**") 
+                    st.info("🚀 **Status**: Full cognitive system with GCP storage and AI processing active.")
+                else:
+                    st.warning("⚠️ **Cognitive System in Offline Mode**")
+                    from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
+                    if OPENAI_AVAILABLE:
+                        st.info("📝 **Status**: OpenAI available but system initializing. Please wait or check logs.")
+                    else:
+                        st.info("📝 **Status**: Using mock data. OpenAI API key required for hybrid mode.")
             else:
-                st.warning("⚠️ **Cognitive System in Offline Mode**")
-                st.info("📝 **Status**: Using mock data. Consider setting OpenAI API key for hybrid mode.")
+                st.warning("⚠️ **Cognitive System Status Unknown**")
+                st.info("📝 **Status**: Unable to determine system state.")
     
     def _render_sentiment_tab(self):
         """Render the market sentiment analysis tab"""
@@ -521,6 +540,26 @@ class CognitiveInsightsPage:
     def _render_health_tab(self, cognitive_summary: Dict[str, Any]):
         """Render the cognitive system health tab"""
         st.subheader("⚙️ Cognitive System Health Dashboard")
+        
+        # AI Configuration Status (added like Log Monitor)
+        st.subheader("🔧 AI Configuration")
+        from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE, API_KEY_SOURCE
+        
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            if OPENAI_AVAILABLE:
+                st.success("✅ OpenAI API Key: Available")
+            else:
+                st.error("❌ OpenAI API Key: Missing")
+        
+        with col2:
+            st.caption("**Key Source:**")
+            st.code(API_KEY_SOURCE)
+            if OPENAI_AVAILABLE:
+                st.caption("**Key Status:**")
+                st.code("✅ Available (Hidden for security)")
+        
+        st.divider()
         
         cognitive_health = self.cognitive_data.get_cognitive_health()
         

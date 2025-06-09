@@ -25,11 +25,46 @@ from runner.config import OFFLINE_MODE
 # Import OpenAI for direct AI processing
 try:
     import openai
-    OPENAI_AVAILABLE = bool(os.getenv('OPENAI_API_KEY'))
+    # Multi-source API key detection (same as Log Monitor)
+    def get_openai_api_key():
+        """Get OpenAI API key from multiple sources in priority order"""
+        
+        # 1. Environment variables (highest priority)
+        api_key = os.getenv('OPENAI_API_KEY')
+        if api_key and api_key.strip():
+            return api_key.strip(), "Environment Variable"
+        
+        # 2. GCP Secret Manager (using k8s native client)
+        try:
+            from runner.k8s_native_gcp_client import get_k8s_gcp_client
+            client = get_k8s_gcp_client()
+            if client and hasattr(client, 'get_secret'):
+                secret_value = client.get_secret('OPENAI_API_KEY')
+                if secret_value and secret_value.strip():
+                    return secret_value.strip(), "GCP Secret Manager"
+        except Exception as e:
+            pass  # Silent fallback
+        
+        # 3. Streamlit secrets (fallback)
+        try:
+            import streamlit as st
+            if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
+                api_key = st.secrets['OPENAI_API_KEY']
+                if api_key and api_key.strip():
+                    return api_key.strip(), "Streamlit Secrets"
+        except Exception as e:
+            pass  # Silent fallback
+        
+        return None, "Not Found"
+    
+    OPENAI_API_KEY, API_KEY_SOURCE = get_openai_api_key()
+    OPENAI_AVAILABLE = bool(OPENAI_API_KEY)
     if OPENAI_AVAILABLE:
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        openai.api_key = OPENAI_API_KEY
 except ImportError:
     OPENAI_AVAILABLE = False
+    OPENAI_API_KEY = None
+    API_KEY_SOURCE = "OpenAI package not installed"
 
 
 class CognitiveDataProvider:

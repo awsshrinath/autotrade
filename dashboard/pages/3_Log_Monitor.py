@@ -186,8 +186,8 @@ with st.sidebar:
         st.caption("**Key Source:**")
         st.code(API_KEY_SOURCE)
         if OPENAI_API_KEY:
-            st.caption("**Key Preview:**")
-            st.code(f"{OPENAI_API_KEY[:15]}...{OPENAI_API_KEY[-8:]}")
+            st.caption("**Key Status:**")
+            st.code("✅ Available (Hidden for security)")
 
 # Main application check - allow access if we have API key (either way)
 if not st.session_state.user_authenticated:
