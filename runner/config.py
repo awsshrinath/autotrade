@@ -53,6 +53,33 @@ except ImportError as e:
         alerts_email_enabled = False
         alerts_slack_enabled = False
         alerts_webhook_url = ""
+        
+        # Add missing methods that are expected by the config system
+        def is_development(self):
+            return self.environment == "development"
+        
+        def is_production(self):
+            return self.environment == "production"
+        
+        def is_paper_trade(self):
+            return self.paper_trade
+        
+        def get_environment_info(self):
+            return {
+                "environment": self.environment,
+                "paper_trade": self.paper_trade,
+                "log_level": self.log_level
+            }
+        
+        def validate_configuration(self):
+            return {
+                "valid": True,
+                "issues": [],
+                "warnings": []
+            }
+        
+        def save_current_config(self):
+            return {"success": True, "message": "Fallback config - no save needed"}
     
     def get_config():
         return FallbackConfig()
@@ -115,6 +142,11 @@ ALERTS_EMAIL_ENABLED = _trading_config.alerts_email_enabled
 ALERTS_SLACK_ENABLED = _trading_config.alerts_slack_enabled
 ALERTS_WEBHOOK_URL = _trading_config.alerts_webhook_url
 
+# Development and Testing Configuration
+TEST_MODE = False   # Set to True for testing
+
+# Offline Mode - Disable GCP services when credentials unavailable
+OFFLINE_MODE = True  # Set to False when GCP credentials are properly configured
 
 def get_config_manager():
     """Get the configuration manager instance"""

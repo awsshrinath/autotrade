@@ -18,11 +18,25 @@ if [ ! -f "gpt_runner/rag/__init__.py" ]; then
     echo "# Makes rag a Python package" > gpt_runner/rag/__init__.py
 fi
 
+# Ensure runner package structure exists (needed for futures/options traders)
+if [ ! -f "runner/__init__.py" ]; then
+    echo "# Makes runner a Python package" > runner/__init__.py
+fi
+
+# Ensure runner subdirectories are packages
+for subdir in utils strategies; do
+    if [ -d "runner/$subdir" ] && [ ! -f "runner/$subdir/__init__.py" ]; then
+        echo "# Makes runner.$subdir a Python package" > runner/$subdir/__init__.py
+    fi
+done
+
 # Debug: Show Python path and file structure
 echo "Python path: $PYTHONPATH"
 echo "Current directory: $(pwd)"
 echo "Files in gpt_runner: $(ls -la gpt_runner/ 2>/dev/null || echo 'Directory not found')"
 echo "Files in gpt_runner/rag: $(ls -la gpt_runner/rag/ 2>/dev/null || echo 'Directory not found')"
+echo "Files in runner: $(ls -la runner/ 2>/dev/null || echo 'Directory not found')"
+echo "Runner package check: $(python3 -c 'import runner; print("✓ runner package importable")' 2>/dev/null || echo '✗ runner package not importable')"
 
 # Test basic imports before running - avoid problematic ones for now
 python3 -c "

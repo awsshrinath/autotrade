@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TRON Trading System Architecture</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #4b9cd3;
+            margin-bottom: 30px;
+        }
+        .diagram {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TRON Trading System Architecture</h1>
+        
+        <div class="diagram">
+            <pre class="mermaid">
+flowchart TB
+    %% Define styles
+    classDef tradingCore fill:#1a4d7c,stroke:#666,color:#fff,stroke-width:1px
+    classDef cognitive fill:#66476e,stroke:#666,color:#fff,stroke-width:1px
+    classDef infrastructure fill:#333,stroke:#666,color:#fff,stroke-width:1px
+    classDef dataSource fill:#3d5a5d,stroke:#666,color:#fff,stroke-width:1px
+    classDef gcpService fill:#3d5a80,stroke:#666,color:#fff,stroke-width:1px
+    classDef tradingPod fill:#2c4e6c,stroke:#666,color:#fff,stroke-width:1px
+    classDef support fill:#4b5358,stroke:#666,color:#fff,stroke-width:1px
+    
+    %% External Data Sources
+    subgraph ExternalSources["External Data Sources"]
+        YF["Yahoo Finance API<br>SGX Nifty, Historical Data"]
+        AV["Alpha Vantage API<br>Backup Historical Data"]
+        KC["KiteConnect API<br>Fallback Data Source"]
+        ZD["Zerodha API<br>Trade Execution"]
+        VIX["India VIX<br>Volatility Index"]
+    end
+    
+    %% GCP Backend Services
+    subgraph GCPServices["GCP Backend Services"]
+        SM["Secret Manager<br>Secure Credentials"]
+        FS["Firestore<br>Real-time Data"]
+        GCS["Cloud Storage<br>Archives & Backups"]
+    end
+    
+    %% Kubernetes Infrastructure
+    subgraph K8S["GKE Cluster - Kubernetes Infrastructure"]
+        subgraph Infrastructure["Infrastructure Layer"]
+            LB["Load Balancer<br>External Access"]
+            ING["Ingress + SSL/TLS<br>logs.tron-trading.com"]
+            CM["ConfigMap<br>Configuration"]
+            SEC["Secrets<br>API Keys"]
+            NP["Network Policies<br>Security"]
+        end
+        
+        subgraph TradingPods["Trading Pods"]
+            MR["Main Runner<br>Orchestrator"]
+            
+            subgraph Traders["Trading Engines"]
+                ST["Stock Trader<br>Equity Trading"]
+                OT["Options Trader<br>Options Trading"]
+                FT["Futures Trader<br>Futures Trading"]
+            end
+        end
+        
+        subgraph Support["Support Services"]
+            LM["Log Monitor Service<br>FastAPI + Web UI"]
+            DB["Dashboard Service<br>Trading Dashboard"]
+            TS["Token Service<br>Authentication"]
+        end
+        
+        subgraph CognitiveSystem["Cognitive Intelligence System"]
+            CS["Cognitive Engine<br>Decision Making"]
+            TJ["Thought Journal<br>Decision Logging"]
+            MM["Memory Manager<br>Multi-layer Memory"]
+            MS["Metacognition<br>Self-Analysis"]
+            VR["Volatility Regime<br>Market Analysis"]
+        end
+        
+        subgraph TradingIntelligence["Trading Intelligence Core"]
+            SS["Strategy Selector<br>VIX + Regime Based"]
+            TM["Trade Manager<br>Execution Engine"]
+            RG["Risk Governor<br>Risk Controls"]
+            CAP["Capital Manager<br>Position Sizing"]
+        end
+    end
+    
+    %% Define connections - External data to Main Runner
+    YF --> MR
+    AV --> MR
+    KC --> MR
+    VIX --> MR
+    
+    %% Zerodha connections to trading pods
+    ZD --> ST
+    ZD --> OT
+    ZD --> FT
+    
+    %% GCP Services connections
+    SM --> SEC
+    SEC --> MR
+    SEC --> ST
+    SEC --> OT
+    SEC --> FT
+    
+    %% Infrastructure connections
+    LB --> ING
+    ING --> MR
+    ING --> LM
+    ING --> DB
+    
+    %% Main runner to components
+    MR --> VR
+    
+    %% Trading intelligence flow
+    VR --> SS
+    SS --> TM
+    TM --> RG
+    RG --> CAP
+    
+    %% Cognitive system connections
+    TM --> CS
+    CS --> TJ
+    CS --> MM
+    CS --> MS
+    
+    %% Feedback loops
+    MS --> SS
+    
+    %% Capital manager to trading pods
+    CAP --> ST
+    CAP --> OT
+    CAP --> FT
+    
+    %% Persistent storage
+    TJ --> GCS
+    MM --> GCS
+    MS --> GCS
+    
+    %% Trading pods to monitoring
+    ST --> FS
+    OT --> FS
+    FT --> FS
+    
+    %% Log services
+    ST --> LM
+    OT --> LM
+    FT --> LM
+    MR --> LM
+    
+    %% Apply classes
+    class YF,AV,KC,ZD,VIX dataSource
+    class SM,FS,GCS gcpService
+    class LB,ING,CM,SEC,NP infrastructure
+    class MR,ST,OT,FT tradingPod
+    class LM,DB,TS support
+    class CS,TJ,MM,MS,VR cognitive
+    class SS,TM,RG,CAP tradingCore
+            </pre>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #1a4d7c;"></div>
+                <span>Trading Core</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #66476e;"></div>
+                <span>Cognitive System</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #333;"></div>
+                <span>Infrastructure</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #3d5a5d;"></div>
+                <span>Data Sources</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #3d5a80;"></div>
+                <span>GCP Services</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #2c4e6c;"></div>
+                <span>Trading Pods</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #4b5358;"></div>
+                <span>Support Services</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose'
+        });
+    </script>
+</body>
+</html>
