@@ -10,7 +10,7 @@ from enum import Enum
 import json
 import math
 import logging
-from .gcp_memory_client import GCPMemoryClient, MemorySnapshot
+from .k8s_native_gcp_client import get_k8s_gcp_client
 
 
 class MemoryType(Enum):

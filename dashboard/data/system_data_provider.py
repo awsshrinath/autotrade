@@ -72,19 +72,45 @@ class SystemDataProvider:
                 health_data = asyncio.run(self.production_manager.comprehensive_health_check())
                 checks = health_data.get('checks', [])
                 
-                # Ensure status fields are strings, not enum objects
+                # Clean up enum objects and format for display
+                formatted_checks = []
                 for check in checks:
-                    if 'status' in check:
-                        check['status'] = str(check['status'])
+                    formatted_check = dict(check)
+                    
+                    # Convert HealthStatus enum to string
+                    if 'status' in formatted_check:
+                        status = formatted_check['status']
+                        if hasattr(status, 'value'):
+                            formatted_check['status'] = status.value
+                        else:
+                            formatted_check['status'] = str(status).replace('HealthStatus.', '').lower()
+                    
+                    # Clean up service names for display
+                    service_name = formatted_check.get('service', 'Unknown')
+                    formatted_check['service'] = service_name.replace('_', ' ').title()
+                    
+                    # Ensure response_time is a number
+                    if 'response_time' in formatted_check:
+                        formatted_check['response_time'] = float(formatted_check.get('response_time', 0))
+                    
+                    formatted_checks.append(formatted_check)
                 
-                return checks
+                return formatted_checks
             else:
-                # Return mock health checks
+                # Return mock health checks with proper formatting
                 return self._get_mock_health_checks()
                 
         except Exception as e:
             self.logger.log_event(f"Error getting health checks: {e}")
-            return []
+            # Return error status for display
+            return [{
+                'service': 'System Health',
+                'status': 'critical',
+                'response_time': 999,
+                'timestamp': datetime.now().isoformat(),
+                'details': {'error': str(e)},
+                'is_critical': True
+            }]
     
     def get_system_metrics(self) -> Dict[str, Any]:
         """Get current system resource metrics"""

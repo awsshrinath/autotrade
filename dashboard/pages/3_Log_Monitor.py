@@ -28,6 +28,9 @@ from dashboard.utils.log_api_client import LogAPIClient
 import os
 FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "http://log-monitor-service:8001/api/v1") 
 
+# Auto-get OpenAI API key from environment (GitHub secrets/Kubernetes secrets)
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
 # Initialize API client in session state to persist across reruns
 if 'log_api_client' not in st.session_state:
     st.session_state.log_api_client = None
@@ -41,21 +44,23 @@ st.set_page_config(
 st.title("🔍 Unified Log Monitor")
 st.caption(f"Displaying logs and insights. Current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-# Function to initialize or update client, potentially after API key is entered
-def initialize_api_client(api_key_to_use: Optional[str] = None):
+# Function to initialize or update client with automatic API key detection
+def initialize_api_client(manual_api_key: Optional[str] = None):
+    """Initialize API client with automatic key detection or manual override"""
+    
+    # Priority: 1) Manual override, 2) Environment variable, 3) No key
+    api_key_to_use = manual_api_key or OPENAI_API_KEY
+    
     if api_key_to_use:
         st.session_state.log_api_client = LogAPIClient(base_url=FASTAPI_BASE_URL, api_key=api_key_to_use)
         st.session_state.user_authenticated = True
         st.session_state.api_key = api_key_to_use
-        st.success("API Client initialized with new key.")
-    elif st.session_state.get("api_key"):
-        st.session_state.log_api_client = LogAPIClient(base_url=FASTAPI_BASE_URL, api_key=st.session_state.api_key)
-        st.session_state.user_authenticated = True # Assuming stored key is valid
-        st.info("API Client initialized with stored key.")
+        st.session_state.api_key_source = "manual" if manual_api_key else "environment"
     else:
-        st.session_state.log_api_client = LogAPIClient(base_url=FASTAPI_BASE_URL) # No API key (for unsecured dev or if auth is off)
-        st.session_state.user_authenticated = False # Or True if auth is disabled on backend
-        st.warning("API Client initialized without API key. Endpoints requiring auth may fail if auth is enabled on backend.")
+        st.session_state.log_api_client = LogAPIClient(base_url=FASTAPI_BASE_URL) # No API key
+        st.session_state.user_authenticated = False 
+        st.session_state.api_key = None
+        st.session_state.api_key_source = "none"
 
 # --- Authentication Check and Client Initialization ---
 if 'user_authenticated' not in st.session_state:
@@ -63,54 +68,97 @@ if 'user_authenticated' not in st.session_state:
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
 
-# Attempt to initialize client on first load if key already in session_state (e.g. from previous session)
-if st.session_state.log_api_client is None and st.session_state.api_key:
-    initialize_api_client(st.session_state.api_key)
+# Auto-initialize client on first load with environment API key
+if st.session_state.log_api_client is None:
+    initialize_api_client()
 
 with st.sidebar:
-    st.header("API Configuration")
-    # Allow users to update API key if needed
-    new_api_key_input = st.text_input(
-        "Enter API Key", 
-        type="password", 
-        value=st.session_state.get("api_key", ""),
-        key="api_key_input_sidebar"
-    )
-    if st.button("Update API Key & Re-initialize Client"):
-        if new_api_key_input:
-            initialize_api_client(new_api_key_input)
-            st.rerun()
-        else:
-            st.warning("Please enter an API key to update.")
+    st.header("🔧 API Configuration")
     
+    # Show current API key status
+    if OPENAI_API_KEY:
+        st.success("✅ **OpenAI API Key**: Auto-detected from environment")
+        st.caption(f"🔑 Key source: Environment variables (GitHub/K8s secrets)")
+        api_key_status = f"Active ({st.session_state.api_key_source})"
+    else:
+        st.warning("⚠️ **OpenAI API Key**: Not found in environment")
+        st.caption("🔑 Please provide manually or check environment configuration")
+        api_key_status = "Manual required"
+    
+    st.metric("API Key Status", api_key_status)
+    
+    # Advanced: Manual API key override (mostly for debugging)
+    with st.expander("🔧 Advanced: Manual API Key Override"):
+        st.caption("Only use this for debugging. In production, API keys come from environment variables.")
+        manual_api_key_input = st.text_input(
+            "Manual API Key Override", 
+            type="password", 
+            value="",
+            key="manual_api_key_input",
+            help="This overrides the environment variable"
+        )
+        if st.button("Apply Manual Override"):
+            if manual_api_key_input:
+                initialize_api_client(manual_api_key_input)
+                st.rerun()
+            else:
+                st.warning("Please enter an API key to override.")
+    
+    # API Status and Health Check
     if st.session_state.log_api_client and st.session_state.user_authenticated:
-        st.success("API Client is active.")
-        # Perform a health check
-        if st.button("Test API Connection (Health Check)"):
+        st.success("🚀 **API Client**: Active and ready")
+        
+        # Health check section
+        st.subheader("🏥 Health Check")
+        if st.button("Test API Connection"):
             with st.spinner("Checking API health..."):
                 health_status = st.session_state.log_api_client.health_check()
                 if health_status and health_status.get("status") == "ok":
-                    st.success(f"API Connection Successful: {health_status.get('message')}")
-                    st.json(health_status.get("dependencies", {}))
+                    st.success(f"✅ **Connection**: {health_status.get('message')}")
+                    
+                    # Show service dependencies
+                    dependencies = health_status.get("dependencies", {})
+                    st.subheader("📊 Service Dependencies")
+                    for service, status in dependencies.items():
+                        if status == "ok":
+                            st.success(f"✅ {service.replace('_', ' ').title()}")
+                        else:
+                            st.error(f"❌ {service.replace('_', ' ').title()}: {status}")
+                            
                 elif health_status:
-                    st.warning(f"API Status: {health_status.get('status')} - {health_status.get('message')}")
+                    st.warning(f"⚠️ **API Status**: {health_status.get('status')} - {health_status.get('message')}")
                     st.json(health_status.get("dependencies", {}))
                 else:
-                    st.error("Failed to connect to API or get health status.")
-    elif not st.session_state.api_key:
-        st.info("Enter an API key to activate client and features.")
+                    st.error("❌ **Connection**: Failed to connect to API")
+    else:
+        st.error("❌ **API Client**: Not authenticated")
+        if not OPENAI_API_KEY:
+            st.info("💡 **Solution**: Set `OPENAI_API_KEY` environment variable or use manual override above.")
+        
+# Show environment info for debugging
+with st.sidebar:
+    with st.expander("🔍 Environment Info"):
+        st.caption("**FastAPI Base URL:**")
+        st.code(FASTAPI_BASE_URL)
+        st.caption("**OpenAI Key Available:**")
+        st.code("Yes" if OPENAI_API_KEY else "No")
+        if OPENAI_API_KEY:
+            st.caption("**Key Preview:**")
+            st.code(f"{OPENAI_API_KEY[:15]}...{OPENAI_API_KEY[-8:]}")
 
-# Stop page execution if client not properly initialized for authenticated access (if needed)
-# This logic depends on whether your backend *requires* an API key for all/most operations.
-# If AUTH_ENABLED is false on backend, client can operate without api_key.
-# For this example, we allow page to load, and individual API calls will fail if key is missing & required.
-if not st.session_state.log_api_client and st.session_state.user_authenticated: # Edge case: user_auth true but client not set
-    initialize_api_client(st.session_state.api_key) # Try to re-init
-
-if not st.session_state.user_authenticated and os.environ.get("REQUIRE_AUTH_GLOBALLY", "True").lower() == "true":
-     st.warning("Please provide a valid API Key in the sidebar to use the log monitoring features.")
-     st.stop()
-
+# Main application check - allow access if we have API key (either way)
+if not st.session_state.user_authenticated:
+    st.warning("⚠️ **Please configure OpenAI API Key to use the log monitoring features.**")
+    st.info("""
+    **For Production Deployment:**
+    - API key should be set as `OPENAI_API_KEY` environment variable
+    - In Kubernetes, this comes from GitHub secrets automatically
+    
+    **For Local Development:**
+    - Add `OPENAI_API_KEY=your-key-here` to your `.env` file
+    - Or use the manual override in the sidebar
+    """)
+    st.stop()
 
 # --- Main Page Layout ---
 # Tabs for different log sources and summary

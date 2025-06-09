@@ -176,29 +176,39 @@ def get_config() -> LogAggregatorConfig:
 def validate_config() -> bool:
     """Validate that required configuration is present."""
     errors = []
+    warnings = []
     
-    # Check required GCP configuration
+    # Check required GCP configuration (optional in some deployments)
     if not config.google_application_credentials:
-        errors.append("GOOGLE_APPLICATION_CREDENTIALS is required")
+        warnings.append("GOOGLE_APPLICATION_CREDENTIALS not set - GCP features may be limited")
     
     if not config.firestore_project_id:
-        errors.append("FIRESTORE_PROJECT_ID is required")
+        warnings.append("FIRESTORE_PROJECT_ID not set - Firestore logs unavailable")
     
     if not config.gcs_bucket_name:
-        errors.append("GCS_BUCKET_NAME is required")
+        warnings.append("GCS_BUCKET_NAME not set - GCS logs unavailable")
     
-    # Check OpenAI configuration for summarization
+    # Check OpenAI configuration for summarization (auto-pulls from environment)
     if not config.openai_api_key:
-        errors.append("OPENAI_API_KEY is required for log summarization")
+        warnings.append("OPENAI_API_KEY not found in environment - AI summarization disabled")
+    else:
+        print(f"✅ OpenAI API key loaded from environment (key: {config.openai_api_key[:15]}...)")
     
     # Check security configuration
     if config.secret_key == "your-secret-key-change-in-production":
-        errors.append("LOG_AGGREGATOR_SECRET_KEY should be changed from default")
+        warnings.append("LOG_AGGREGATOR_SECRET_KEY should be changed from default")
     
+    # Display warnings but don't fail validation
+    if warnings:
+        print("Configuration warnings:")
+        for warning in warnings:
+            print(f"  ⚠️  {warning}")
+    
+    # Only fail on critical errors
     if errors:
         print("Configuration validation errors:")
         for error in errors:
-            print(f"  - {error}")
+            print(f"  ❌ {error}")
         return False
     
     return True

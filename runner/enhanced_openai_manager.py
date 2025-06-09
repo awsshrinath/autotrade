@@ -67,15 +67,17 @@ class EnhancedOpenAIManager:
             self._log_info("Using OpenAI API key from environment variable")
             return api_key
             
-        # Source 2: Try Enhanced Secret Manager (with better error handling)
+        # Source 2: Try Kubernetes-native GCP Secret Manager (no impersonation)
         try:
-            from runner.enhanced_secret_manager import get_openai_key_enhanced
-            api_key = get_openai_key_enhanced(logger=self.logger)
-            if api_key:
-                self._log_info("Using OpenAI API key from Enhanced Secret Manager")
-                return api_key
+            from runner.k8s_native_gcp_client import get_k8s_gcp_client
+            k8s_client = get_k8s_gcp_client(logger=self.logger)
+            if k8s_client and hasattr(k8s_client, 'get_secret'):
+                api_key = k8s_client.get_secret("OPENAI_API_KEY")
+                if api_key:
+                    self._log_info("Using OpenAI API key from K8s-native Secret Manager")
+                    return api_key
         except Exception as e:
-            self._log_warning(f"Enhanced Secret Manager failed: {e}")
+            self._log_warning(f"K8s-native Secret Manager failed: {e}")
             
         # Source 3: Try Original Secret Manager (fallback)
         try:
