@@ -28,8 +28,39 @@ from dashboard.utils.log_api_client import LogAPIClient
 import os
 FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "http://log-monitor-service:8001/api/v1") 
 
-# Auto-get OpenAI API key from environment (GitHub secrets/Kubernetes secrets)
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+# Auto-get OpenAI API key from multiple sources
+def get_openai_api_key_auto():
+    """Auto-detect OpenAI API key from environment or GCP Secret Manager"""
+    
+    # Source 1: Environment variables (GitHub secrets/Kubernetes secrets)
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if api_key:
+        return api_key, "environment"
+    
+    # Source 2: GCP Secret Manager using K8s-native client
+    try:
+        from runner.k8s_native_gcp_client import get_k8s_gcp_client
+        k8s_client = get_k8s_gcp_client()
+        if k8s_client and k8s_client.is_available:
+            api_key = k8s_client.get_secret("OPENAI_API_KEY")
+            if api_key:
+                return api_key, "gcp_secret_manager"
+    except Exception as e:
+        print(f"Failed to get API key from GCP Secret Manager: {e}")
+    
+    # Source 3: Streamlit secrets (fallback for local development)
+    try:
+        if hasattr(st, 'secrets') and "OPENAI_API_KEY" in st.secrets:
+            api_key = st.secrets["OPENAI_API_KEY"]
+            if api_key:
+                return api_key, "streamlit_secrets"
+    except Exception:
+        pass
+    
+    return None, "none"
+
+# Get API key automatically
+OPENAI_API_KEY, API_KEY_SOURCE = get_openai_api_key_auto()
 
 # Initialize API client in session state to persist across reruns
 if 'log_api_client' not in st.session_state:
@@ -77,13 +108,23 @@ with st.sidebar:
     
     # Show current API key status
     if OPENAI_API_KEY:
-        st.success("✅ **OpenAI API Key**: Auto-detected from environment")
-        st.caption(f"🔑 Key source: Environment variables (GitHub/K8s secrets)")
-        api_key_status = f"Active ({st.session_state.api_key_source})"
+        if API_KEY_SOURCE == "environment":
+            st.success("✅ **OpenAI API Key**: Auto-detected from environment")
+            st.caption("🔑 Key source: Environment variables (GitHub/K8s secrets)")
+        elif API_KEY_SOURCE == "gcp_secret_manager":
+            st.success("✅ **OpenAI API Key**: Auto-detected from GCP Secret Manager") 
+            st.caption("🔑 Key source: GCP Secret Manager using pod service account")
+        elif API_KEY_SOURCE == "streamlit_secrets":
+            st.success("✅ **OpenAI API Key**: Auto-detected from Streamlit secrets")
+            st.caption("🔑 Key source: Local Streamlit secrets")
+        else:
+            st.success("✅ **OpenAI API Key**: Available")
+            st.caption(f"🔑 Key source: {API_KEY_SOURCE}")
+        api_key_status = f"Active ({API_KEY_SOURCE})"
     else:
-        st.warning("⚠️ **OpenAI API Key**: Not found in environment")
-        st.caption("🔑 Please provide manually or check environment configuration")
-        api_key_status = "Manual required"
+        st.error("❌ **OpenAI API Key**: Not found")
+        st.caption("🔑 Checked: Environment variables → GCP Secret Manager → Streamlit secrets")
+        api_key_status = "Not found"
     
     st.metric("API Key Status", api_key_status)
     
@@ -142,21 +183,28 @@ with st.sidebar:
         st.code(FASTAPI_BASE_URL)
         st.caption("**OpenAI Key Available:**")
         st.code("Yes" if OPENAI_API_KEY else "No")
+        st.caption("**Key Source:**")
+        st.code(API_KEY_SOURCE)
         if OPENAI_API_KEY:
             st.caption("**Key Preview:**")
             st.code(f"{OPENAI_API_KEY[:15]}...{OPENAI_API_KEY[-8:]}")
 
 # Main application check - allow access if we have API key (either way)
 if not st.session_state.user_authenticated:
-    st.warning("⚠️ **Please configure OpenAI API Key to use the log monitoring features.**")
-    st.info("""
-    **For Production Deployment:**
-    - API key should be set as `OPENAI_API_KEY` environment variable
-    - In Kubernetes, this comes from GitHub secrets automatically
+    st.error("❌ **OpenAI API Key Required**")
+    st.warning("Log monitoring features require an OpenAI API key for AI-powered analysis.")
     
-    **For Local Development:**
-    - Add `OPENAI_API_KEY=your-key-here` to your `.env` file
-    - Or use the manual override in the sidebar
+    st.info(f"""
+    **🔍 Detection Results:**
+    - **Environment Variables**: {os.environ.get("OPENAI_API_KEY", "❌ Not found")}
+    - **GCP Secret Manager**: {API_KEY_SOURCE == "gcp_secret_manager" and "✅ Available" or "❌ Not accessible"}
+    - **Streamlit Secrets**: {API_KEY_SOURCE == "streamlit_secrets" and "✅ Available" or "❌ Not found"}
+    
+    **💡 Solutions:**
+    - **Kubernetes**: Ensure `OPENAI_API_KEY` is in GitHub secrets and mapped to pod environment
+    - **GCP Secret Manager**: Verify the secret exists and pod service account has access
+    - **Local Development**: Add `OPENAI_API_KEY=your-key-here` to your `.env` file
+    - **Manual Override**: Use the sidebar for debugging
     """)
     st.stop()
 
