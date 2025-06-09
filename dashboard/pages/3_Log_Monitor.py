@@ -11,9 +11,9 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 import re
 
-# Placeholder for API client (to be implemented in subtask 7.2)
-# from ..utils.log_api_client import LogAPIClient
-from ..utils.log_api_client import LogAPIClient # Import the client
+# Import the API client using absolute import
+# This fixes the "attempted relative import with no known parent package" error
+from dashboard.utils.log_api_client import LogAPIClient
 
 # Placeholder: Initialize API client
 # Make sure the FastAPI service is running and accessible.

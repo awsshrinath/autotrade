@@ -1,48 +1,992 @@
 """
 Cognitive Data Provider
-Provides AI-powered insights and analysis data
+Provides AI-powered insights and analysis data from the production cognitive system
 """
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
+import logging
+
+# Import existing cognitive system components
+try:
+    from runner.enhanced_cognitive_system import EnhancedCognitiveSystem
+    from runner.cognitive_system import DecisionType, ConfidenceLevel, CognitiveState
+    COGNITIVE_AVAILABLE = True
+except ImportError:
+    # Fallback if cognitive system is not available
+    COGNITIVE_AVAILABLE = False
+    
+from runner.logger import Logger
+from runner.config import OFFLINE_MODE
 
 
 class CognitiveDataProvider:
-    """Provides cognitive insights and AI-powered analysis data"""
+    """Data provider for cognitive insights with offline mode support"""
     
     def __init__(self):
-        pass
+        self.logger = logging.getLogger(__name__)
+        self.offline_mode = OFFLINE_MODE
+        
+        if not self.offline_mode:
+            try:
+                from runner.production_manager import ProductionManager
+                self.production_manager = ProductionManager()
+                self.cognitive_system = self.production_manager.cognitive_system
+                self.logger.info("✅ Connected to cognitive system")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Failed to connect to cognitive system, using offline mode: {e}")
+                self.offline_mode = True
+                self.production_manager = None
+                self.cognitive_system = None
+        else:
+            self.logger.info("🔌 Running in offline mode")
+            self.production_manager = None
+            self.cognitive_system = None
+    
+    def get_cognitive_summary(self) -> Dict[str, Any]:
+        """Get comprehensive cognitive system summary"""
+        try:
+            if not self.offline_mode and self.cognitive_system and hasattr(self.cognitive_system, 'available') and self.cognitive_system.available:
+                return self.cognitive_system.get_cognitive_summary()
+            else:
+                return self._get_mock_cognitive_summary()
+        except Exception as e:
+            self.logger.info(f"Using fallback data for cognitive summary: {e}")
+            return self._get_mock_cognitive_summary()
     
     def get_market_sentiment(self) -> Dict[str, Any]:
-        """Get market sentiment analysis"""
-        return {
-            'overall_sentiment': 'bullish',
-            'confidence': 0.75,
-            'factors': [
-                'Strong earnings reports',
-                'Positive economic indicators',
-                'Low volatility'
-            ]
-        }
+        """Get AI-powered market sentiment analysis"""
+        try:
+            if not self.offline_mode and self.cognitive_system and hasattr(self.cognitive_system, 'available') and self.cognitive_system.available:
+                # Get recent market analysis thoughts
+                recent_thoughts = self.cognitive_system.get_recent_thoughts(
+                    hours=24, 
+                    decision_types=[DecisionType.MARKET_ANALYSIS]
+                )
+                
+                # Get memories related to market sentiment
+                sentiment_memories = self.cognitive_system.search_memories(
+                    query="market sentiment analysis", 
+                    limit=5
+                )
+                
+                # Analyze sentiment from thoughts and memories
+                sentiment_data = self._analyze_sentiment_from_thoughts(recent_thoughts)
+                
+                return {
+                    'overall_sentiment': sentiment_data.get('sentiment', 'neutral'),
+                    'confidence': sentiment_data.get('confidence', 0.5),
+                    'factors': sentiment_data.get('factors', []),
+                    'recent_thoughts_count': len(recent_thoughts),
+                    'last_analysis': sentiment_data.get('last_analysis', datetime.now().isoformat()),
+                    'trend': sentiment_data.get('trend', 'stable')
+                }
+            else:
+                return self._get_mock_market_sentiment()
+        except Exception as e:
+            self.logger.log_event(f"Error getting market sentiment: {e}")
+            return self._get_mock_market_sentiment()
     
     def get_trade_insights(self) -> List[Dict[str, Any]]:
-        """Get AI-powered trade insights"""
+        """Get AI-powered trade insights and pattern recognition"""
+        try:
+            if self.cognitive_system and self.cognitive_system.available:
+                insights = []
+                
+                # Get recent trading thoughts
+                trade_thoughts = self.cognitive_system.get_recent_thoughts(
+                    hours=24,
+                    decision_types=[DecisionType.TRADE_ENTRY, DecisionType.TRADE_EXIT]
+                )
+                
+                # Get strategy-related memories
+                strategy_memories = self.cognitive_system.search_memories(
+                    query="strategy performance pattern", 
+                    limit=10
+                )
+                
+                # Analyze patterns from recent trades
+                for thought in trade_thoughts[-10:]:  # Last 10 trade thoughts
+                    insight = self._generate_trade_insight(thought)
+                    if insight:
+                        insights.append(insight)
+                
+                # Add pattern recognition insights
+                pattern_insights = self._analyze_trade_patterns(trade_thoughts)
+                insights.extend(pattern_insights)
+                
+                return insights
+            else:
+                return self._get_mock_trade_insights()
+        except Exception as e:
+            self.logger.log_event(f"Error getting trade insights: {e}")
+            return self._get_mock_trade_insights()
+    
+    def get_strategy_recommendations(self) -> List[Dict[str, Any]]:
+        """Get AI-powered strategy optimization recommendations"""
+        try:
+            if self.cognitive_system and self.cognitive_system.available:
+                recommendations = []
+                
+                # Get metacognitive analysis
+                metacognitive_summary = self.cognitive_system.get_metacognitive_summary()
+                
+                # Get recent strategy-related thoughts
+                strategy_thoughts = self.cognitive_system.get_recent_thoughts(
+                    hours=168,  # Last week
+                    decision_types=[DecisionType.STRATEGY_SELECTION]
+                )
+                
+                # Generate recommendations based on performance
+                perf_recommendations = self._generate_performance_recommendations(metacognitive_summary)
+                recommendations.extend(perf_recommendations)
+                
+                # Generate strategy-specific recommendations
+                strategy_recommendations = self._analyze_strategy_performance(strategy_thoughts)
+                recommendations.extend(strategy_recommendations)
+                
+                return recommendations
+            else:
+                return self._get_mock_strategy_recommendations()
+        except Exception as e:
+            self.logger.log_event(f"Error getting strategy recommendations: {e}")
+            return self._get_mock_strategy_recommendations()
+    
+    def get_risk_predictions(self) -> List[Dict[str, Any]]:
+        """Get AI-powered risk prediction models"""
+        try:
+            if self.cognitive_system and self.cognitive_system.available:
+                predictions = []
+                
+                # Get recent risk-related thoughts and decisions
+                risk_thoughts = self.cognitive_system.get_recent_thoughts(
+                    hours=72,  # Last 3 days
+                    decision_types=[DecisionType.RISK_MANAGEMENT]
+                )
+                
+                # Analyze risk patterns
+                risk_analysis = self._analyze_risk_patterns(risk_thoughts)
+                predictions.extend(risk_analysis)
+                
+                # Get system state for risk assessment
+                cognitive_summary = self.cognitive_system.get_cognitive_summary()
+                state_based_risks = self._assess_state_based_risks(cognitive_summary)
+                predictions.extend(state_based_risks)
+                
+                return predictions
+            else:
+                return self._get_mock_risk_predictions()
+        except Exception as e:
+            self.logger.log_event(f"Error getting risk predictions: {e}")
+            return self._get_mock_risk_predictions()
+    
+    def get_performance_insights(self) -> Dict[str, Any]:
+        """Get AI-powered performance improvement recommendations"""
+        try:
+            if self.cognitive_system and self.cognitive_system.available:
+                # Get metacognitive summary for performance analysis
+                metacognitive_summary = self.cognitive_system.get_metacognitive_summary()
+                
+                # Get memory summary for context
+                memory_summary = self.cognitive_system.get_memory_summary()
+                
+                # Generate performance insights
+                insights = {
+                    'decision_accuracy': metacognitive_summary.get('decision_accuracy', 0.0),
+                    'confidence_calibration': metacognitive_summary.get('confidence_calibration', 0.0),
+                    'learning_rate': metacognitive_summary.get('learning_rate', 0.0),
+                    'bias_detection': metacognitive_summary.get('detected_biases', []),
+                    'improvement_areas': metacognitive_summary.get('improvement_recommendations', []),
+                    'memory_efficiency': memory_summary.get('consolidation_efficiency', 0.0),
+                    'thought_quality': self._assess_thought_quality(),
+                    'adaptation_score': metacognitive_summary.get('adaptation_score', 0.0)
+                }
+                
+                return insights
+            else:
+                return self._get_mock_performance_insights()
+        except Exception as e:
+            self.logger.log_event(f"Error getting performance insights: {e}")
+            return self._get_mock_performance_insights()
+    
+    def get_cognitive_health(self) -> Dict[str, Any]:
+        """Get cognitive system health and status"""
+        try:
+            if self.cognitive_system and self.cognitive_system.available:
+                cognitive_summary = self.cognitive_system.get_cognitive_summary()
+                
+                return {
+                    'system_status': cognitive_summary.get('system_status', {}),
+                    'memory_health': cognitive_summary.get('memory_summary', {}),
+                    'thought_processing': cognitive_summary.get('thought_summary', {}),
+                    'state_analytics': cognitive_summary.get('state_analytics', {}),
+                    'health_checks': cognitive_summary.get('health_status', {}),
+                    'cognitive_metrics': cognitive_summary.get('cognitive_metrics', {})
+                }
+            else:
+                return self._get_mock_cognitive_health()
+        except Exception as e:
+            self.logger.log_event(f"Error getting cognitive health: {e}")
+            return self._get_mock_cognitive_health()
+    
+    # === HELPER METHODS ===
+    
+    def _analyze_sentiment_from_thoughts(self, thoughts: List[Dict]) -> Dict[str, Any]:
+        """Enhanced AI-powered market sentiment analysis from recent thoughts"""
+        if not thoughts:
+            return {'sentiment': 'neutral', 'confidence': 0.5, 'factors': []}
+        
+        # Enhanced sentiment analysis with multiple indicators
+        sentiment_scores = []
+        confidence_weights = []
+        factors = []
+        
+        # Sentiment keywords with weights
+        bullish_keywords = {
+            'bullish': 1.0, 'positive': 0.8, 'strong': 0.7, 'uptrend': 0.9,
+            'breakout': 0.8, 'momentum': 0.6, 'rally': 0.9, 'support': 0.5,
+            'buy': 0.7, 'long': 0.6, 'growth': 0.6, 'optimistic': 0.8
+        }
+        
+        bearish_keywords = {
+            'bearish': 1.0, 'negative': 0.8, 'weak': 0.7, 'downtrend': 0.9,
+            'breakdown': 0.8, 'decline': 0.7, 'sell': 0.7, 'short': 0.6,
+            'resistance': 0.5, 'pessimistic': 0.8, 'correction': 0.6, 'crash': 1.0
+        }
+        
+        for thought in thoughts:
+            decision = thought.get('decision', '').lower()
+            reasoning = thought.get('reasoning', '').lower()
+            confidence = thought.get('confidence', 'medium')
+            
+            # Calculate sentiment score for this thought
+            thought_text = f"{decision} {reasoning}"
+            
+            bullish_score = 0
+            bearish_score = 0
+            
+            # Keyword-based sentiment scoring
+            for keyword, weight in bullish_keywords.items():
+                if keyword in thought_text:
+                    bullish_score += weight
+                    
+            for keyword, weight in bearish_keywords.items():
+                if keyword in thought_text:
+                    bearish_score += weight
+            
+            # Normalize scores
+            total_score = bullish_score + bearish_score
+            if total_score > 0:
+                normalized_bullish = bullish_score / total_score
+                normalized_bearish = bearish_score / total_score
+                
+                if normalized_bullish > normalized_bearish:
+                    sentiment_score = normalized_bullish - normalized_bearish
+                    factors.append(f"Bullish indicators: {decision[:50]}")
+                elif normalized_bearish > normalized_bullish:
+                    sentiment_score = -(normalized_bearish - normalized_bullish)
+                    factors.append(f"Bearish indicators: {decision[:50]}")
+                else:
+                    sentiment_score = 0
+            else:
+                sentiment_score = 0
+            
+            sentiment_scores.append(sentiment_score)
+            
+            # Weight by confidence
+            conf_weight = {'low': 0.5, 'medium': 1.0, 'high': 1.5}.get(confidence, 1.0)
+            confidence_weights.append(conf_weight)
+        
+        # Calculate weighted average sentiment
+        if sentiment_scores and confidence_weights:
+            weighted_sentiment = sum(s * w for s, w in zip(sentiment_scores, confidence_weights))
+            total_weight = sum(confidence_weights)
+            avg_sentiment = weighted_sentiment / total_weight if total_weight > 0 else 0
+        else:
+            avg_sentiment = 0
+        
+        # Determine sentiment category and confidence
+        if avg_sentiment > 0.2:
+            sentiment = 'bullish'
+            confidence = min(0.95, 0.6 + abs(avg_sentiment) * 0.3)
+        elif avg_sentiment < -0.2:
+            sentiment = 'bearish'
+            confidence = min(0.95, 0.6 + abs(avg_sentiment) * 0.3)
+        else:
+            sentiment = 'neutral'
+            confidence = 0.5 + abs(avg_sentiment) * 0.2
+        
+        # Trend analysis based on temporal patterns
+        if len(thoughts) >= 3:
+            recent_scores = sentiment_scores[-3:]
+            if len(recent_scores) >= 2:
+                trend_direction = recent_scores[-1] - recent_scores[0]
+                if trend_direction > 0.1:
+                    trend = 'improving'
+                elif trend_direction < -0.1:
+                    trend = 'declining'
+                else:
+                    trend = 'stable'
+            else:
+                trend = 'stable'
+        else:
+            trend = 'stable'
+        
+        return {
+            'sentiment': sentiment,
+            'confidence': confidence,
+            'factors': factors[:5],  # Top 5 factors
+            'last_analysis': datetime.now().isoformat(),
+            'trend': trend,
+            'sentiment_score': avg_sentiment,
+            'analysis_depth': len(thoughts)
+        }
+    
+    def _generate_trade_insight(self, thought: Dict) -> Optional[Dict[str, Any]]:
+        """Enhanced AI-powered trade insight generation"""
+        try:
+            decision = thought.get('decision', '')
+            reasoning = thought.get('reasoning', '')
+            confidence = thought.get('confidence', 'medium')
+            decision_type = thought.get('decision_type', 'unknown')
+            market_context = thought.get('market_context', {})
+            
+            # Enhanced confidence mapping with context
+            conf_map = {'low': 0.3, 'medium': 0.6, 'high': 0.9}
+            base_confidence = conf_map.get(confidence, 0.6)
+            
+            # Adjust confidence based on reasoning quality
+            reasoning_quality = self._assess_reasoning_quality(reasoning)
+            adjusted_confidence = min(0.95, base_confidence * (0.8 + reasoning_quality * 0.4))
+            
+            # Generate insight type based on decision content
+            insight_type = self._classify_insight_type(decision, decision_type)
+            
+            # Generate actionable recommendation
+            action = self._generate_action_recommendation(decision, adjusted_confidence, market_context)
+            
+            # Extract key patterns or signals
+            patterns = self._extract_decision_patterns(decision, reasoning)
+            
+            insight = {
+                'type': insight_type,
+                'message': f"AI Analysis: {decision}",
+                'reasoning': reasoning,
+                'confidence': adjusted_confidence,
+                'timestamp': thought.get('timestamp', datetime.now().isoformat()),
+                'action': action,
+                'patterns': patterns,
+                'market_context_score': self._score_market_context(market_context)
+            }
+            
+            # Add risk assessment if available
+            if market_context:
+                risk_level = self._assess_decision_risk(decision, market_context)
+                insight['risk_level'] = risk_level
+            
+            return insight
+            
+        except Exception as e:
+            self.logger.log_event(f"Error generating trade insight: {e}")
+            return None
+    
+    def _analyze_trade_patterns(self, thoughts: List[Dict]) -> List[Dict[str, Any]]:
+        """Enhanced AI-powered trade pattern recognition"""
+        patterns = []
+        
+        if len(thoughts) < 3:
+            return patterns
+        
+        # Analyze decision frequency patterns
+        decision_types = [t.get('decision_type', 'unknown') for t in thoughts]
+        decision_frequency = {}
+        for dt in decision_types:
+            decision_frequency[dt] = decision_frequency.get(dt, 0) + 1
+        
+        # Pattern 1: High-frequency trading detection
+        if len(thoughts) > 10:  # More than 10 decisions in timeframe
+            patterns.append({
+                'type': 'pattern_recognition',
+                'message': 'High-frequency decision making detected',
+                'confidence': 0.8,
+                'action': 'Monitor for overtrading risk',
+                'timestamp': datetime.now().isoformat(),
+                'pattern_strength': min(1.0, len(thoughts) / 20),
+                'recommendation': 'Consider consolidating decisions or extending analysis periods'
+            })
+        
+        # Pattern 2: Strategy consistency analysis
+        strategies = [t.get('strategy_id', 'unknown') for t in thoughts if t.get('strategy_id')]
+        if strategies:
+            strategy_diversity = len(set(strategies)) / len(strategies)
+            if strategy_diversity < 0.3:  # Low diversity
+                patterns.append({
+                    'type': 'pattern_recognition',
+                    'message': f'Low strategy diversity detected ({strategy_diversity:.1%})',
+                    'confidence': 0.7,
+                    'action': 'Consider diversifying trading strategies',
+                    'timestamp': datetime.now().isoformat(),
+                    'pattern_strength': 1 - strategy_diversity,
+                    'recommendation': 'Explore alternative strategies for different market conditions'
+                })
+        
+        # Pattern 3: Confidence trend analysis
+        confidences = [t.get('confidence', 'medium') for t in thoughts]
+        conf_scores = [{'low': 0.3, 'medium': 0.6, 'high': 0.9}.get(c, 0.6) for c in confidences]
+        
+        if len(conf_scores) >= 5:
+            recent_conf = sum(conf_scores[-3:]) / 3
+            earlier_conf = sum(conf_scores[:3]) / 3
+            conf_trend = recent_conf - earlier_conf
+            
+            if conf_trend < -0.2:
+                patterns.append({
+                    'type': 'pattern_recognition',
+                    'message': 'Declining confidence trend detected',
+                    'confidence': 0.75,
+                    'action': 'Review recent decisions and market analysis',
+                    'timestamp': datetime.now().isoformat(),
+                    'pattern_strength': abs(conf_trend),
+                    'recommendation': 'Consider reducing position sizes until confidence recovers'
+                })
+            elif conf_trend > 0.2:
+                patterns.append({
+                    'type': 'pattern_recognition',
+                    'message': 'Increasing confidence trend detected',
+                    'confidence': 0.75,
+                    'action': 'Monitor for overconfidence bias',
+                    'timestamp': datetime.now().isoformat(),
+                    'pattern_strength': conf_trend,
+                    'recommendation': 'Maintain risk management discipline despite high confidence'
+                })
+        
+        # Pattern 4: Market condition adaptation
+        market_contexts = [t.get('market_context', {}) for t in thoughts]
+        volatility_responses = []
+        
+        for context in market_contexts:
+            if 'volatility' in context:
+                volatility_responses.append(context['volatility'])
+        
+        if len(volatility_responses) >= 3:
+            unique_responses = len(set(volatility_responses))
+            if unique_responses == 1:
+                patterns.append({
+                    'type': 'pattern_recognition',
+                    'message': 'Consistent response to market volatility detected',
+                    'confidence': 0.6,
+                    'action': 'Verify strategy effectiveness across different volatility regimes',
+                    'timestamp': datetime.now().isoformat(),
+                    'pattern_strength': 0.7,
+                    'recommendation': 'Test strategies in different market conditions'
+                })
+        
+        return patterns
+    
+    def _assess_reasoning_quality(self, reasoning: str) -> float:
+        """Assess the quality of reasoning in a thought"""
+        if not reasoning:
+            return 0.0
+        
+        quality_score = 0.0
+        
+        # Length factor (more detailed reasoning generally better)
+        length_score = min(1.0, len(reasoning) / 200)
+        quality_score += length_score * 0.3
+        
+        # Keyword indicators of good reasoning
+        quality_keywords = [
+            'because', 'analysis', 'data', 'trend', 'pattern', 'indicator',
+            'support', 'resistance', 'volume', 'momentum', 'risk', 'probability'
+        ]
+        
+        keyword_count = sum(1 for keyword in quality_keywords if keyword in reasoning.lower())
+        keyword_score = min(1.0, keyword_count / 5)
+        quality_score += keyword_score * 0.4
+        
+        # Structure indicators (questions, multiple points)
+        structure_indicators = ['?', '1.', '2.', 'first', 'second', 'however', 'therefore']
+        structure_count = sum(1 for indicator in structure_indicators if indicator in reasoning.lower())
+        structure_score = min(1.0, structure_count / 3)
+        quality_score += structure_score * 0.3
+        
+        return min(1.0, quality_score)
+    
+    def _classify_insight_type(self, decision: str, decision_type: str) -> str:
+        """Classify the type of insight based on decision content"""
+        decision_lower = decision.lower()
+        
+        if 'pattern' in decision_lower or 'trend' in decision_lower:
+            return 'pattern_recognition'
+        elif 'risk' in decision_lower or 'danger' in decision_lower:
+            return 'risk_alert'
+        elif 'entry' in decision_lower or 'exit' in decision_lower:
+            return 'trade_signal'
+        elif 'strategy' in decision_lower:
+            return 'strategy_insight'
+        else:
+            return 'ai_analysis'
+    
+    def _generate_action_recommendation(self, decision: str, confidence: float, market_context: Dict) -> str:
+        """Generate actionable recommendation based on decision and confidence"""
+        if confidence > 0.8:
+            if 'buy' in decision.lower() or 'long' in decision.lower():
+                return 'Strong Buy Signal - Consider position entry'
+            elif 'sell' in decision.lower() or 'short' in decision.lower():
+                return 'Strong Sell Signal - Consider position exit'
+            else:
+                return 'High confidence decision - Execute with standard position size'
+        elif confidence > 0.6:
+            return 'Moderate confidence - Consider with reduced position size'
+        else:
+            return 'Low confidence - Monitor and wait for confirmation'
+    
+    def _extract_decision_patterns(self, decision: str, reasoning: str) -> List[str]:
+        """Extract key patterns or signals from decision and reasoning"""
+        patterns = []
+        text = f"{decision} {reasoning}".lower()
+        
+        # Technical patterns
+        technical_patterns = [
+            'breakout', 'breakdown', 'support', 'resistance', 'trend', 'reversal',
+            'momentum', 'volume', 'moving average', 'rsi', 'macd'
+        ]
+        
+        for pattern in technical_patterns:
+            if pattern in text:
+                patterns.append(f"Technical: {pattern}")
+        
+        # Market condition patterns
+        market_patterns = [
+            'volatility', 'correlation', 'sentiment', 'regime', 'cycle'
+        ]
+        
+        for pattern in market_patterns:
+            if pattern in text:
+                patterns.append(f"Market: {pattern}")
+        
+        return patterns[:3]  # Return top 3 patterns
+    
+    def _score_market_context(self, market_context: Dict) -> float:
+        """Score the richness of market context information"""
+        if not market_context:
+            return 0.0
+        
+        context_factors = [
+            'volatility', 'sentiment', 'trend', 'volume', 'correlation',
+            'regime', 'support', 'resistance', 'momentum'
+        ]
+        
+        available_factors = sum(1 for factor in context_factors if factor in market_context)
+        return min(1.0, available_factors / len(context_factors))
+    
+    def _assess_decision_risk(self, decision: str, market_context: Dict) -> str:
+        """Assess risk level of a decision based on context"""
+        risk_score = 0.0
+        
+        # High-risk keywords
+        high_risk_keywords = ['breakout', 'breakdown', 'volatile', 'uncertain']
+        for keyword in high_risk_keywords:
+            if keyword in decision.lower():
+                risk_score += 0.3
+        
+        # Market context risk factors
+        volatility = market_context.get('volatility', 'medium')
+        if volatility == 'high':
+            risk_score += 0.4
+        elif volatility == 'low':
+            risk_score -= 0.2
+        
+        # Determine risk level
+        if risk_score > 0.6:
+            return 'high'
+        elif risk_score > 0.3:
+            return 'medium'
+        else:
+            return 'low'
+    
+    def _generate_performance_recommendations(self, metacognitive_summary: Dict) -> List[Dict[str, Any]]:
+        """Enhanced AI-powered performance recommendations based on metacognitive analysis"""
+        recommendations = []
+        
+        # Decision accuracy analysis
+        accuracy = metacognitive_summary.get('decision_accuracy', 0.0)
+        if accuracy < 0.6:
+            severity = 'high' if accuracy < 0.4 else 'medium'
+            recommendations.append({
+                'strategy': 'decision_making',
+                'recommendation': 'Implement decision accuracy improvement program',
+                'reason': f'Current accuracy: {accuracy:.1%}. Below optimal threshold of 60%.',
+                'confidence': 0.85,
+                'priority': severity,
+                'action_items': [
+                    'Review decision-making framework',
+                    'Increase analysis depth before decisions',
+                    'Implement decision validation checkpoints'
+                ],
+                'expected_improvement': '15-25% accuracy increase'
+            })
+        elif accuracy > 0.8:
+            recommendations.append({
+                'strategy': 'decision_making',
+                'recommendation': 'Maintain current decision-making excellence',
+                'reason': f'High accuracy: {accuracy:.1%}. Performance above 80% threshold.',
+                'confidence': 0.9,
+                'priority': 'low',
+                'action_items': [
+                    'Document successful decision patterns',
+                    'Share best practices across strategies'
+                ],
+                'expected_improvement': 'Sustained high performance'
+            })
+        
+        # Confidence calibration analysis
+        calibration = metacognitive_summary.get('confidence_calibration', 0.0)
+        if calibration < 0.5:
+            recommendations.append({
+                'strategy': 'confidence_calibration',
+                'recommendation': 'Improve confidence calibration accuracy',
+                'reason': f'Poor calibration: {calibration:.1%}. Confidence levels not matching outcomes.',
+                'confidence': 0.8,
+                'priority': 'high',
+                'action_items': [
+                    'Track confidence vs outcome correlation',
+                    'Adjust confidence assessment criteria',
+                    'Implement confidence validation metrics'
+                ],
+                'expected_improvement': 'Better risk assessment accuracy'
+            })
+        
+        # Bias detection and correction
+        biases = metacognitive_summary.get('detected_biases', [])
+        if biases:
+            bias_severity = 'high' if len(biases) > 3 else 'medium'
+            recommendations.append({
+                'strategy': 'bias_correction',
+                'recommendation': 'Implement comprehensive bias mitigation program',
+                'reason': f'Detected {len(biases)} cognitive biases: {", ".join(biases[:3])}',
+                'confidence': 0.75,
+                'priority': bias_severity,
+                'action_items': [
+                    f'Address {biases[0]} bias through structured decision frameworks',
+                    'Implement bias detection alerts',
+                    'Regular bias assessment reviews'
+                ],
+                'expected_improvement': 'Reduced decision distortion'
+            })
+        
+        # Learning rate analysis
+        learning_rate = metacognitive_summary.get('learning_rate', 0.0)
+        if learning_rate < 0.3:
+            recommendations.append({
+                'strategy': 'learning_acceleration',
+                'recommendation': 'Accelerate learning and adaptation processes',
+                'reason': f'Low learning rate: {learning_rate:.1%}. Slow adaptation to market changes.',
+                'confidence': 0.7,
+                'priority': 'medium',
+                'action_items': [
+                    'Increase feedback loop frequency',
+                    'Implement active learning techniques',
+                    'Enhance pattern recognition training'
+                ],
+                'expected_improvement': 'Faster market adaptation'
+            })
+        
+        # Adaptation score analysis
+        adaptation = metacognitive_summary.get('adaptation_score', 0.0)
+        if adaptation < 0.4:
+            recommendations.append({
+                'strategy': 'market_adaptation',
+                'recommendation': 'Improve market condition adaptation',
+                'reason': f'Poor adaptation: {adaptation:.1%}. Difficulty adjusting to market changes.',
+                'confidence': 0.8,
+                'priority': 'high',
+                'action_items': [
+                    'Implement dynamic strategy selection',
+                    'Enhance market regime detection',
+                    'Develop condition-specific playbooks'
+                ],
+                'expected_improvement': 'Better performance across market conditions'
+            })
+        
+        return recommendations
+    
+    def _analyze_strategy_performance(self, strategy_thoughts: List[Dict]) -> List[Dict[str, Any]]:
+        """Analyze strategy performance from thoughts"""
+        recommendations = []
+        
+        if len(strategy_thoughts) >= 2:
+            # Simple analysis of strategy selections
+            strategies = [t.get('strategy_id', 'unknown') for t in strategy_thoughts]
+            most_common = max(set(strategies), key=strategies.count) if strategies else 'unknown'
+            
+            if most_common != 'unknown':
+                recommendations.append({
+                    'strategy': most_common,
+                    'recommendation': 'Continue current strategy',
+                    'reason': f'Strategy {most_common} most frequently selected',
+                    'confidence': 0.6,
+                    'priority': 'low'
+                })
+        
+        return recommendations
+    
+    def _analyze_risk_patterns(self, risk_thoughts: List[Dict]) -> List[Dict[str, Any]]:
+        """Enhanced AI-powered risk pattern analysis from thoughts"""
+        predictions = []
+        
+        if len(risk_thoughts) < 2:
+            return predictions
+        
+        # Analyze risk frequency and intensity
+        risk_frequency = len(risk_thoughts)
+        risk_decisions = [t.get('decision', '').lower() for t in risk_thoughts]
+        risk_confidences = [t.get('confidence', 'medium') for t in risk_thoughts]
+        
+        # Pattern 1: High-frequency risk management
+        if risk_frequency > 5:
+            intensity = min(1.0, risk_frequency / 10)
+            predictions.append({
+                'type': 'risk_pattern',
+                'prediction': f'Elevated risk management activity detected ({risk_frequency} decisions)',
+                'confidence': 0.8,
+                'impact': 'high' if intensity > 0.7 else 'medium',
+                'timeframe': '24-48h',
+                'mitigation': 'Review position sizing and implement stricter risk controls',
+                'risk_score': intensity,
+                'indicators': ['High decision frequency', 'Active risk monitoring']
+            })
+        
+        # Pattern 2: Risk escalation detection
+        recent_risks = risk_decisions[-3:] if len(risk_decisions) >= 3 else risk_decisions
+        escalation_keywords = ['stop', 'exit', 'close', 'reduce', 'emergency', 'urgent']
+        escalation_count = sum(1 for decision in recent_risks 
+                             for keyword in escalation_keywords 
+                             if keyword in decision)
+        
+        if escalation_count >= 2:
+            predictions.append({
+                'type': 'risk_escalation',
+                'prediction': 'Risk escalation pattern detected in recent decisions',
+                'confidence': 0.85,
+                'impact': 'high',
+                'timeframe': 'immediate',
+                'mitigation': 'Immediate portfolio review and risk assessment required',
+                'risk_score': min(1.0, escalation_count / 3),
+                'indicators': ['Emergency actions', 'Position exits', 'Risk reduction']
+            })
+        
+        # Pattern 3: Confidence degradation in risk decisions
+        conf_scores = [{'low': 0.3, 'medium': 0.6, 'high': 0.9}.get(c, 0.6) for c in risk_confidences]
+        if len(conf_scores) >= 3:
+            avg_confidence = sum(conf_scores) / len(conf_scores)
+            if avg_confidence < 0.5:
+                predictions.append({
+                    'type': 'confidence_risk',
+                    'prediction': f'Low confidence in risk decisions (avg: {avg_confidence:.1%})',
+                    'confidence': 0.7,
+                    'impact': 'medium',
+                    'timeframe': '24h',
+                    'mitigation': 'Enhance risk analysis tools and decision support systems',
+                    'risk_score': 1 - avg_confidence,
+                    'indicators': ['Low decision confidence', 'Uncertain risk assessment']
+                })
+        
+        # Pattern 4: Market stress indicators
+        market_stress_keywords = ['volatile', 'uncertain', 'unstable', 'crisis', 'panic']
+        stress_mentions = sum(1 for decision in risk_decisions 
+                            for keyword in market_stress_keywords 
+                            if keyword in decision)
+        
+        if stress_mentions >= 2:
+            stress_intensity = min(1.0, stress_mentions / len(risk_decisions))
+            predictions.append({
+                'type': 'market_stress',
+                'prediction': f'Market stress indicators in {stress_mentions} risk decisions',
+                'confidence': 0.75,
+                'impact': 'high' if stress_intensity > 0.5 else 'medium',
+                'timeframe': '12-24h',
+                'mitigation': 'Implement defensive positioning and increase cash reserves',
+                'risk_score': stress_intensity,
+                'indicators': ['Market volatility concerns', 'Stress-related decisions']
+            })
+        
+        # Pattern 5: Systematic risk detection
+        system_keywords = ['system', 'correlation', 'contagion', 'cascade', 'widespread']
+        system_risk_count = sum(1 for decision in risk_decisions 
+                              for keyword in system_keywords 
+                              if keyword in decision)
+        
+        if system_risk_count >= 1:
+            predictions.append({
+                'type': 'systematic_risk',
+                'prediction': 'Systematic risk concerns identified in decision patterns',
+                'confidence': 0.8,
+                'impact': 'high',
+                'timeframe': '24-72h',
+                'mitigation': 'Diversify across uncorrelated assets and reduce overall exposure',
+                'risk_score': min(1.0, system_risk_count / 2),
+                'indicators': ['Systematic concerns', 'Correlation risks', 'Market-wide issues']
+            })
+        
+        return predictions
+    
+    def _assess_state_based_risks(self, cognitive_summary: Dict) -> List[Dict[str, Any]]:
+        """Assess risks based on cognitive state"""
+        predictions = []
+        
+        system_status = cognitive_summary.get('system_status', {})
+        current_state = system_status.get('current_state', 'unknown')
+        
+        if current_state == 'emergency':
+            predictions.append({
+                'type': 'system_risk',
+                'prediction': 'Cognitive system in emergency state',
+                'confidence': 0.9,
+                'impact': 'high',
+                'timeframe': 'immediate',
+                'mitigation': 'Review system health and resolve issues'
+            })
+        
+        return predictions
+    
+    def _assess_thought_quality(self) -> float:
+        """Assess the quality of recent thoughts"""
+        try:
+            if self.cognitive_system and self.cognitive_system.available:
+                recent_thoughts = self.cognitive_system.get_recent_thoughts(hours=24)
+                
+                if not recent_thoughts:
+                    return 0.5
+                
+                # Simple quality assessment based on reasoning length and confidence
+                quality_scores = []
+                for thought in recent_thoughts:
+                    reasoning_length = len(thought.get('reasoning', ''))
+                    confidence = thought.get('confidence', 'medium')
+                    
+                    # Score based on reasoning depth and confidence
+                    score = min(1.0, reasoning_length / 100)  # Longer reasoning = higher quality
+                    if confidence == 'high':
+                        score += 0.2
+                    elif confidence == 'low':
+                        score -= 0.1
+                    
+                    quality_scores.append(max(0.0, min(1.0, score)))
+                
+                return sum(quality_scores) / len(quality_scores) if quality_scores else 0.5
+            else:
+                return 0.5
+        except Exception:
+            return 0.5
+    
+    # === FALLBACK METHODS ===
+    
+    def _get_mock_cognitive_summary(self) -> Dict[str, Any]:
+        """Get mock cognitive summary when system unavailable"""
+        return {
+            'system_status': {
+                'initialized': False,
+                'current_state': 'offline',
+                'uptime_hours': 0
+            },
+            'memory_summary': {
+                'working_memory_count': 0,
+                'total_memories': 0
+            },
+            'thought_summary': {
+                'recent_thoughts': 0,
+                'total_thoughts': 0
+            },
+            'cognitive_metrics': {
+                'decisions_made': 0,
+                'thoughts_recorded': 0
+            }
+        }
+    
+    def _get_mock_market_sentiment(self) -> Dict[str, Any]:
+        """Get mock market sentiment data"""
+        return {
+            'overall_sentiment': 'neutral',
+            'confidence': 0.5,
+            'factors': [
+                'Cognitive system offline',
+                'Using fallback mode'
+            ],
+            'recent_thoughts_count': 0,
+            'last_analysis': datetime.now().isoformat(),
+            'trend': 'stable'
+        }
+    
+    def _get_mock_trade_insights(self) -> List[Dict[str, Any]]:
+        """Get mock trade insights"""
         return [
             {
-                'type': 'pattern_recognition',
-                'message': 'Bullish flag pattern detected in RELIANCE',
-                'confidence': 0.8,
-                'action': 'Consider long position'
+                'type': 'system_message',
+                'message': 'Cognitive system offline - using fallback mode',
+                'confidence': 0.0,
+                'action': 'Enable cognitive system for AI insights',
+                'timestamp': datetime.now().isoformat()
             }
         ]
     
-    def get_strategy_recommendations(self) -> List[Dict[str, Any]]:
-        """Get strategy optimization recommendations"""
+    def _get_mock_strategy_recommendations(self) -> List[Dict[str, Any]]:
+        """Get mock strategy recommendations"""
         return [
             {
-                'strategy': 'momentum',
-                'recommendation': 'Increase position size',
-                'reason': 'High win rate in current market conditions',
-                'confidence': 0.7
+                'strategy': 'system',
+                'recommendation': 'Enable cognitive system',
+                'reason': 'Cognitive system offline - limited insights available',
+                'confidence': 0.0,
+                'priority': 'high'
             }
-        ] 
+        ]
+    
+    def _get_mock_risk_predictions(self) -> List[Dict[str, Any]]:
+        """Get mock risk predictions"""
+        return [
+            {
+                'type': 'system_risk',
+                'prediction': 'Cognitive system offline',
+                'confidence': 1.0,
+                'impact': 'medium',
+                'timeframe': 'current',
+                'mitigation': 'Enable cognitive system for AI-powered risk analysis'
+            }
+        ]
+    
+    def _get_mock_performance_insights(self) -> Dict[str, Any]:
+        """Get mock performance insights"""
+        return {
+            'decision_accuracy': 0.0,
+            'confidence_calibration': 0.0,
+            'learning_rate': 0.0,
+            'bias_detection': [],
+            'improvement_areas': ['Enable cognitive system'],
+            'memory_efficiency': 0.0,
+            'thought_quality': 0.0,
+            'adaptation_score': 0.0
+        }
+    
+    def _get_mock_cognitive_health(self) -> Dict[str, Any]:
+        """Get mock cognitive health data"""
+        return {
+            'system_status': {
+                'initialized': False,
+                'current_state': 'offline'
+            },
+            'memory_health': {
+                'working_memory_count': 0
+            },
+            'thought_processing': {
+                'recent_thoughts': 0
+            },
+            'state_analytics': {},
+            'health_checks': {
+                'cognitive_available': False
+            },
+            'cognitive_metrics': {
+                'decisions_made': 0
+            }
+        }

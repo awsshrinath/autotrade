@@ -79,9 +79,8 @@ class LiveTradesPage:
             if st.button("🚨 Close All Positions", type="secondary"):
                 self._handle_close_all_positions()
         
-        # Store filters in session state
-        st.session_state.strategy_filter = selected_strategy
-        st.session_state.symbol_filter = selected_symbol
+        # Note: No need to manually set session state - 
+        # the selectbox widgets with keys automatically manage session state
     
     def _render_positions_overview(self):
         """Render positions overview cards"""

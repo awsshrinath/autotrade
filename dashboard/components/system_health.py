@@ -65,7 +65,7 @@ class SystemHealthPage:
             st.markdown(f"""
             <div style="text-align: center; padding: 1rem; border: 2px solid {status_color}; border-radius: 10px;">
                 <h2>{status_icon}</h2>
-                <h3 style="color: {status_color};">{status.upper()}</h3>
+                <h3 style="color: {status_color};">{str(status).upper()}</h3>
                 <p>System Status</p>
             </div>
             """, unsafe_allow_html=True)
@@ -130,7 +130,7 @@ class SystemHealthPage:
                     st.markdown(f"""
                     <div class="metric-card" style="border-left-color: {status_color};">
                         <h4>{status_icon} {service.replace('_', ' ').title()}</h4>
-                        <p><strong>Status:</strong> <span style="color: {status_color};">{status.upper()}</span></p>
+                        <p><strong>Status:</strong> <span style="color: {status_color};">{str(status).upper()}</span></p>
                         <p><strong>Response:</strong> {response_time*1000:.0f}ms</p>
                         <p style="color: red; font-weight: bold;">{critical_badge}</p>
                     </div>

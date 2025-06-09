@@ -34,8 +34,12 @@ class SystemDataProvider:
                 # Get comprehensive health check
                 health_data = asyncio.run(self.production_manager.comprehensive_health_check())
                 
+                # Ensure overall_status is a string, not enum object
+                overall_status = health_data.get('overall_status', 'unknown')
+                overall_status = str(overall_status)
+                
                 return {
-                    'overall_status': health_data.get('overall_status', 'unknown'),
+                    'overall_status': overall_status,
                     'uptime_hours': self._get_uptime_hours(),
                     'last_check_time': health_data.get('timestamp', datetime.now().isoformat()),
                     'critical_failures': health_data.get('critical_failures', 0),
@@ -66,7 +70,14 @@ class SystemDataProvider:
         try:
             if self.production_manager:
                 health_data = asyncio.run(self.production_manager.comprehensive_health_check())
-                return health_data.get('checks', [])
+                checks = health_data.get('checks', [])
+                
+                # Ensure status fields are strings, not enum objects
+                for check in checks:
+                    if 'status' in check:
+                        check['status'] = str(check['status'])
+                
+                return checks
             else:
                 # Return mock health checks
                 return self._get_mock_health_checks()
