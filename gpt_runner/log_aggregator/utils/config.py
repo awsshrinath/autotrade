@@ -5,7 +5,8 @@ Handles environment variables, settings, and application configuration.
 
 import os
 from typing import Optional, List
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -87,6 +88,11 @@ class LogAggregatorConfig(BaseSettings):
         env="ACCESS_TOKEN_EXPIRE_MINUTES",
         description="JWT token expiration time in minutes"
     )
+    auth_enabled: bool = Field(
+        default=False,
+        env="AUTH_ENABLED",
+        description="Enable authentication for API endpoints"
+    )
     
 
     
@@ -102,9 +108,19 @@ class LogAggregatorConfig(BaseSettings):
         description="API host address"
     )
     api_port: int = Field(
-        default=8000,
+        default=8001,
         env="API_PORT",
         description="API port number"
+    )
+    api_prefix: str = Field(
+        default="/api/v1",
+        env="API_PREFIX",
+        description="API prefix for all endpoints"
+    )
+    cors_origins: str = Field(
+        default="*",
+        env="CORS_ORIGINS",
+        description="CORS allowed origins (comma-separated)"
     )
     workers: int = Field(
         default=1,
@@ -162,6 +178,7 @@ class LogAggregatorConfig(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Allow extra fields to be ignored
 
 
 # Global configuration instance

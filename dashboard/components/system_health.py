@@ -102,7 +102,13 @@ class SystemHealthPage:
         # Get health check data
         health_checks = self.system_data.get_health_checks()
         
-        if health_checks:
+        # Debug info (temporarily visible)
+        with st.expander("🐛 Debug Health Check Data", expanded=False):
+            st.write(f"Health checks type: {type(health_checks)}")
+            st.write(f"Health checks length: {len(health_checks) if health_checks else 'None'}")
+            st.json(health_checks)
+        
+        if health_checks and len(health_checks) > 0:
             # Create grid layout
             cols = st.columns(3)
             
@@ -112,31 +118,60 @@ class SystemHealthPage:
                     status = check.get('status', 'unknown')
                     response_time = check.get('response_time', 0)
                     is_critical = check.get('is_critical', False)
+                    details = check.get('details', {})
                     
                     # Status styling
                     if status == 'healthy':
                         status_color = "green"
                         status_icon = "✅"
+                        status_bg = "#d4edda"
                     elif status == 'degraded':
                         status_color = "orange"
                         status_icon = "⚠️"
+                        status_bg = "#fff3cd"
                     else:
                         status_color = "red"
                         status_icon = "❌"
+                        status_bg = "#f8d7da"
                     
                     # Critical indicator
-                    critical_badge = "🔴 CRITICAL" if is_critical and status != 'healthy' else ""
+                    critical_badge = " 🔴 CRITICAL" if is_critical and status != 'healthy' else ""
+                    
+                    # Format details for display
+                    details_text = ""
+                    if details:
+                        for key, value in details.items():
+                            if isinstance(value, (int, float)):
+                                if 'usage' in key.lower():
+                                    details_text += f"<br><small>{key.replace('_', ' ').title()}: {value:.1f}%</small>"
+                                elif 'time' in key.lower():
+                                    details_text += f"<br><small>{key.replace('_', ' ').title()}: {value:.0f}ms</small>"
+                                else:
+                                    details_text += f"<br><small>{key.replace('_', ' ').title()}: {value}</small>"
+                            elif isinstance(value, str):
+                                details_text += f"<br><small>{key.replace('_', ' ').title()}: {value}</small>"
                     
                     st.markdown(f"""
-                    <div class="metric-card" style="border-left-color: {status_color};">
-                        <h4>{status_icon} {service.replace('_', ' ').title()}</h4>
-                        <p><strong>Status:</strong> <span style="color: {status_color};">{str(status).upper()}</span></p>
-                        <p><strong>Response:</strong> {response_time*1000:.0f}ms</p>
-                        <p style="color: red; font-weight: bold;">{critical_badge}</p>
+                    <div style="
+                        background-color: {status_bg};
+                        padding: 1rem;
+                        border-radius: 8px;
+                        border-left: 4px solid {status_color};
+                        margin-bottom: 1rem;
+                        min-height: 120px;
+                    ">
+                        <h4 style="margin: 0 0 10px 0; color: {status_color};">
+                            {status_icon} {service.replace('_', ' ').title()}{critical_badge}
+                        </h4>
+                        <p style="margin: 5px 0;"><strong>Status:</strong> 
+                           <span style="color: {status_color}; font-weight: bold;">{str(status).upper()}</span>
+                        </p>
+                        <p style="margin: 5px 0;"><strong>Response:</strong> {response_time*1000:.0f}ms</p>
+                        {details_text}
                     </div>
                     """, unsafe_allow_html=True)
         else:
-            st.info("No health check data available")
+            st.warning("⚠️ Health check data is not available. System may be starting up or experiencing connectivity issues.")
     
     def _render_resource_usage(self):
         """Render system resource usage"""
@@ -180,28 +215,34 @@ class SystemHealthPage:
                 status = service_data.get('status', 'unknown')
                 health = service_data.get('health', 'unknown')
                 
-                # Status icon
-                if status == 'running' and health == 'healthy':
+                # Fix the logic to properly handle different status combinations
+                if (status == 'running' or status == 'connected') and health == 'healthy':
                     icon = "✅"
                     color = "green"
-                elif status == 'running':
+                elif status == 'running' or status == 'connected':
                     icon = "⚠️"
-                    color = "orange"
-                else:
+                    color = "orange" 
+                elif status == 'disconnected' or status == 'stopped':
                     icon = "❌"
                     color = "red"
+                else:
+                    icon = "❓"
+                    color = "gray"
                 
-                # Display service
+                # Display service with proper spacing and clear status
                 col1, col2, col3 = st.columns([2, 1, 1])
                 
                 with col1:
-                    st.write(f"{icon} **{service_name.replace('_', ' ').title()}**")
+                    st.markdown(f"{icon} **{service_name.replace('_', ' ').title()}**")
                 
                 with col2:
-                    st.write(f"<span style='color: {color};'>{status}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color: {color}; font-weight: bold;'>{status}</span>", unsafe_allow_html=True)
                 
                 with col3:
-                    st.write(f"<span style='color: {color};'>{health}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color: {color}; font-weight: bold;'>{health}</span>", unsafe_allow_html=True)
+                    
+                # Add small spacing between services
+                st.markdown("---")
         else:
             st.info("No service status data available")
     

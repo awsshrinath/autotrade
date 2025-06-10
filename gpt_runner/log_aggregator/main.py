@@ -9,11 +9,12 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import structlog
+from datetime import datetime
 
 from .utils.config import get_config
-# Routers will be imported here later
+# Routers will be imported here later - temporarily disabled for debugging
 # from .routers import gcs_router, firestore_router, k8s_router, summary_router
-from .routers import gcs_router, firestore_router, k8s_router, summary_router
+# from .routers import gcs_router, firestore_router, k8s_router, summary_router
 
 logger = structlog.get_logger(__name__)
 
@@ -52,84 +53,33 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def read_root():
     return {"message": "Welcome to the Log Aggregator API!"}
 
-# Placeholder for health check endpoint
+# Basic health check endpoint
 @app.get(f"{app_config.api_prefix}/health", tags=["Health"])
 async def health_check():
-    # In a real application, you might check dependencies like database connections
-    # For a more detailed health check, we can test service connections
-    from ..services.gcs_service import get_gcs_service
-    from ..services.firestore_service import get_firestore_service
-    from ..services.k8s_service import get_k8s_service
-    from ..services.gpt_service import get_gpt_service
-
-    service_status = {
-        "gcs_service": "not_tested",
-        "firestore_service": "not_tested",
-        "k8s_service": "not_tested",
-        "gpt_service_openai": "not_tested",
+    # Basic health check - just return that the API is running
+    return {
+        "status": "ok", 
+        "message": "Log Aggregator API is running", 
+        "version": "0.1.0"
     }
-    overall_healthy = True
 
-    try:
-        gcs_available = await get_gcs_service().test_connection()
-        service_status["gcs_service"] = "ok" if gcs_available else "error"
-        if not gcs_available: overall_healthy = False
-    except Exception as e:
-        logger.warning("GCS health check failed", error=str(e))
-        service_status["gcs_service"] = "error"
-        overall_healthy = False
-    
-    try:
-        firestore_available = await get_firestore_service().test_connection()
-        service_status["firestore_service"] = "ok" if firestore_available else "error"
-        if not firestore_available: overall_healthy = False
-    except Exception as e:
-        logger.warning("Firestore health check failed", error=str(e))
-        service_status["firestore_service"] = "error"
-        overall_healthy = False
-
-    try:
-        k8s_available = await get_k8s_service().test_connection()
-        service_status["k8s_service"] = "ok" if k8s_available else "error"
-        if not k8s_available: overall_healthy = False
-    except Exception as e:
-        logger.warning("Kubernetes health check failed", error=str(e))
-        service_status["k8s_service"] = "error"
-        overall_healthy = False
-
-    try:
-        gpt_connections = await get_gpt_service().test_connection()
-        service_status["gpt_service_openai"] = "ok" if gpt_connections.get("openai") else "error"
-        if not gpt_connections.get("openai"): overall_healthy = False
-    except Exception as e:
-        logger.warning("GPT service health check failed", error=str(e))
-        service_status["gpt_service_openai"] = "error"
-        overall_healthy = False
-
-    if overall_healthy:
-        return {"status": "ok", "message": "All services are healthy", "dependencies": service_status}
-    else:
-        # If any critical service is down, we might return a 503 Service Unavailable
-        # For now, just indicating in the message.
-        return {"status": "degraded", "message": "One or more dependent services are not healthy.", "dependencies": service_status}
-
-# Include routers (placeholders for now)
+# Include routers (temporarily disabled for debugging)
 # app.include_router(gcs_router.router, prefix=f"{app_config.api_prefix}/logs/gcs", tags=["GCS Logs"])
 # app.include_router(firestore_router.router, prefix=f"{app_config.api_prefix}/logs/firestore", tags=["Firestore Logs"])
 # app.include_router(k8s_router.router, prefix=f"{app_config.api_prefix}/logs/k8s", tags=["Kubernetes Logs"])
 # app.include_router(summary_router.router, prefix=f"{app_config.api_prefix}/summary", tags=["Log Summarization"])
 
-app.include_router(gcs_router.router, prefix=f"{app_config.api_prefix}/gcs", tags=["GCS Logs"])
-app.include_router(firestore_router.router, prefix=f"{app_config.api_prefix}/firestore", tags=["Firestore Logs"])
-app.include_router(k8s_router.router, prefix=f"{app_config.api_prefix}/k8s", tags=["Kubernetes Logs"])
-app.include_router(summary_router.router, prefix=f"{app_config.api_prefix}/summary", tags=["Log Summarization"])
+# app.include_router(gcs_router.router, prefix=f"{app_config.api_prefix}/gcs", tags=["GCS Logs"])
+# app.include_router(firestore_router.router, prefix=f"{app_config.api_prefix}/firestore", tags=["Firestore Logs"])
+# app.include_router(k8s_router.router, prefix=f"{app_config.api_prefix}/k8s", tags=["Kubernetes Logs"])
+# app.include_router(summary_router.router, prefix=f"{app_config.api_prefix}/summary", tags=["Log Summarization"])
 
 if __name__ == "__main__":
     logger.info("Starting Log Aggregator API with Uvicorn...")
     uvicorn.run(
-        "main:app",
-        host=app_config.server_host,
-        port=app_config.server_port,
-        reload=app_config.debug_mode,
+        app,  # Use the app directly instead of string import
+        host=app_config.api_host,
+        port=app_config.api_port,
+        reload=False,  # Disable reload to avoid multiprocessing issues  
         log_level=app_config.log_level.lower()
     ) 

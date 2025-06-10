@@ -27,6 +27,49 @@ class SystemDataProvider:
             self.logger.log_event(f"Failed to initialize production manager: {e}")
             self.production_manager = None
     
+    def get_system_health(self) -> Dict[str, Any]:
+        """Get overall system health summary"""
+        try:
+            # Get basic status
+            status_data = self.get_system_status()
+            
+            # Get health checks
+            health_checks = self.get_health_checks()
+            
+            # Count health check statuses
+            healthy_count = sum(1 for check in health_checks if check.get('status') == 'healthy')
+            degraded_count = sum(1 for check in health_checks if check.get('status') == 'degraded')
+            critical_count = sum(1 for check in health_checks if check.get('status') in ['critical', 'unhealthy'])
+            
+            # Determine overall health
+            if critical_count > 0:
+                overall_health = "critical"
+            elif degraded_count > 0:
+                overall_health = "degraded" 
+            elif healthy_count > 0:
+                overall_health = "healthy"
+            else:
+                overall_health = "unknown"
+            
+            return {
+                'status': overall_health,
+                'overall_status': status_data.get('overall_status', 'unknown'),
+                'uptime_hours': status_data.get('uptime_hours', 0),
+                'healthy_services': healthy_count,
+                'degraded_services': degraded_count,
+                'critical_services': critical_count,
+                'total_services': len(health_checks),
+                'last_check': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            self.logger.log_event(f"Error getting system health: {e}")
+            return {
+                'status': 'error',
+                'message': str(e),
+                'last_check': datetime.now().isoformat()
+            }
+
     def get_system_status(self) -> Dict[str, Any]:
         """Get overall system status"""
         try:
@@ -361,15 +404,23 @@ class SystemDataProvider:
                 'status': 'healthy',
                 'response_time': 0.12,
                 'timestamp': datetime.now().isoformat(),
-                'details': {'mode': 'paper_trade'},
+                'details': {
+                    'mode': 'paper_trade',
+                    'connection_status': 'connected',
+                    'last_order_time': '10:30:45'
+                },
                 'is_critical': True
             },
             {
                 'service': 'firestore',
-                'status': 'healthy',
-                'response_time': 0.045,
+                'status': 'degraded',
+                'response_time': 0.245,
                 'timestamp': datetime.now().isoformat(),
-                'details': {'connection': 'successful'},
+                'details': {
+                    'connection': 'slow',
+                    'latency_ms': 245,
+                    'retry_count': 2
+                },
                 'is_critical': False
             },
             {
@@ -378,9 +429,10 @@ class SystemDataProvider:
                 'response_time': 0.01,
                 'timestamp': datetime.now().isoformat(),
                 'details': {
-                    'cpu_usage': 25.0,
-                    'memory_usage': 45.0,
-                    'disk_usage': 30.0
+                    'cpu_usage': 36.2,
+                    'memory_usage': 15.6,
+                    'disk_usage': 15.6,
+                    'available_memory_gb': 13.2
                 },
                 'is_critical': True
             },
@@ -389,7 +441,36 @@ class SystemDataProvider:
                 'status': 'healthy',
                 'response_time': 0.08,
                 'timestamp': datetime.now().isoformat(),
-                'details': {'services_status': {'all': True}},
+                'details': {
+                    'main_runner': 'running',
+                    'options_trader': 'running',
+                    'futures_trader': 'running',
+                    'active_strategies': 3
+                },
+                'is_critical': True
+            },
+            {
+                'service': 'network_connectivity',
+                'status': 'healthy',
+                'response_time': 0.15,
+                'timestamp': datetime.now().isoformat(),
+                'details': {
+                    'google_connectivity': 'ok',
+                    'kite_api_connectivity': 'ok',
+                    'success_rate': 1.0
+                },
+                'is_critical': True
+            },
+            {
+                'service': 'cognitive_system',
+                'status': 'critical',
+                'response_time': 2.5,
+                'timestamp': datetime.now().isoformat(),
+                'details': {
+                    'gcp_connectivity': 'failed',
+                    'memory_system': 'offline',
+                    'error': 'GCP authentication failed'
+                },
                 'is_critical': True
             }
         ] 

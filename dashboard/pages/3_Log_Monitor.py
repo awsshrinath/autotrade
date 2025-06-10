@@ -24,9 +24,9 @@ from dashboard.utils.log_api_client import LogAPIClient
 # Configuration for the API client (could be moved to a config file or Streamlit secrets)
 # Ensure your FastAPI service is running at this address.
 # The API_PREFIX from your FastAPI config should be part of this base_url.
-# Try to get from environment variables first, then use default for GKE deployment
+# Try to get from environment variables first, then use default for development/GKE deployment
 import os
-FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "http://log-monitor-service:8001/api/v1") 
+FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "http://localhost:8001/api/v1")
 
 # Auto-get OpenAI API key from multiple sources
 def get_openai_api_key_auto():
