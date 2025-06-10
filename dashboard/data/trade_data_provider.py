@@ -76,18 +76,19 @@ class TradeDataProvider:
                         pass
             
             if not all_trades:
-                # Return mock data for demonstration
+                # Return clear "no data available" status instead of zeros
                 return {
-                    'total_pnl': 0,
-                    'pnl_change_pct': 0,
-                    'active_trades': 0,
-                    'trades_change': 0,
-                    'win_rate': 0,
-                    'win_rate_change': 0,
+                    'total_pnl': 'No data',
+                    'pnl_change_pct': 'No data',
+                    'active_trades': 'No data',
+                    'trades_change': 'No data',
+                    'win_rate': 'No data',
+                    'win_rate_change': 'No data',
                     'total_trades': 0,
-                    'avg_profit_per_trade': 0,
-                    'portfolio_value': 100000,
-                    'portfolio_change_pct': 0
+                    'avg_profit_per_trade': 'No data',
+                    'portfolio_value': 100000,  # This is the starting capital
+                    'portfolio_change_pct': 'No data',
+                    'data_status': 'No trading data found in Firestore'
                 }
             
             # Calculate metrics
@@ -495,16 +496,17 @@ class TradeDataProvider:
     def _get_default_summary(self) -> Dict[str, Any]:
         """Get default summary when no data is available"""
         return {
-            'total_pnl': 0,
-            'pnl_change_pct': 0,
-            'active_trades': 0,
-            'trades_change': 0,
-            'win_rate': 0,
-            'win_rate_change': 0,
+            'total_pnl': 'No data',
+            'pnl_change_pct': 'No data',
+            'active_trades': 'No data',
+            'trades_change': 'No data',
+            'win_rate': 'No data',
+            'win_rate_change': 'No data',
             'total_trades': 0,
-            'avg_profit_per_trade': 0,
-            'portfolio_value': 100000,
-            'portfolio_change_pct': 0
+            'avg_profit_per_trade': 'No data',
+            'portfolio_value': 100000,  # Starting capital
+            'portfolio_change_pct': 'No data',
+            'data_status': 'Trading system error - no data available'
         }
     
     # Additional methods for live trades page
@@ -552,23 +554,4 @@ class TradeDataProvider:
         """Refresh all position prices"""
         return {"status": "success", "message": "Prices refreshed"}
 
-    def _get_mock_positions(self) -> List[Dict[str, Any]]:
-        """Get mock positions for demonstration when no real data is available"""
-        return [
-            {
-                'id': 'mock_1',
-                'symbol': 'RELIANCE',
-                'strategy': 'momentum',
-                'direction': 'bullish',
-                'entry_price': 2450.0,
-                'current_price': 2465.0,
-                'quantity': 10,
-                'stop_loss': 2400.0,
-                'target': 2500.0,
-                'unrealized_pnl': 150.0,
-                'duration': '2h 15m',
-                'confidence': 'high',
-                'entry_time': datetime.now().isoformat(),
-                'bot_type': 'demo'
-            }
-        ] 
+    # Mock data removed - system now shows clear "No data" status when no real trading data is available 

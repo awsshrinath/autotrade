@@ -197,6 +197,44 @@ st.markdown("""
          margin-top: -1px;
      }
      
+     /* Ensure all text is visible and readable */
+     .stMarkdown, .stText, .stMetric, .element-container {
+         color: #333333 !important;
+         background-color: rgba(255, 255, 255, 0.9);
+         border-radius: 4px;
+         padding: 0.25rem;
+     }
+     
+     .metric-container, .metric-value, .metric-delta {
+         color: #333333 !important;
+         background-color: white;
+         padding: 0.5rem;
+         border-radius: 6px;
+         margin: 0.25rem 0;
+     }
+     
+     .stAlert, .stSuccess, .stError, .stWarning, .stInfo {
+         background-color: white !important;
+         color: #333333 !important;
+         border-radius: 8px;
+         padding: 1rem;
+         margin: 0.5rem 0;
+     }
+     
+     /* Fix specific components with visibility issues */
+     div[data-testid="stVerticalBlock"] > div {
+         background-color: rgba(255, 255, 255, 0.1);
+         border-radius: 4px;
+         padding: 0.25rem;
+     }
+     
+     .stColumns > div {
+         background-color: rgba(255, 255, 255, 0.05);
+         border-radius: 6px;
+         padding: 0.5rem;
+         margin: 0.25rem;
+     }
+     
      .sidebar .stSelectbox > div > div {
          background-color: #f8f9fa;
          border-radius: 8px;

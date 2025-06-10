@@ -146,7 +146,7 @@ ALERTS_WEBHOOK_URL = _trading_config.alerts_webhook_url
 TEST_MODE = False   # Set to True for testing
 
 # Offline Mode - Disable GCP services when credentials unavailable
-OFFLINE_MODE = True  # Set to False when GCP credentials are properly configured
+OFFLINE_MODE = False  # Set to True to force offline mode (GCP credentials are now properly configured)
 
 def get_config_manager():
     """Get the configuration manager instance"""

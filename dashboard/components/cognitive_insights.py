@@ -36,15 +36,17 @@ class CognitiveInsightsPage:
                 st.success("🚀 **Cognitive System Online** - Fully operational with GCP storage.")
                 st.info("⚡ Complete cognitive system with persistent memory and AI processing")
             else:
-                from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
+                from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE, API_KEY_SOURCE
+                st.error("❌ **Cognitive Services Unavailable**")
                 if OPENAI_AVAILABLE:
-                    st.warning("⚠️ Cognitive system initializing. OpenAI available - enhanced insights loading...")
+                    st.warning("⚠️ OpenAI API key detected but cognitive services failed to initialize.")
                 else:
-                    st.warning("⚠️ Cognitive system offline. Limited mock insights available.")
+                    st.error(f"🔑 **OpenAI API Key**: {API_KEY_SOURCE}")
+                    st.info("📋 **Action Required**: Configure OpenAI API key in GCP Secret Manager or environment variables.")
         elif system_available:
             st.success("✅ **Cognitive System Online** - AI insights available!")
         else:
-            st.warning("⚠️ Cognitive system offline. Limited insights available.")
+            st.error("❌ **Cognitive System Unavailable** - Configuration required.")
         
         # Main layout with tabs
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -172,18 +174,19 @@ class CognitiveInsightsPage:
                 ]
                 
             else:
-                st.warning("⚠️ **Cognitive System in Offline Mode**")
-                from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
+                st.error("❌ **Cognitive Services Unavailable**")
+                from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE, API_KEY_SOURCE
                 if OPENAI_AVAILABLE:
-                    st.info("📝 **Status**: OpenAI available but system initializing. Please wait or check logs.")
+                    st.info("📝 **Status**: OpenAI API key detected but cognitive services failed to initialize.")
                 else:
-                    st.info("📝 **Status**: Using mock data. OpenAI API key required for hybrid mode.")
+                    st.error(f"🔑 **API Key Status**: {API_KEY_SOURCE}")
+                    st.info("📋 **Required**: Configure OpenAI API key in GCP Secret Manager or environment variables.")
                 
                 activity_data = [
-                    {"Component": "Mock Data", "Status": "Active", "Items": "Sample Insights"},
-                    {"Component": "Simulated Analysis", "Status": "Running", "Items": "Test Data"},
-                    {"Component": "Demo Mode", "Status": "Available", "Items": "Limited"},
-                    {"Component": "API Configuration", "Status": "Required", "Items": "Pending"}
+                    {"Component": "API Configuration", "Status": "Required", "Items": API_KEY_SOURCE},
+                    {"Component": "Cognitive Services", "Status": "Unavailable", "Items": "Not Configured"},
+                    {"Component": "AI Analysis", "Status": "Disabled", "Items": "No API Key"},
+                    {"Component": "System Status", "Status": "Offline", "Items": "Configuration Needed"}
                 ]
         else:
             if system_status.get('initialized', False):

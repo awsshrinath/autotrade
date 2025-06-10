@@ -6,9 +6,8 @@ Real-time monitoring and analytics for the TRON trading system
 __version__ = "1.0.0"
 __author__ = "TRON Trading System"
 
-from dashboard.app import TradingDashboard
-from dashboard.components import *
-from dashboard.utils import *
+# Note: Main app imports are done lazily to avoid streamlit dependency
+# Use: from dashboard.app import TradingDashboard
 
 __all__ = [
     "TradingDashboard",

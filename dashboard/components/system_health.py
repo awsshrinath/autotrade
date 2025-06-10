@@ -19,8 +19,8 @@ class SystemHealthPage:
     
     def render(self):
         """Render the system health page"""
-        st.markdown('<h1 style="color: #6c757d; text-align: center; margin-bottom: 2rem;">⚙️ System Health Monitor</h1>', unsafe_allow_html=True)
-        st.markdown("**Real-time system monitoring and health status tracking**")
+        st.markdown('<h1 style="color: #333333; text-align: center; margin-bottom: 2rem;">⚙️ System Health Monitor</h1>', unsafe_allow_html=True)
+        st.markdown('<div style="color: #333333; font-weight: 600; text-align: center; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">Real-time system monitoring and health status tracking</div>', unsafe_allow_html=True)
         st.markdown('<hr style="height: 2px; background: linear-gradient(90deg, transparent, #6c757d, transparent); border: none; margin: 2rem 0;">', unsafe_allow_html=True)
         
         # Overall status
@@ -52,7 +52,7 @@ class SystemHealthPage:
     
     def _render_overall_status(self):
         """Render overall system status"""
-        st.subheader("🎯 Overall System Status")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">🎯 Overall System Status</h2>', unsafe_allow_html=True)
         
         # Get system status
         status_data = self.system_data.get_system_status()
@@ -67,15 +67,16 @@ class SystemHealthPage:
             st.markdown(f"""
             <div style="
                 text-align: center; 
-                padding: 1rem; 
+                padding: 1.5rem; 
                 border: 2px solid {status_color}; 
                 border-radius: 10px;
                 background-color: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
                 color: #333333 !important;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                margin-bottom: 1rem;
             ">
-                <h2 style="margin: 0; font-size: 2rem;">{status_icon}</h2>
+                <h2 style="margin: 0; font-size: 2rem; color: #333333 !important;">{status_icon}</h2>
                 <h3 style="color: {status_color} !important; margin: 0.5rem 0; font-weight: 600;">{str(status).upper()}</h3>
                 <p style="color: #555555 !important; margin: 0; font-size: 0.9rem;">System Status</p>
             </div>
@@ -83,41 +84,51 @@ class SystemHealthPage:
         
         with col2:
             uptime = status_data.get('uptime_hours', 0)
-            st.metric(
-                "⏱️ Uptime",
-                f"{uptime:.1f} hours",
-                f"{uptime/24:.1f} days"
-            )
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #333333 !important; margin: 0;">⏱️ Uptime</h3>
+                <h2 style="color: #007acc !important; margin: 0.5rem 0;">{uptime:.1f} hours</h2>
+                <p style="color: #666666 !important; margin: 0; font-size: 0.8rem;">{uptime/24:.1f} days</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
             critical_failures = status_data.get('critical_failures', 0)
-            st.metric(
-                "🚨 Critical Issues",
-                critical_failures,
-                "Active" if critical_failures > 0 else "None"
-            )
+            failure_color = "red" if critical_failures > 0 else "green"
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #333333 !important; margin: 0;">🚨 Critical Issues</h3>
+                <h2 style="color: {failure_color} !important; margin: 0.5rem 0;">{critical_failures}</h2>
+                <p style="color: #666666 !important; margin: 0; font-size: 0.8rem;">{"Active" if critical_failures > 0 else "None"}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col4:
             system_ready = status_data.get('system_ready', False)
             ready_icon = "✅" if system_ready else "❌"
-            st.metric(
-                "🎯 System Ready",
-                f"{ready_icon} {'Yes' if system_ready else 'No'}",
-                "Trading Ready"
-            )
+            ready_color = "green" if system_ready else "red"
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #333333 !important; margin: 0;">🎯 System Ready</h3>
+                <h2 style="color: {ready_color} !important; margin: 0.5rem 0;">{ready_icon} {'Yes' if system_ready else 'No'}</h2>
+                <p style="color: #666666 !important; margin: 0; font-size: 0.8rem;">Trading Ready</p>
+            </div>
+            """, unsafe_allow_html=True)
     
     def _render_health_checks(self):
         """Render detailed health checks"""
-        st.subheader("🔍 Health Checks")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">🔍 Health Checks</h2>', unsafe_allow_html=True)
         
         # Get health check data
         health_checks = self.system_data.get_health_checks()
         
         # Debug info (temporarily visible)
         with st.expander("🐛 Debug Health Check Data", expanded=False):
+            st.markdown('<div style="background-color: white; padding: 1rem; border-radius: 8px; color: #333333 !important;">', unsafe_allow_html=True)
             st.write(f"Health checks type: {type(health_checks)}")
             st.write(f"Health checks length: {len(health_checks) if health_checks else 'None'}")
             st.json(health_checks)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         if health_checks and len(health_checks) > 0:
             # Create grid layout
@@ -136,14 +147,17 @@ class SystemHealthPage:
                         status_color = "green"
                         status_icon = "✅"
                         status_bg = "#d4edda"
+                        border_color = "green"
                     elif status == 'degraded':
                         status_color = "orange"
                         status_icon = "⚠️"
                         status_bg = "#fff3cd"
+                        border_color = "orange"
                     else:
                         status_color = "red"
                         status_icon = "❌"
                         status_bg = "#f8d7da"
+                        border_color = "red"
                     
                     # Critical indicator
                     critical_badge = " 🔴 CRITICAL" if is_critical and status != 'healthy' else ""
@@ -154,25 +168,25 @@ class SystemHealthPage:
                         for key, value in details.items():
                             if isinstance(value, (int, float)):
                                 if 'usage' in key.lower():
-                                    details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value:.1f}%</small>"
+                                    details_text += f"<small style='color: #333333 !important; display: block; margin: 2px 0;'><strong style='color: #333333 !important;'>{key.replace('_', ' ').title()}:</strong> {value:.1f}%</small>"
                                 elif 'time' in key.lower():
-                                    details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value:.0f}ms</small>"
+                                    details_text += f"<small style='color: #333333 !important; display: block; margin: 2px 0;'><strong style='color: #333333 !important;'>{key.replace('_', ' ').title()}:</strong> {value:.0f}ms</small>"
                                 else:
-                                    details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value}</small>"
+                                    details_text += f"<small style='color: #333333 !important; display: block; margin: 2px 0;'><strong style='color: #333333 !important;'>{key.replace('_', ' ').title()}:</strong> {value}</small>"
                             elif isinstance(value, str):
-                                details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value}</small>"
+                                details_text += f"<small style='color: #333333 !important; display: block; margin: 2px 0;'><strong style='color: #333333 !important;'>{key.replace('_', ' ').title()}:</strong> {value}</small>"
                     
                     st.markdown(f"""
                     <div style="
-                        background-color: {status_bg};
-                        padding: 1rem;
+                        background-color: white;
+                        padding: 1.5rem;
                         border-radius: 8px;
-                        border-left: 4px solid {status_color};
+                        border: 2px solid {border_color};
                         margin-bottom: 1rem;
-                        min-height: 120px;
+                        min-height: 140px;
                         color: #333333 !important;
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
                     ">
                         <h4 style="margin: 0 0 10px 0; color: {status_color} !important; font-weight: 600; font-size: 1.1rem;">
                             {status_icon} {service.replace('_', ' ').title()}{critical_badge}
@@ -181,52 +195,64 @@ class SystemHealthPage:
                            <span style="color: {status_color} !important; font-weight: bold;">{str(status).upper()}</span>
                         </p>
                         <p style="margin: 5px 0; color: #333333 !important; font-size: 0.9rem;"><strong style="color: #333333 !important;">Response:</strong> {response_time*1000:.0f}ms</p>
-                        <div style="color: #555555 !important; font-size: 0.85rem;">
+                        <div style="color: #333333 !important; font-size: 0.85rem; margin-top: 10px;">
                             {details_text}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
         else:
-            st.warning("⚠️ Health check data is not available. System may be starting up or experiencing connectivity issues.")
+            st.markdown("""
+            <div style="background-color: white; padding: 1.5rem; border-radius: 8px; border: 2px solid orange; color: #333333 !important;">
+                ⚠️ Health check data is not available. System may be starting up or experiencing connectivity issues.
+            </div>
+            """, unsafe_allow_html=True)
     
     def _render_resource_usage(self):
         """Render system resource usage"""
-        st.subheader("📊 Resource Usage")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">📊 Resource Usage</h2>', unsafe_allow_html=True)
         
         # Get system metrics
         metrics = self.system_data.get_system_metrics()
         
+        # Create container for metrics
+        st.markdown('<div style="background-color: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">', unsafe_allow_html=True)
+        
         # CPU Usage
         cpu_usage = metrics.get('cpu_usage', 0)
         cpu_color = "red" if cpu_usage > 80 else "orange" if cpu_usage > 60 else "green"
-        st.metric("💻 CPU Usage", f"{cpu_usage:.1f}%")
+        st.markdown(f'<h4 style="color: #333333 !important; margin-bottom: 0.5rem;">💻 CPU Usage: {cpu_usage:.1f}%</h4>', unsafe_allow_html=True)
         st.progress(cpu_usage/100)
         
         # Memory Usage
         memory_usage = metrics.get('memory_usage', 0)
         memory_available = metrics.get('memory_available_gb', 0)
         memory_color = "red" if memory_usage > 85 else "orange" if memory_usage > 70 else "green"
-        st.metric("🧠 Memory Usage", f"{memory_usage:.1f}%", f"{memory_available:.1f}GB available")
+        st.markdown(f'<h4 style="color: #333333 !important; margin: 1rem 0 0.5rem 0;">🧠 Memory Usage: {memory_usage:.1f}%</h4>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: #666666 !important; margin: 0;">{memory_available:.1f}GB available</p>', unsafe_allow_html=True)
         st.progress(memory_usage/100)
         
         # Disk Usage
         disk_usage = metrics.get('disk_usage', 0)
         disk_color = "red" if disk_usage > 90 else "orange" if disk_usage > 75 else "green"
-        st.metric("💾 Disk Usage", f"{disk_usage:.1f}%")
+        st.markdown(f'<h4 style="color: #333333 !important; margin: 1rem 0 0.5rem 0;">💾 Disk Usage: {disk_usage:.1f}%</h4>', unsafe_allow_html=True)
         st.progress(disk_usage/100)
         
         # Network Connections
         network_connections = metrics.get('network_connections', 0)
-        st.metric("🌐 Network Connections", network_connections)
+        st.markdown(f'<h4 style="color: #333333 !important; margin: 1rem 0 0.5rem 0;">🌐 Network Connections: {network_connections}</h4>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     def _render_service_status(self):
         """Render individual service status"""
-        st.subheader("🔧 Service Status")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">🔧 Service Status</h2>', unsafe_allow_html=True)
         
         # Get service status
         services = self.system_data.get_service_status()
         
         if services:
+            st.markdown('<div style="background-color: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">', unsafe_allow_html=True)
+            
             for service_name, service_data in services.items():
                 status = service_data.get('status', 'unknown')
                 health = service_data.get('health', 'unknown')
@@ -245,26 +271,39 @@ class SystemHealthPage:
                     icon = "❓"
                     color = "gray"
                 
-                # Display service with proper spacing and clear status
-                col1, col2, col3 = st.columns([2, 1, 1])
-                
-                with col1:
-                    st.markdown(f"{icon} **{service_name.replace('_', ' ').title()}**")
-                
-                with col2:
-                    st.markdown(f"<span style='color: {color}; font-weight: bold;'>{status}</span>", unsafe_allow_html=True)
-                
-                with col3:
-                    st.markdown(f"<span style='color: {color}; font-weight: bold;'>{health}</span>", unsafe_allow_html=True)
-                    
-                # Add small spacing between services
-                st.markdown("---")
+                # Display service with proper styling
+                st.markdown(f"""
+                <div style="
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    padding: 0.75rem; 
+                    margin: 0.5rem 0;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 6px;
+                    background-color: #f9f9f9;
+                ">
+                    <div style="color: #333333 !important; font-weight: 600;">
+                        {icon} {service_name.replace('_', ' ').title()}
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <span style="color: {color} !important; font-weight: bold; font-size: 0.9rem;">{status}</span>
+                        <span style="color: {color} !important; font-weight: bold; font-size: 0.9rem;">{health}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
-            st.info("No service status data available")
+            st.markdown("""
+            <div style="background-color: white; padding: 1.5rem; border-radius: 8px; border: 2px solid #007acc; color: #333333 !important;">
+                ℹ️ No service status data available
+            </div>
+            """, unsafe_allow_html=True)
     
     def _render_performance_metrics(self):
         """Render performance metrics"""
-        st.subheader("⚡ Performance Metrics")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">⚡ Performance Metrics</h2>', unsafe_allow_html=True)
         
         # Get performance data
         perf_data = self.system_data.get_performance_metrics()
@@ -273,22 +312,42 @@ class SystemHealthPage:
         
         with col1:
             api_time = perf_data.get('api_response_time_ms', 0)
-            st.metric("🔗 API Response", f"{api_time}ms")
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #333333 !important; margin: 0;">🔗 API Response</h4>
+                <h3 style="color: #007acc !important; margin: 0.5rem 0;">{api_time}ms</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
             db_time = perf_data.get('database_query_time_ms', 0)
-            st.metric("🗄️ Database Query", f"{db_time}ms")
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #333333 !important; margin: 0;">🗄️ Database Query</h4>
+                <h3 style="color: #007acc !important; margin: 0.5rem 0;">{db_time}ms</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
             trade_time = perf_data.get('trade_execution_time_ms', 0)
-            st.metric("📈 Trade Execution", f"{trade_time}ms")
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #333333 !important; margin: 0;">📈 Trade Execution</h4>
+                <h3 style="color: #007acc !important; margin: 0.5rem 0;">{trade_time}ms</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col4:
             uptime_pct = perf_data.get('uptime_pct', 0)
-            st.metric("⏰ Uptime", f"{uptime_pct:.1f}%")
+            st.markdown(f"""
+            <div style="background-color: white; padding: 1rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #333333 !important; margin: 0;">⏰ Uptime</h4>
+                <h3 style="color: #007acc !important; margin: 0.5rem 0;">{uptime_pct:.1f}%</h3>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Performance trends (mock data for visualization)
-        st.subheader("📈 Performance Trends")
+        st.markdown('<h3 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin: 2rem 0 1rem 0;">📈 Performance Trends</h3>', unsafe_allow_html=True)
         
         # Create sample trend data
         times = pd.date_range(start=datetime.now() - timedelta(hours=24), end=datetime.now(), freq='1H')
@@ -324,17 +383,22 @@ class SystemHealthPage:
             yaxis=dict(title="API Response (ms)", side="left"),
             yaxis2=dict(title="Memory Usage (%)", side="right", overlaying="y"),
             height=300,
-            margin=dict(l=0, r=0, t=30, b=0)
+            margin=dict(l=0, r=0, t=30, b=0),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            font=dict(color='#333333')
         )
         
         st.plotly_chart(fig, use_container_width=True)
     
     def _render_recent_alerts(self):
         """Render recent system alerts"""
-        st.subheader("🚨 Recent Alerts")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">🚨 Recent Alerts</h2>', unsafe_allow_html=True)
         
         # Get alerts
         alerts = self.system_data.get_alerts()
+        
+        st.markdown('<div style="background-color: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">', unsafe_allow_html=True)
         
         if alerts:
             for alert in alerts[-10:]:  # Show last 10 alerts
@@ -347,12 +411,15 @@ class SystemHealthPage:
                 if alert_type == 'critical':
                     icon = "🔴"
                     color = "red"
+                    bg_color = "#ffe6e6"
                 elif alert_type == 'warning':
                     icon = "🟡"
                     color = "orange"
+                    bg_color = "#fff3e0"
                 else:
                     icon = "🔵"
                     color = "blue"
+                    bg_color = "#e3f2fd"
                 
                 # Format timestamp
                 try:
@@ -362,34 +429,71 @@ class SystemHealthPage:
                     time_str = "Unknown"
                 
                 st.markdown(f"""
-                <div style="padding: 0.5rem; margin: 0.25rem 0; border-left: 3px solid {color}; background-color: rgba(255,255,255,0.1);">
-                    {icon} <strong>{time_str}</strong> - {message}
+                <div style="
+                    padding: 0.75rem; 
+                    margin: 0.5rem 0; 
+                    border-left: 4px solid {color}; 
+                    background-color: {bg_color};
+                    border-radius: 4px;
+                    color: #333333 !important;
+                ">
+                    {icon} <strong style="color: #333333 !important;">{time_str}</strong> - <span style="color: #333333 !important;">{message}</span>
                 </div>
                 """, unsafe_allow_html=True)
         else:
-            st.success("✅ No recent alerts")
+            st.markdown("""
+            <div style="padding: 1rem; text-align: center; background-color: #e8f5e8; border-radius: 8px; color: #333333 !important;">
+                ✅ No recent alerts
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     def _render_log_summary(self):
         """Render log summary"""
-        st.subheader("📋 Log Summary")
+        st.markdown('<h2 style="color: #333333; background-color: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">📋 Log Summary</h2>', unsafe_allow_html=True)
         
         # Get log summary
         log_data = self.system_data.get_log_summary()
+        
+        st.markdown('<div style="background-color: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">', unsafe_allow_html=True)
         
         if log_data:
             col1, col2 = st.columns(2)
             
             with col1:
-                st.metric("📁 Log Files", log_data.get('total_log_files', 0))
-                st.metric("📝 Total Entries", log_data.get('total_entries', 0))
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 1rem; background-color: #f9f9f9;">
+                    <h4 style="color: #333333 !important; margin: 0;">📁 Log Files</h4>
+                    <h3 style="color: #007acc !important; margin: 0.5rem 0;">{log_data.get('total_log_files', 0)}</h3>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 6px; background-color: #f9f9f9;">
+                    <h4 style="color: #333333 !important; margin: 0;">📝 Total Entries</h4>
+                    <h3 style="color: #007acc !important; margin: 0.5rem 0;">{log_data.get('total_entries', 0)}</h3>
+                </div>
+                """, unsafe_allow_html=True)
             
             with col2:
-                st.metric("❌ Error Entries", log_data.get('error_entries', 0))
-                st.metric("⚠️ Warning Entries", log_data.get('warning_entries', 0))
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 1rem; background-color: #f9f9f9;">
+                    <h4 style="color: #333333 !important; margin: 0;">❌ Error Entries</h4>
+                    <h3 style="color: red !important; margin: 0.5rem 0;">{log_data.get('error_entries', 0)}</h3>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 6px; background-color: #f9f9f9;">
+                    <h4 style="color: #333333 !important; margin: 0;">⚠️ Warning Entries</h4>
+                    <h3 style="color: orange !important; margin: 0.5rem 0;">{log_data.get('warning_entries', 0)}</h3>
+                </div>
+                """, unsafe_allow_html=True)
             
             # Log file breakdown (if available)
             if log_data.get('total_log_files', 0) > 0:
-                st.write("**Recent Log Activity:**")
+                st.markdown('<h4 style="color: #333333 !important; margin: 1.5rem 0 1rem 0;">Recent Log Activity:</h4>', unsafe_allow_html=True)
                 
                 # Mock log activity data
                 log_activity = [
@@ -406,10 +510,24 @@ class SystemHealthPage:
                     color = "red" if level == "ERROR" else "orange" if level == "WARN" else "blue"
                     
                     st.markdown(f"""
-                    <div style="font-size: 0.8rem; padding: 0.25rem; margin: 0.1rem 0;">
-                        {icon} <span style="color: gray;">{entry['time']}</span> 
-                        <span style="color: {color};">[{level}]</span> {entry['message']}
+                    <div style="
+                        font-size: 0.9rem; 
+                        padding: 0.5rem; 
+                        margin: 0.25rem 0;
+                        background-color: #f5f5f5;
+                        border-radius: 4px;
+                        color: #333333 !important;
+                    ">
+                        {icon} <span style="color: #666666 !important;">{entry['time']}</span> 
+                        <span style="color: {color} !important; font-weight: bold;">[{level}]</span> 
+                        <span style="color: #333333 !important;">{entry['message']}</span>
                     </div>
                     """, unsafe_allow_html=True)
         else:
-            st.info("No log data available") 
+            st.markdown("""
+            <div style="padding: 1rem; text-align: center; background-color: #e3f2fd; border-radius: 8px; color: #333333 !important;">
+                ℹ️ No log data available
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True) 
