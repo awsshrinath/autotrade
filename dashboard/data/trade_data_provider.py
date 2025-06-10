@@ -226,18 +226,20 @@ class TradeDataProvider:
                             }
                             positions.append(position)
                     except:
-                        # If Firestore fails, add mock positions for this bot
+                        # If Firestore fails, do not add mock positions
+                        self.logger.log_event(f"Could not fetch trades for {bot_name}, and no mock data will be used.")
                         pass
             
-            # If no real positions, return mock data for demonstration
+            # If no real positions, return an empty list
             if not positions:
-                return self._get_mock_positions()
+                self.logger.log_event("No live positions found. Returning empty list.")
+                return []
             
             return positions
             
         except Exception as e:
             self.logger.log_event(f"Error getting live positions: {e}")
-            return self._get_mock_positions()
+            return []
     
     def get_recent_trades(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get recent completed trades"""
@@ -512,7 +514,7 @@ class TradeDataProvider:
     # Additional methods for live trades page
     def get_position_pnl_timeline(self) -> List[Dict[str, Any]]:
         """Get real-time P&L timeline for positions"""
-        # This would require storing historical price data
+        # This would require event logging
         # For now, return empty list
         return []
     
@@ -554,4 +556,7 @@ class TradeDataProvider:
         """Refresh all position prices"""
         return {"status": "success", "message": "Prices refreshed"}
 
+    # Mock data generation functions are now removed.
+    # The system will rely on real data or show clear "No data" states.
+    
     # Mock data removed - system now shows clear "No data" status when no real trading data is available 

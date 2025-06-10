@@ -21,6 +21,7 @@ from dashboard.components.system_health import SystemHealthPage
 from dashboard.components.cognitive_insights import CognitiveInsightsPage
 from dashboard.components.risk_monitor import RiskMonitorPage
 from dashboard.components.strategy_performance import StrategyPerformancePage
+from dashboard.components.predictive_alerts import PredictiveAlerts
 
 # Data providers
 from dashboard.data.trade_data_provider import TradeDataProvider
@@ -43,8 +44,12 @@ class TradingDashboard:
         self.cognitive_data = CognitiveDataProvider()
         self.notification_manager = NotificationManager()
         
-        # Initialize session state
+        self._initialize_data_providers()
         self._initialize_session_state()
+        
+        self.risk_monitor_page = RiskMonitorPage(self.trade_data, self.market_monitor)
+        self.strategy_performance_page = StrategyPerformancePage(self.trade_data)
+        self.predictive_alerts = PredictiveAlerts(self.market_monitor)
         
     def _initialize_session_state(self):
         """Initialize Streamlit session state variables"""
@@ -193,6 +198,9 @@ class TradingDashboard:
         # Header
         self._show_header()
         
+        # Add the predictive alerts component
+        self.predictive_alerts.render()
+        
         # Sidebar
         self._show_sidebar()
         
@@ -210,9 +218,9 @@ class TradingDashboard:
         elif page == "🧠 Cognitive Insights":
             CognitiveInsightsPage(self.cognitive_data).render()
         elif page == "🛡️ Risk Monitor":
-            RiskMonitorPage(self.trade_data).render()
+            self.risk_monitor_page.render()
         elif page == "📈 Strategy Performance":
-            StrategyPerformancePage(self.trade_data).render()
+            self.strategy_performance_page.render()
     
     def _show_header(self):
         """Show dashboard header with key metrics"""
@@ -232,26 +240,61 @@ class TradingDashboard:
         
         with col1:
             pnl = summary.get('total_pnl', 0)
-            pnl_color = "green" if pnl >= 0 else "red"
+            # Handle both numeric and string values
+            if isinstance(pnl, str):
+                pnl_display = pnl
+                pnl_change = summary.get('pnl_change_pct', 'N/A')
+                if isinstance(pnl_change, str):
+                    pnl_change_display = pnl_change
+                else:
+                    pnl_change_display = f"{pnl_change:+.1f}%"
+            else:
+                pnl_display = f"₹{pnl:,.2f}"
+                pnl_change = summary.get('pnl_change_pct', 0)
+                pnl_change_display = f"{pnl_change:+.1f}%"
+            
             st.metric(
                 "💰 Today's P&L",
-                f"₹{pnl:,.2f}",
-                f"{summary.get('pnl_change_pct', 0):+.1f}%"
+                pnl_display,
+                pnl_change_display
             )
         
         with col2:
+            active_trades = summary.get('active_trades', 0)
+            trades_change = summary.get('trades_change', 0)
+            
+            # Handle string/numeric values
+            active_trades_display = str(active_trades)
+            if isinstance(trades_change, str):
+                trades_change_display = trades_change
+            else:
+                trades_change_display = f"{trades_change:+d}"
+            
             st.metric(
                 "📊 Active Trades",
-                summary.get('active_trades', 0),
-                f"{summary.get('trades_change', 0):+d}"
+                active_trades_display,
+                trades_change_display
             )
         
         with col3:
             win_rate = summary.get('win_rate', 0)
+            win_rate_change = summary.get('win_rate_change', 0)
+            
+            # Handle string/numeric values
+            if isinstance(win_rate, str):
+                win_rate_display = win_rate
+            else:
+                win_rate_display = f"{win_rate:.1f}%"
+                
+            if isinstance(win_rate_change, str):
+                win_rate_change_display = win_rate_change
+            else:
+                win_rate_change_display = f"{win_rate_change:+.1f}%"
+            
             st.metric(
                 "🎯 Win Rate",
-                f"{win_rate:.1f}%",
-                f"{summary.get('win_rate_change', 0):+.1f}%"
+                win_rate_display,
+                win_rate_change_display
             )
         
         with col4:
@@ -265,10 +308,23 @@ class TradingDashboard:
         
         with col5:
             portfolio_value = summary.get('portfolio_value', 0)
+            portfolio_change = summary.get('portfolio_change_pct', 0)
+            
+            # Handle string/numeric values
+            if isinstance(portfolio_value, str):
+                portfolio_value_display = portfolio_value
+            else:
+                portfolio_value_display = f"₹{portfolio_value:,.0f}"
+                
+            if isinstance(portfolio_change, str):
+                portfolio_change_display = portfolio_change
+            else:
+                portfolio_change_display = f"{portfolio_change:+.1f}%"
+            
             st.metric(
                 "💼 Portfolio",
-                f"₹{portfolio_value:,.0f}",
-                f"{summary.get('portfolio_change_pct', 0):+.1f}%"
+                portfolio_value_display,
+                portfolio_change_display
             )
     
     def _show_sidebar(self):

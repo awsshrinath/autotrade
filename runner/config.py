@@ -9,7 +9,7 @@ import sys
 # Add project root to path for proper imports
 sys.path.insert(0, '/app' if os.path.exists('/app') else '.')
 
-# Try to import config_manager with fallback
+# Try to import config_manager. If it fails, raise a critical error.
 try:
     from config.config_manager import (
         get_config,
@@ -21,91 +21,16 @@ try:
     )
     CONFIG_AVAILABLE = True
 except ImportError as e:
-    print(f"Warning: Could not import config_manager: {e}")
-    CONFIG_AVAILABLE = False
-    
-    # Create fallback functions
-    class FallbackConfig:
-        paper_trade = True
-        default_capital = 100000
-        log_level = "INFO"
-        scalp_config = {
-            "min_price": 100,
-            "max_price": 120,
-            "sl_buffer": 30,
-            "target_buffer": 60,
-            "quantity": 75,
-        }
-        environment = "development"
-        max_daily_loss = 1000
-        max_daily_loss_pct = 2.0
-        stock_position_limit = 0.1
-        option_position_limit = 0.05
-        future_position_limit = 0.15
-        margin_utilization_limit = 0.8
-        max_volatility_threshold = 0.05
-        min_trade_value = 1000
-        api_rate_limit = 3
-        api_timeout = 10
-        monitoring_interval = 30
-        backup_frequency = 300
-        auto_square_off_time = "15:20"
-        alerts_email_enabled = False
-        alerts_slack_enabled = False
-        alerts_webhook_url = ""
-        
-        # Add missing methods that are expected by the config system
-        def is_development(self):
-            return self.environment == "development"
-        
-        def is_production(self):
-            return self.environment == "production"
-        
-        def is_paper_trade(self):
-            return self.paper_trade
-        
-        def get_environment_info(self):
-            return {
-                "environment": self.environment,
-                "paper_trade": self.paper_trade,
-                "log_level": self.log_level
-            }
-        
-        def validate_configuration(self):
-            return {
-                "valid": True,
-                "issues": [],
-                "warnings": []
-            }
-        
-        def save_current_config(self):
-            return {"success": True, "message": "Fallback config - no save needed"}
-    
-    def get_config():
-        return FallbackConfig()
-    
-    def get_trading_config():
-        return FallbackConfig()
-    
-    def get_paper_trade():
-        return True
-    
-    def get_default_capital():
-        return 100000
-    
-    def get_max_daily_loss():
-        return 1000
-    
-    def get_position_limits():
-        return {"stock": 0.1, "option": 0.05, "future": 0.15}
+    print("CRITICAL ERROR: Could not import the configuration manager.")
+    print(f"Please ensure that 'config/config_manager.py' exists and is correctly configured.")
+    print(f"Error details: {e}")
+    # Exit with a non-zero status code to prevent the application from running
+    # with a potentially incorrect or missing configuration.
+    sys.exit(1)
 
 # Initialize configuration
-if CONFIG_AVAILABLE:
-    _config_manager = get_config()
-    _trading_config = get_trading_config()
-else:
-    _config_manager = get_config()
-    _trading_config = get_trading_config()
+_config_manager = get_config()
+_trading_config = get_trading_config()
 
 # Backward compatibility with old config.py interface
 PAPER_TRADE = _trading_config.paper_trade
@@ -145,8 +70,8 @@ ALERTS_WEBHOOK_URL = _trading_config.alerts_webhook_url
 # Development and Testing Configuration
 TEST_MODE = False   # Set to True for testing
 
-# Offline Mode - Disable GCP services when credentials unavailable
-OFFLINE_MODE = False  # Set to True to force offline mode (GCP credentials are now properly configured)
+# Offline Mode is now determined by the main config, not hardcoded.
+OFFLINE_MODE = _trading_config.get('offline_mode', False)
 
 def get_config_manager():
     """Get the configuration manager instance"""

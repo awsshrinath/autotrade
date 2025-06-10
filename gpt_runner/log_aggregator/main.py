@@ -12,9 +12,7 @@ import structlog
 from datetime import datetime
 
 from .utils.config import get_config
-# Routers will be imported here later - temporarily disabled for debugging
-# from .routers import gcs_router, firestore_router, k8s_router, summary_router
-# from .routers import gcs_router, firestore_router, k8s_router, summary_router
+from .routers import gcs_router, firestore_router, k8s_router, summary_router, market_data_router
 
 logger = structlog.get_logger(__name__)
 
@@ -63,16 +61,12 @@ async def health_check():
         "version": "0.1.0"
     }
 
-# Include routers (temporarily disabled for debugging)
-# app.include_router(gcs_router.router, prefix=f"{app_config.api_prefix}/logs/gcs", tags=["GCS Logs"])
-# app.include_router(firestore_router.router, prefix=f"{app_config.api_prefix}/logs/firestore", tags=["Firestore Logs"])
-# app.include_router(k8s_router.router, prefix=f"{app_config.api_prefix}/logs/k8s", tags=["Kubernetes Logs"])
-# app.include_router(summary_router.router, prefix=f"{app_config.api_prefix}/summary", tags=["Log Summarization"])
-
-# app.include_router(gcs_router.router, prefix=f"{app_config.api_prefix}/gcs", tags=["GCS Logs"])
-# app.include_router(firestore_router.router, prefix=f"{app_config.api_prefix}/firestore", tags=["Firestore Logs"])
-# app.include_router(k8s_router.router, prefix=f"{app_config.api_prefix}/k8s", tags=["Kubernetes Logs"])
-# app.include_router(summary_router.router, prefix=f"{app_config.api_prefix}/summary", tags=["Log Summarization"])
+# Include routers
+app.include_router(gcs_router.router, prefix=f"{app_config.api_prefix}/logs/gcs", tags=["GCS Logs"])
+app.include_router(firestore_router.router, prefix=f"{app_config.api_prefix}/logs/firestore", tags=["Firestore Logs"])
+app.include_router(k8s_router.router, prefix=f"{app_config.api_prefix}/logs/k8s", tags=["Kubernetes Logs"])
+app.include_router(summary_router.router, prefix=f"{app_config.api_prefix}/summary", tags=["Log Summarization"])
+app.include_router(market_data_router.router, prefix=f"{app_config.api_prefix}/market", tags=["Market Data"])
 
 if __name__ == "__main__":
     logger.info("Starting Log Aggregator API with Uvicorn...")

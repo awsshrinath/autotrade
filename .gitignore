@@ -1,14 +1,141 @@
-# Ignore cache
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a script, but they are often
+#  committed by accident.
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs / Editors
+.idea/
+.vscode/
+.cursor/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sensitive Files
+*.private
+*.secret
+*_key.json
+service-account.json
+gcp-credentials.json
+*.pem
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+*.rdb
+*.sqlite3
+
+# Node.js
+node_modules/
+.npm
+package-lock.json
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Scripts
+/start_dashboard.sh
+/restart_dashboard.py
+/test_k8s_auth.py
+
+# Task Master
+.taskmaster/
+tasks/
+reports/
+
+# Other
+temp-app/
+nul
+.DS_Store?
+gcp_credentials.json
+*.json-e
+gcp_service_account_key.json
+service-account.json
+gpt-runner-sa-key.json
+secrets.json
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log
+/gpt-runner-sa-key.json
+*.credentials.json
+.DS_Store
+npm-debug.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Ignore shell and batch scripts
 *.bat
 
 # Ignore logs (keep folder structure optional)
-logs/
 !logs/.keep
-/temp-app/
 
 # Configuration files
 config/local.yaml

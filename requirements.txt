@@ -39,3 +39,7 @@ tokenizers>=0.13.0
 yfinance>=0.2.18
 investpy>=1.0.8
 alpha-vantage>=2.3.1
+
+# 🧪 Load Testing
+locust
+pytest-benchmark

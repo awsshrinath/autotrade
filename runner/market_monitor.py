@@ -20,7 +20,7 @@ except ImportError:
 
 try:
     import investpy
-    INVESTPY_AVAILABLE = True
+    INVESTPY_AVAILABLE = False
 except ImportError:
     INVESTPY_AVAILABLE = False
 
@@ -28,8 +28,9 @@ except ImportError:
 class CorrelationMonitor:
     """Cross-market correlation analysis for multi-instrument trading"""
     
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, data_fetcher=None):
         self.logger = logger
+        self.data_fetcher = data_fetcher
         
         # Common instruments for correlation analysis
         self.instruments = {
@@ -40,23 +41,24 @@ class CorrelationMonitor:
             'NIFTY AUTO': 11924226
         }
 
-    def fetch_sector_data(self, symbol: str, days: int = 30) -> Optional[List[float]]:
+    def fetch_sector_data(self, instrument_token: int, days: int = 30) -> Optional[List[float]]:
         """Fetch sector index data for correlation analysis"""
         try:
             if self.logger:
-                self.logger.log_event(f"Fetching sector data for {symbol}")
+                self.logger.log_event(f"Fetching sector data for {instrument_token}")
             
-            # Mock price data - replace with real API call in production
-            base_price = 17000 if 'NIFTY' in symbol else 42000
-            prices = []
-            for i in range(days):
-                price = base_price + np.random.uniform(-500, 500)
-                prices.append(price)
+            from_date = datetime.now() - timedelta(days=days)
+            to_date = datetime.now()
             
-            return prices
+            historical_data = self.data_fetcher.fetch_historical_data(instrument_token, from_date, to_date, "day")
+            
+            if historical_data:
+                return [d['close'] for d in historical_data]
+            
+            return None
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[ERROR] Failed to fetch sector data for {symbol}: {e}")
+                self.logger.log_event(f"[ERROR] Failed to fetch sector data for {instrument_token}: {e}")
             return None
 
     def calculate_correlation_matrix(self) -> Dict[str, Any]:
@@ -65,8 +67,8 @@ class CorrelationMonitor:
             correlations = {}
             
             # Fetch data for main indices
-            nifty_data = self.fetch_sector_data('NIFTY', 30)
-            banknifty_data = self.fetch_sector_data('BANKNIFTY', 30)
+            nifty_data = self.fetch_sector_data(256265, 30)
+            banknifty_data = self.fetch_sector_data(260105, 30)
             
             if nifty_data and banknifty_data:
                 # Calculate NIFTY vs BANKNIFTY correlation
@@ -124,36 +126,42 @@ class MarketRegimeClassifier:
             if len(close_prices) < 20:
                 return {"regime": "INSUFFICIENT_DATA", "confidence": 0}
             
-            # Use TechnicalIndicators for ADX calculation
+            # Use TechnicalIndicators for ADX and Bollinger Bands calculation
             adx_data = TechnicalIndicators.calculate_adx(high_prices, low_prices, close_prices)
             adx = adx_data.get('adx', 20)
             
+            bollinger_data = TechnicalIndicators.calculate_bollinger_bands(close_prices)
+            bollinger_width = bollinger_data.get('width', 0)
+
             # Price action analysis
             price_action = TechnicalIndicators.analyze_price_action(high_prices, low_prices, close_prices)
             trend_strength = price_action.get('strength', 0)
             
             # Regime classification logic
-            if adx > 30 and trend_strength > 0.7:
-                regime = "STRONGLY_TRENDING"
+            if adx > 25 and bollinger_width > 4.0:
+                regime = "STRONG_TREND"
                 confidence = 0.9
-            elif adx > 20 and trend_strength > 0.5:
-                regime = "WEAKLY_TRENDING"
+            elif adx > 20 and trend_strength > 0.6:
+                regime = "TRENDING"
                 confidence = 0.7
-            elif adx < 15:
+            elif adx < 20 and bollinger_width < 2.5:
                 regime = "RANGING"
                 confidence = 0.8
             else:
-                regime = "MIXED"
+                regime = "UNCERTAIN"
                 confidence = 0.5
             
             return {
                 "regime": regime,
                 "confidence": confidence,
-                "adx": adx,
-                "trend_strength": trend_strength,
-                "di_plus": adx_data.get('di_plus', 0),
-                "di_minus": adx_data.get('di_minus', 0),
-                "price_action": price_action,
+                "indicators": {
+                    "adx": adx,
+                    "bollinger_width": bollinger_width,
+                    "trend_strength": trend_strength,
+                    "di_plus": adx_data.get('di_plus', 0),
+                    "di_minus": adx_data.get('di_minus', 0),
+                    "price_action": price_action
+                },
                 "timestamp": datetime.now().isoformat()
             }
             
@@ -168,25 +176,9 @@ class MarketMonitor:
         self.logger = logger
         self.kite_client = kite_client
         self.firestore_client = firestore_client
-        self.data_fetcher = MarketDataFetcher(logger)
+        self.data_fetcher = MarketDataFetcher(logger, kite_client)
         self.regime_classifier = MarketRegimeClassifier(logger)
-        self.correlation_monitor = CorrelationMonitor(logger)
-        
-        # 🚀 NEW: Historical Data Configuration
-        self.historical_config = {
-            'cache_ttl_minutes': 15,  # Cache data for 15 minutes
-            'max_retry_attempts': 3,
-            'batch_size': 10,  # Max instruments per batch
-            'rate_limit_delay': 1.0,  # Seconds between requests
-            'exponential_backoff_base': 2.0,
-            'max_backoff_seconds': 30,
-            'use_real_data': True,  # Enable real data fetching
-            'alpha_vantage_api_key': os.getenv('ALPHA_VANTAGE_API_KEY'),
-            'data_source_priority': ['yfinance', 'alpha_vantage', 'investpy', 'kite', 'mock']
-        }
-        
-        # 🚀 NEW: In-memory cache for historical data
-        self.data_cache = {}
+        self.correlation_monitor = CorrelationMonitor(logger, self.data_fetcher)
         
         # 🚀 NEW: Common instrument tokens for batching
         self.common_instruments = {
@@ -200,579 +192,26 @@ class MarketMonitor:
             'INDIA VIX': 264969
         }
 
-    def _generate_cache_key(self, instrument_token, from_date, to_date, interval):
-        """Generate a unique cache key for the data request"""
-        return f"{instrument_token}_{from_date.strftime('%Y%m%d_%H%M')}_{to_date.strftime('%Y%m%d_%H%M')}_{interval}"
-
-    def _is_cache_valid(self, cache_entry):
-        """Check if cached data is still valid based on TTL"""
-        if not cache_entry or 'timestamp' not in cache_entry:
-            return False
-        
-        cache_age_minutes = (datetime.now() - cache_entry['timestamp']).total_seconds() / 60
-        return cache_age_minutes < self.historical_config['cache_ttl_minutes']
-
-    def _get_from_cache(self, cache_key):
-        """Retrieve data from cache if valid"""
-        if cache_key in self.data_cache:
-            cache_entry = self.data_cache[cache_key]
-            if self._is_cache_valid(cache_entry):
-                if self.logger:
-                    self.logger.log_event(f"[CACHE HIT] Retrieved data for {cache_key}")
-                return cache_entry['data']
-            else:
-                # Remove expired cache entry
-                del self.data_cache[cache_key]
-                if self.logger:
-                    self.logger.log_event(f"[CACHE EXPIRED] Removed expired data for {cache_key}")
-        
-        return None
-
-    def _store_in_cache(self, cache_key, data):
-        """Store data in cache with timestamp"""
-        self.data_cache[cache_key] = {
-            'data': data,
-            'timestamp': datetime.now()
-        }
-        if self.logger:
-            self.logger.log_event(f"[CACHE STORE] Cached data for {cache_key}")
-
-    def _get_nifty_symbol_mapping(self, instrument_token):
-        """Map instrument tokens to real data source symbols"""
-        symbol_mapping = {
-            256265: '^NSEI',  # NIFTY 50 -> Yahoo Finance symbol
-            260105: '^NSEBANK',  # BANKNIFTY -> Yahoo Finance symbol  
-            264969: 'INDIA VIX',  # INDIA VIX
-            11924738: '^CNXIT',  # NIFTY IT
-            11924234: '^NSEBANK',  # NIFTY BANK
-            11924242: '^CNXFMCG',  # NIFTY FMCG
-            11924226: '^CNXAUTO',  # NIFTY AUTO
-            11924274: '^CNXPHARMA',  # NIFTY PHARMA
-            'NIFTY 50': '^NSEI',
-            'BANKNIFTY': '^NSEBANK',
-            'NIFTY BANK': '^NSEBANK',
-            'NIFTY IT': '^CNXIT',
-            'NIFTY AUTO': '^CNXAUTO',
-            'NIFTY FMCG': '^CNXFMCG',
-            'NIFTY PHARMA': '^CNXPHARMA'
-        }
-        
-        return symbol_mapping.get(instrument_token, '^NSEI')  # Default to NIFTY 50
-
-    def _fetch_yfinance_data(self, instrument_token, from_date, to_date, interval):
-        """Fetch historical data using Yahoo Finance (yfinance)"""
-        try:
-            if not YFINANCE_AVAILABLE:
-                raise ImportError("yfinance not available")
-            
-            # Map interval to yfinance format
-            interval_mapping = {
-                'minute': '1m',
-                '5minute': '5m', 
-                '15minute': '15m',
-                '1hour': '1h',
-                'day': '1d'
-            }
-            yf_interval = interval_mapping.get(interval, '5m')
-            
-            # Get symbol for yfinance
-            symbol = self._get_nifty_symbol_mapping(instrument_token)
-            
-            if self.logger:
-                self.logger.log_event(f"[YFINANCE] Fetching {symbol} from {from_date} to {to_date}, interval {yf_interval}")
-            
-            # Fetch data from yfinance
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(start=from_date, end=to_date, interval=yf_interval)
-            
-            if df.empty:
-                raise ValueError(f"No data returned for {symbol}")
-            
-            # Standardize column names to match expected format
-            df = df.reset_index()
-            df.columns = [col.lower() for col in df.columns]
-            
-            # Rename columns to match expected format
-            column_mapping = {
-                'datetime': 'date',
-                'adj close': 'close'  # Use adjusted close as close price
-            }
-            df = df.rename(columns=column_mapping)
-            
-            # Ensure we have the required columns
-            required_columns = ['date', 'open', 'high', 'low', 'close', 'volume']
-            df = df[required_columns]
-            
-            if self.logger:
-                self.logger.log_event(f"[YFINANCE SUCCESS] Fetched {len(df)} records for {symbol}")
-            
-            return df
-            
-        except Exception as e:
-            if self.logger:
-                self.logger.log_event(f"[YFINANCE ERROR] Failed to fetch data: {e}")
-            raise e
-
-    def _fetch_alpha_vantage_data(self, instrument_token, from_date, to_date, interval):
-        """Fetch historical data using Alpha Vantage API"""
-        try:
-            api_key = self.historical_config.get('alpha_vantage_api_key')
-            if not api_key:
-                raise ValueError("Alpha Vantage API key not configured")
-            
-            # Map instrument to Alpha Vantage symbol (limited for Indian indices)
-            # Alpha Vantage mainly supports US markets, so this is a fallback
-            symbol_mapping = {
-                256265: 'NIFTY',  # Limited support
-                'NIFTY 50': 'NIFTY'
-            }
-            
-            symbol = symbol_mapping.get(instrument_token, 'NIFTY')
-            
-            # Alpha Vantage function mapping
-            function_mapping = {
-                'minute': 'TIME_SERIES_INTRADAY',
-                '5minute': 'TIME_SERIES_INTRADAY', 
-                '15minute': 'TIME_SERIES_INTRADAY',
-                '1hour': 'TIME_SERIES_INTRADAY',
-                'day': 'TIME_SERIES_DAILY'
-            }
-            
-            function = function_mapping.get(interval, 'TIME_SERIES_INTRADAY')
-            
-            # Build API URL
-            url = f"https://www.alphavantage.co/query"
-            params = {
-                'function': function,
-                'symbol': symbol,
-                'apikey': api_key,
-                'datatype': 'json'
-            }
-            
-            if interval in ['minute', '5minute', '15minute', '1hour']:
-                params['interval'] = interval.replace('minute', 'min').replace('1hour', '60min')
-            
-            if self.logger:
-                self.logger.log_event(f"[ALPHA_VANTAGE] Fetching {symbol} with function {function}")
-            
-            response = requests.get(url, params=params, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Check for API error messages
-            if 'Error Message' in data:
-                raise ValueError(f"Alpha Vantage error: {data['Error Message']}")
-            
-            if 'Note' in data:
-                raise ValueError(f"Alpha Vantage rate limit: {data['Note']}")
-            
-            # Extract time series data
-            time_series_key = None
-            for key in data.keys():
-                if 'Time Series' in key:
-                    time_series_key = key
-                    break
-            
-            if not time_series_key or time_series_key not in data:
-                raise ValueError("No time series data found in response")
-            
-            time_series = data[time_series_key]
-            
-            # Convert to DataFrame
-            records = []
-            for date_str, values in time_series.items():
-                record = {
-                    'date': pd.to_datetime(date_str),
-                    'open': float(values.get('1. open', 0)),
-                    'high': float(values.get('2. high', 0)),
-                    'low': float(values.get('3. low', 0)),
-                    'close': float(values.get('4. close', 0)),
-                    'volume': int(values.get('5. volume', 0))
-                }
-                records.append(record)
-            
-            df = pd.DataFrame(records)
-            df = df.sort_values('date').reset_index(drop=True)
-            
-            # Filter by date range
-            df = df[(df['date'] >= pd.to_datetime(from_date)) & 
-                   (df['date'] <= pd.to_datetime(to_date))]
-            
-            if self.logger:
-                self.logger.log_event(f"[ALPHA_VANTAGE SUCCESS] Fetched {len(df)} records for {symbol}")
-            
-            return df
-            
-        except Exception as e:
-            if self.logger:
-                self.logger.log_event(f"[ALPHA_VANTAGE ERROR] Failed to fetch data: {e}")
-            raise e
-
-    def _fetch_real_historical_data(self, instrument_token, from_date, to_date, interval):
-        """Fetch real historical data using prioritized data sources"""
-        if not self.historical_config.get('use_real_data', True):
-            raise ValueError("Real data fetching disabled")
-        
-        data_sources = self.historical_config.get('data_source_priority', ['yfinance', 'alpha_vantage', 'kite'])
-        last_error = None
-        
-        for source in data_sources:
-            if source == 'mock':
-                continue  # Skip mock for real data fetching
-            if source == 'kite' and not self.kite_client:
-                continue  # Skip kite if client not available
-                
-            try:
-                if self.logger:
-                    self.logger.log_event(f"[REAL_DATA] Trying {source} for {instrument_token}")
-                
-                if source == 'yfinance':
-                    return self._fetch_yfinance_data(instrument_token, from_date, to_date, interval)
-                elif source == 'alpha_vantage':
-                    return self._fetch_alpha_vantage_data(instrument_token, from_date, to_date, interval)
-                elif source == 'kite' and self.kite_client:
-                    return self._fetch_with_retry(instrument_token, from_date, to_date, interval)
-                    
-            except Exception as e:
-                last_error = e
-                if self.logger:
-                    self.logger.log_event(f"[REAL_DATA] {source} failed: {e}")
-                continue
-        
-        # If all real data sources fail, raise the last error
-        raise last_error or ValueError("All real data sources failed")
-
-    def _fetch_with_retry(self, instrument_token, from_date, to_date, interval, attempt=1):
-        """Fetch historical data with exponential backoff retry logic"""
-        try:
-            if self.logger:
-                self.logger.log_event(f"[ATTEMPT {attempt}] Fetching {instrument_token} data from {from_date} to {to_date} interval {interval}")
-            
-            # Make the actual API call
-            historical_data = self.kite_client.historical_data(
-                instrument_token, from_date, to_date, interval
-            )
-            
-            if historical_data:
-                df = pd.DataFrame(historical_data)
-                if self.logger:
-                    self.logger.log_event(f"[SUCCESS] Fetched {len(df)} records for {instrument_token}")
-                return df
-            else:
-                raise ValueError("No data returned from API")
-                
-        except Exception as e:
-            error_msg = str(e).lower()
-            
-            # Check if it's a rate limit error (HTTP 429)
-            is_rate_limit = 'rate limit' in error_msg or '429' in error_msg or 'too many requests' in error_msg
-            
-            # Check if it's a transient error that should be retried
-            is_retryable = (
-                is_rate_limit or 
-                'timeout' in error_msg or 
-                'connection' in error_msg or 
-                'network' in error_msg or
-                'temporary' in error_msg
-            )
-            
-            if is_retryable and attempt < self.historical_config['max_retry_attempts']:
-                # Calculate exponential backoff delay
-                backoff_delay = min(
-                    self.historical_config['exponential_backoff_base'] ** attempt,
-                    self.historical_config['max_backoff_seconds']
-                )
-                
-                if self.logger:
-                    self.logger.log_event(f"[RETRY] Attempt {attempt} failed with {error_msg}. Retrying in {backoff_delay}s")
-                
-                time.sleep(backoff_delay)
-                return self._fetch_with_retry(instrument_token, from_date, to_date, interval, attempt + 1)
-            else:
-                if self.logger:
-                    error_type = "RATE_LIMIT" if is_rate_limit else "API_ERROR"
-                    self.logger.log_event(f"[{error_type}] Final attempt {attempt} failed for {instrument_token}: {e}")
-                raise e
-
-    def _fetch_historical_data_batch(self, instruments_batch, from_date, to_date, interval):
-        """Fetch historical data for a batch of instruments with rate limiting"""
-        batch_results = {}
-        
-        for instrument_name, instrument_token in instruments_batch.items():
-            try:
-                # Check cache first
-                cache_key = self._generate_cache_key(instrument_token, from_date, to_date, interval)
-                cached_data = self._get_from_cache(cache_key)
-                
-                if cached_data is not None:
-                    batch_results[instrument_name] = cached_data
-                    continue
-                
-                # 🚀 NEW: Try real data sources first, then fallback to Kite/mock
-                try:
-                    if self.historical_config.get('use_real_data', True):
-                        # Try real data sources first
-                        df = self._fetch_real_historical_data(instrument_token, from_date, to_date, interval)
-                    else:
-                        # Use original Kite logic if real data disabled
-                        if self.kite_client:
-                            df = self._fetch_with_retry(instrument_token, from_date, to_date, interval)
-                        else:
-                            raise ValueError("No data source available")
-                    
-                    if not df.empty:
-                        # Store in cache
-                        self._store_in_cache(cache_key, df)
-                        batch_results[instrument_name] = df
-                    else:
-                        if self.logger:
-                            self.logger.log_event(f"[WARNING] Empty data returned for {instrument_name}")
-                        batch_results[instrument_name] = pd.DataFrame()
-                        
-                except Exception as real_data_error:
-                    if self.logger:
-                        self.logger.log_event(f"[REAL_DATA_FALLBACK] Real data failed for {instrument_name}: {real_data_error}")
-                    
-                    # Fallback to Kite API if available
-                    if self.kite_client:
-                        try:
-                            df = self._fetch_with_retry(instrument_token, from_date, to_date, interval)
-                            if not df.empty:
-                                self._store_in_cache(cache_key, df)
-                                batch_results[instrument_name] = df
-                            else:
-                                batch_results[instrument_name] = pd.DataFrame()
-                        except Exception as kite_error:
-                            if self.logger:
-                                self.logger.log_event(f"[KITE_FALLBACK] Kite also failed for {instrument_name}: {kite_error}")
-                            # Final fallback to mock data
-                            batch_results[instrument_name] = self._generate_mock_data(from_date, to_date, interval)
-                    else:
-                        # Final fallback to mock data if no kite client
-                        if self.logger:
-                            self.logger.log_event(f"[MOCK_FALLBACK] No kite client, generating mock data for {instrument_name}")
-                        batch_results[instrument_name] = self._generate_mock_data(from_date, to_date, interval)
-                
-                # Rate limiting between requests
-                time.sleep(self.historical_config['rate_limit_delay'])
-                
-            except Exception as e:
-                if self.logger:
-                    self.logger.log_event(f"[ERROR] Failed to fetch data for {instrument_name}: {e}")
-                
-                # Try to get from cache as fallback
-                cache_key = self._generate_cache_key(instrument_token, from_date, to_date, interval)
-                cached_data = self._get_from_cache(cache_key)
-                
-                if cached_data is not None:
-                    if self.logger:
-                        self.logger.log_event(f"[FALLBACK] Using cached data for {instrument_name}")
-                    batch_results[instrument_name] = cached_data
-                else:
-                    # Final fallback to mock data
-                    if self.logger:
-                        self.logger.log_event(f"[FALLBACK] Generating mock data for {instrument_name}")
-                    batch_results[instrument_name] = self._generate_mock_data(from_date, to_date, interval)
-        
-        return batch_results
-
-    def _generate_mock_data(self, from_date, to_date, interval):
-        """Generate mock historical data with proper OHLCV structure"""
-        try:
-            # Calculate number of data points based on interval
-            if interval == 'minute':
-                freq = '1T'
-                multiplier = 1
-            elif interval == '5minute':
-                freq = '5T'
-                multiplier = 5
-            elif interval == '15minute':
-                freq = '15T'
-                multiplier = 15
-            elif interval == '1hour':
-                freq = '1H'
-                multiplier = 60
-            elif interval == 'day':
-                freq = '1D'
-                multiplier = 1440
-            else:
-                freq = '5T'
-                multiplier = 5
-            
-            # Generate date range
-            date_range = pd.date_range(start=from_date, end=to_date, freq=freq)
-            
-            if len(date_range) == 0:
-                return pd.DataFrame()
-            
-            # Generate realistic OHLCV data
-            base_price = 17500  # NIFTY base price
-            volatility = 0.02   # 2% volatility
-            
-            np.random.seed(int(time.time()) % 1000)  # Reproducible but varied
-            
-            # Generate price movements
-            returns = np.random.normal(0, volatility / np.sqrt(1440/multiplier), len(date_range))
-            prices = base_price * np.exp(np.cumsum(returns))
-            
-            # Generate OHLCV
-            data = pd.DataFrame({
-                'date': date_range,
-                'open': prices,
-                'close': prices * (1 + np.random.normal(0, 0.001, len(date_range))),
-                'volume': np.random.randint(10000, 100000, len(date_range))
-            })
-            
-            # Generate high and low
-            data['high'] = data[['open', 'close']].max(axis=1) * (1 + np.abs(np.random.normal(0, 0.005, len(data))))
-            data['low'] = data[['open', 'close']].min(axis=1) * (1 - np.abs(np.random.normal(0, 0.005, len(data))))
-            
-            # Ensure OHLC relationships are maintained
-            data['high'] = data[['open', 'high', 'low', 'close']].max(axis=1)
-            data['low'] = data[['open', 'high', 'low', 'close']].min(axis=1)
-            
-            return data[['date', 'open', 'high', 'low', 'close', 'volume']]
-            
-        except Exception as e:
-            if self.logger:
-                self.logger.log_event(f"[ERROR] Mock data generation failed: {e}")
-            return pd.DataFrame()
-
-    def _fetch_historical_data(self, instrument_token, from_date, to_date, interval):
-        """
-        🚀 ENHANCED: Fetch historical data with batching, caching, and retry logic
-        
-        This method now supports:
-        - Intelligent caching with TTL
-        - Exponential backoff retry for rate limits
-        - Batch processing for multiple instruments
-        - Comprehensive error handling and fallback mechanisms
-        - Production-ready performance optimizations
-        """
-        start_time = time.time()
-        
-        try:
-            # Convert single instrument request to batch format
-            if isinstance(instrument_token, (str, int)):
-                # Single instrument request
-                instrument_name = next(
-                    (name for name, token in self.common_instruments.items() if token == instrument_token),
-                    str(instrument_token)
-                )
-                instruments_batch = {instrument_name: instrument_token}
-            else:
-                # Already a batch
-                instruments_batch = instrument_token
-            
-            if self.logger:
-                self.logger.log_event(f"[BATCH START] Fetching data for {len(instruments_batch)} instruments")
-            
-            # Process batch with caching and retry logic
-            batch_results = self._fetch_historical_data_batch(instruments_batch, from_date, to_date, interval)
-            
-            # Return single result if single instrument was requested
-            if len(instruments_batch) == 1:
-                result = list(batch_results.values())[0]
-            else:
-                result = batch_results
-            
-            elapsed_time = time.time() - start_time
-            if self.logger:
-                cache_hits = sum(1 for _ in batch_results.values() if not _.empty)
-                self.logger.log_event(f"[BATCH COMPLETE] Processed {len(instruments_batch)} instruments in {elapsed_time:.2f}s, {cache_hits} successful")
-            
-            return result
-            
-        except Exception as e:
-            elapsed_time = time.time() - start_time
-            if self.logger:
-                self.logger.log_event(f"[BATCH ERROR] Failed after {elapsed_time:.2f}s: {e}")
-            
-            # Final fallback to mock data
-            if isinstance(instrument_token, (str, int)):
-                return self._generate_mock_data(from_date, to_date, interval)
-            else:
-                return {name: self._generate_mock_data(from_date, to_date, interval) 
-                       for name in instrument_token.keys()}
-
-    def fetch_multiple_instruments_data(self, instruments_dict, from_date, to_date, interval):
-        """
-        🚀 NEW: Fetch historical data for multiple instruments efficiently
-        
-        Args:
-            instruments_dict: Dict of {instrument_name: instrument_token}
-            from_date: Start date
-            to_date: End date  
-            interval: Data interval (minute, 5minute, 1hour, day)
-            
-        Returns:
-            Dict of {instrument_name: DataFrame}
-        """
-        return self._fetch_historical_data(instruments_dict, from_date, to_date, interval)
-
-    def get_cache_statistics(self):
-        """🚀 NEW: Get cache performance statistics"""
-        total_entries = len(self.data_cache)
-        valid_entries = sum(1 for entry in self.data_cache.values() if self._is_cache_valid(entry))
-        
-        return {
-            'total_cached_entries': total_entries,
-            'valid_cached_entries': valid_entries,
-            'cache_hit_ratio': valid_entries / max(total_entries, 1),
-            'cache_ttl_minutes': self.historical_config['cache_ttl_minutes'],
-            'cache_size_mb': sum(entry['data'].memory_usage(deep=True).sum() 
-                               for entry in self.data_cache.values() 
-                               if hasattr(entry.get('data', {}), 'memory_usage')) / (1024 * 1024)
-        }
-
-    def clear_expired_cache(self):
-        """🚀 NEW: Manually clear expired cache entries"""
-        expired_keys = []
-        for key, entry in self.data_cache.items():
-            if not self._is_cache_valid(entry):
-                expired_keys.append(key)
-        
-        for key in expired_keys:
-            del self.data_cache[key]
-        
-        if self.logger:
-            self.logger.log_event(f"[CACHE CLEANUP] Removed {len(expired_keys)} expired entries")
-        
-        return len(expired_keys)
-
-    def update_historical_config(self, **kwargs):
-        """🚀 NEW: Update historical data fetching configuration"""
-        for key, value in kwargs.items():
-            if key in self.historical_config:
-                old_value = self.historical_config[key]
-                self.historical_config[key] = value
-                if self.logger:
-                    self.logger.log_event(f"[CONFIG] Updated {key}: {old_value} -> {value}")
-            else:
-                if self.logger:
-                    self.logger.log_event(f"[CONFIG WARNING] Unknown config key: {key}")
-
     def get_enhanced_market_regime(self, instrument_token="NIFTY 50", instrument_id=256265) -> Dict[str, Any]:
         """Get comprehensive market regime analysis including volatility, trend, and correlations"""
         try:
-            # Fetch historical data for regime analysis
+            from_date = datetime.now() - timedelta(days=60)
             to_date = datetime.now()
-            from_date = to_date - timedelta(days=5)  # Get more data for better analysis
             
-            hist_data_df = self._fetch_historical_data(instrument_token, from_date, to_date, "5minute")
+            # Use the data_fetcher
+            hist_data = self.data_fetcher.fetch_historical_data(instrument_id, from_date, to_date, 'day')
             
-            if hist_data_df.empty:
-                return {"error": "No data available", "regime": "UNKNOWN"}
-            
-            # Prepare price data for analysis
+            if not hist_data:
+                return {"error": "Failed to fetch historical data for market regime analysis"}
+
             price_data = {
-                'high': hist_data_df['high'].tolist(),
-                'low': hist_data_df['low'].tolist(),
-                'close': hist_data_df['close'].tolist(),
-                'open': hist_data_df['open'].tolist()
+                'open': [d['open'] for d in hist_data],
+                'high': [d['high'] for d in hist_data],
+                'low': [d['low'] for d in hist_data],
+                'close': [d['close'] for d in hist_data],
+                'volume': [d['volume'] for d in hist_data]
             }
-            
+
             # Get volatility regimes (existing functionality)
             volatility_regimes = self.get_volatility_regimes(instrument_token, instrument_id)
             
@@ -818,7 +257,7 @@ class MarketMonitor:
             correlation_breakdown = corr_analysis.get('correlation_breakdown', False)
             
             # Overall regime determination logic
-            if trend_regime == "STRONGLY_TRENDING":
+            if trend_regime == "STRONG_TREND":
                 if vol_1hr == "HIGH":
                     overall_regime = "VOLATILE_TRENDING"
                     strategy_recommendation = "scalp"  # Quick in/out in volatile trends
@@ -832,7 +271,7 @@ class MarketMonitor:
                 else:
                     overall_regime = "STABLE_RANGING"
                     strategy_recommendation = "orb"  # Wait for breakout
-            else:  # WEAKLY_TRENDING or MIXED
+            else:  # TRENDING or UNCERTAIN
                 overall_regime = "TRANSITIONAL"
                 strategy_recommendation = "orb"  # Breakout strategy for unclear markets
             
@@ -914,7 +353,7 @@ class MarketMonitor:
                 self.logger.log_event(f"[VOLATILITY] Fetching data for {instrument_token} volatility regime calculation")
             
             # Use enhanced data fetching with caching and retry logic
-            hist_data_df = self._fetch_historical_data(instrument_token, from_date_1min, to_date, "minute")
+            hist_data_df = self.data_fetcher.fetch_historical_data(instrument_token, from_date_1min, to_date, "minute")
 
             if hist_data_df.empty:
                 if self.logger:
@@ -1042,9 +481,7 @@ class MarketMonitor:
             from_date = to_date - timedelta(days=5)
             
             start_time = time.time()
-            batch_data = self.fetch_multiple_instruments_data(
-                target_instruments, from_date, to_date, "5minute"
-            )
+            batch_data = self.data_fetcher.fetch_historical_data(target_instruments, from_date, to_date, "5minute")
             fetch_time = time.time() - start_time
             
             # Analyze each instrument
@@ -1143,6 +580,32 @@ class MarketMonitor:
                 "analysis_results": {},
                 "timestamp": datetime.now().isoformat()
             }
+
+    def get_predictive_alerts(self) -> List[Dict[str, Any]]:
+        """Generate predictive alerts based on market analysis."""
+        alerts = []
+        
+        # Alert for high volatility
+        vol_regimes = self.get_volatility_regimes()
+        if vol_regimes.get('regime') == 'HIGH_VOLATILITY':
+            alerts.append({
+                'title': 'High Volatility Warning',
+                'value': 'Extreme market movement detected',
+                'description': 'Consider reducing position sizes or using tighter stops.',
+                'color': 'inverse'
+            })
+            
+        # Alert for trend reversal
+        regime_data = self.get_enhanced_market_regime()
+        if regime_data.get('regime') == 'UNCERTAIN':
+             alerts.append({
+                'title': 'Potential Trend Reversal',
+                'value': 'Market direction is unclear',
+                'description': 'A trending market may be losing momentum.',
+                'color': 'off'
+            })
+            
+        return alerts
 
     def get_latest_market_context(self, kite_client=None):
         """
