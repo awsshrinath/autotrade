@@ -19,7 +19,9 @@ class SystemHealthPage:
     
     def render(self):
         """Render the system health page"""
-        st.title("⚙️ System Health Monitor")
+        st.markdown('<h1 style="color: #6c757d; text-align: center; margin-bottom: 2rem;">⚙️ System Health Monitor</h1>', unsafe_allow_html=True)
+        st.markdown("**Real-time system monitoring and health status tracking**")
+        st.markdown('<hr style="height: 2px; background: linear-gradient(90deg, transparent, #6c757d, transparent); border: none; margin: 2rem 0;">', unsafe_allow_html=True)
         
         # Overall status
         self._render_overall_status()
@@ -63,10 +65,19 @@ class SystemHealthPage:
             status_color = "green" if status == 'healthy' else "orange" if status == 'degraded' else "red"
             
             st.markdown(f"""
-            <div style="text-align: center; padding: 1rem; border: 2px solid {status_color}; border-radius: 10px;">
-                <h2>{status_icon}</h2>
-                <h3 style="color: {status_color};">{str(status).upper()}</h3>
-                <p>System Status</p>
+            <div style="
+                text-align: center; 
+                padding: 1rem; 
+                border: 2px solid {status_color}; 
+                border-radius: 10px;
+                background-color: white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                color: #333333 !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            ">
+                <h2 style="margin: 0; font-size: 2rem;">{status_icon}</h2>
+                <h3 style="color: {status_color} !important; margin: 0.5rem 0; font-weight: 600;">{str(status).upper()}</h3>
+                <p style="color: #555555 !important; margin: 0; font-size: 0.9rem;">System Status</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -143,13 +154,13 @@ class SystemHealthPage:
                         for key, value in details.items():
                             if isinstance(value, (int, float)):
                                 if 'usage' in key.lower():
-                                    details_text += f"<br><small>{key.replace('_', ' ').title()}: {value:.1f}%</small>"
+                                    details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value:.1f}%</small>"
                                 elif 'time' in key.lower():
-                                    details_text += f"<br><small>{key.replace('_', ' ').title()}: {value:.0f}ms</small>"
+                                    details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value:.0f}ms</small>"
                                 else:
-                                    details_text += f"<br><small>{key.replace('_', ' ').title()}: {value}</small>"
+                                    details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value}</small>"
                             elif isinstance(value, str):
-                                details_text += f"<br><small>{key.replace('_', ' ').title()}: {value}</small>"
+                                details_text += f"<small style='color: #555555 !important; display: block; margin: 2px 0;'><strong style='color: #555555 !important;'>{key.replace('_', ' ').title()}:</strong> {value}</small>"
                     
                     st.markdown(f"""
                     <div style="
@@ -159,15 +170,20 @@ class SystemHealthPage:
                         border-left: 4px solid {status_color};
                         margin-bottom: 1rem;
                         min-height: 120px;
+                        color: #333333 !important;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     ">
-                        <h4 style="margin: 0 0 10px 0; color: {status_color};">
+                        <h4 style="margin: 0 0 10px 0; color: {status_color} !important; font-weight: 600; font-size: 1.1rem;">
                             {status_icon} {service.replace('_', ' ').title()}{critical_badge}
                         </h4>
-                        <p style="margin: 5px 0;"><strong>Status:</strong> 
-                           <span style="color: {status_color}; font-weight: bold;">{str(status).upper()}</span>
+                        <p style="margin: 5px 0; color: #333333 !important; font-size: 0.9rem;"><strong style="color: #333333 !important;">Status:</strong> 
+                           <span style="color: {status_color} !important; font-weight: bold;">{str(status).upper()}</span>
                         </p>
-                        <p style="margin: 5px 0;"><strong>Response:</strong> {response_time*1000:.0f}ms</p>
-                        {details_text}
+                        <p style="margin: 5px 0; color: #333333 !important; font-size: 0.9rem;"><strong style="color: #333333 !important;">Response:</strong> {response_time*1000:.0f}ms</p>
+                        <div style="color: #555555 !important; font-size: 0.85rem;">
+                            {details_text}
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
         else:

@@ -30,17 +30,21 @@ class CognitiveInsightsPage:
         # Show appropriate status message based on mode
         if hasattr(self.cognitive_data, 'mode'):
             if self.cognitive_data.mode == "hybrid":
-                st.success("✨ Cognitive system is currently in hybrid mode. AI insights available!")
+                st.success("✨ **Cognitive System Online** - Hybrid mode with real AI insights available!")
+                st.info("🧠 Using OpenAI for advanced AI analysis and market insights")
             elif self.cognitive_data.mode == "full":
-                st.success("🚀 Cognitive system is fully operational with GCP storage.")
-            elif not system_available:
+                st.success("🚀 **Cognitive System Online** - Fully operational with GCP storage.")
+                st.info("⚡ Complete cognitive system with persistent memory and AI processing")
+            else:
                 from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
                 if OPENAI_AVAILABLE:
-                    st.warning("⚠️ Cognitive system is currently offline but OpenAI is available. Showing AI-enhanced insights.")
+                    st.warning("⚠️ Cognitive system initializing. OpenAI available - enhanced insights loading...")
                 else:
-                    st.warning("⚠️ Cognitive system is currently offline. Showing limited insights.")
-        elif not system_available:
-            st.warning("⚠️ Cognitive system is currently offline. Showing limited insights.")
+                    st.warning("⚠️ Cognitive system offline. Limited mock insights available.")
+        elif system_available:
+            st.success("✅ **Cognitive System Online** - AI insights available!")
+        else:
+            st.warning("⚠️ Cognitive system offline. Limited insights available.")
         
         # Main layout with tabs
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -143,37 +147,68 @@ class CognitiveInsightsPage:
         # Recent activity summary
         st.subheader("📋 Recent Activity Summary")
         
-        if system_status.get('initialized', False):
-            st.success("✅ Cognitive system is operational and learning from trading activity")
-            
-            activity_data = [
-                {"Component": "Memory System", "Status": "Active", "Items": working_memory},
-                {"Component": "Thought Journal", "Status": "Recording", "Items": recent_thoughts},
-                {"Component": "Decision Analysis", "Status": "Learning", "Items": decisions_made},
-                {"Component": "Pattern Recognition", "Status": "Analyzing", "Items": "Ongoing"}
-            ]
-            
-            df = pd.DataFrame(activity_data)
-            st.dataframe(df, use_container_width=True, hide_index=True)
-        else:
-            # Check cognitive data provider mode for better status display
-            if hasattr(self.cognitive_data, 'mode'):
-                if self.cognitive_data.mode == "hybrid":
-                    st.success("🧠 **Cognitive System in Hybrid Mode**")
-                    st.info("✨ **Status**: Using OpenAI for real AI analysis without GCP storage. Full AI insights available!")
-                elif self.cognitive_data.mode == "full":
-                    st.success("✅ **Cognitive System Fully Online**") 
-                    st.info("🚀 **Status**: Full cognitive system with GCP storage and AI processing active.")
+        # Check cognitive data provider mode for better status display
+        if hasattr(self.cognitive_data, 'mode'):
+            if self.cognitive_data.mode == "hybrid":
+                st.success("🧠 **Cognitive System Online - Hybrid Mode**")
+                st.info("✨ **Status**: Using OpenAI for real AI analysis. All cognitive insights available!")
+                
+                activity_data = [
+                    {"Component": "OpenAI Processing", "Status": "Active", "Items": "Real AI Analysis"},
+                    {"Component": "Market Analysis", "Status": "Live", "Items": "Current Insights"},
+                    {"Component": "Decision Support", "Status": "Available", "Items": "AI-Powered"},
+                    {"Component": "Risk Assessment", "Status": "Active", "Items": "Real-time"}
+                ]
+                
+            elif self.cognitive_data.mode == "full":
+                st.success("✅ **Cognitive System Fully Online**") 
+                st.info("🚀 **Status**: Full cognitive system with GCP storage and AI processing active.")
+                
+                activity_data = [
+                    {"Component": "Memory System", "Status": "Active", "Items": working_memory},
+                    {"Component": "Thought Journal", "Status": "Recording", "Items": recent_thoughts},
+                    {"Component": "Decision Analysis", "Status": "Learning", "Items": decisions_made},
+                    {"Component": "Pattern Recognition", "Status": "Analyzing", "Items": "Ongoing"}
+                ]
+                
+            else:
+                st.warning("⚠️ **Cognitive System in Offline Mode**")
+                from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
+                if OPENAI_AVAILABLE:
+                    st.info("📝 **Status**: OpenAI available but system initializing. Please wait or check logs.")
                 else:
-                    st.warning("⚠️ **Cognitive System in Offline Mode**")
-                    from dashboard.data.cognitive_data_provider import OPENAI_AVAILABLE
-                    if OPENAI_AVAILABLE:
-                        st.info("📝 **Status**: OpenAI available but system initializing. Please wait or check logs.")
-                    else:
-                        st.info("📝 **Status**: Using mock data. OpenAI API key required for hybrid mode.")
+                    st.info("📝 **Status**: Using mock data. OpenAI API key required for hybrid mode.")
+                
+                activity_data = [
+                    {"Component": "Mock Data", "Status": "Active", "Items": "Sample Insights"},
+                    {"Component": "Simulated Analysis", "Status": "Running", "Items": "Test Data"},
+                    {"Component": "Demo Mode", "Status": "Available", "Items": "Limited"},
+                    {"Component": "API Configuration", "Status": "Required", "Items": "Pending"}
+                ]
+        else:
+            if system_status.get('initialized', False):
+                st.success("✅ Cognitive system is operational and learning from trading activity")
+                
+                activity_data = [
+                    {"Component": "Memory System", "Status": "Active", "Items": working_memory},
+                    {"Component": "Thought Journal", "Status": "Recording", "Items": recent_thoughts},
+                    {"Component": "Decision Analysis", "Status": "Learning", "Items": decisions_made},
+                    {"Component": "Pattern Recognition", "Status": "Analyzing", "Items": "Ongoing"}
+                ]
             else:
                 st.warning("⚠️ **Cognitive System Status Unknown**")
                 st.info("📝 **Status**: Unable to determine system state.")
+                
+                activity_data = [
+                    {"Component": "System Status", "Status": "Unknown", "Items": "Check logs"},
+                    {"Component": "Connection", "Status": "Pending", "Items": "Initializing"},
+                    {"Component": "API Access", "Status": "Unknown", "Items": "Verifying"},
+                    {"Component": "Mode Detection", "Status": "Failed", "Items": "Retry needed"}
+                ]
+        
+        # Display activity table
+        df = pd.DataFrame(activity_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
     
     def _render_sentiment_tab(self):
         """Render the market sentiment analysis tab"""

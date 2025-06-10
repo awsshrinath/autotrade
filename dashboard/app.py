@@ -134,6 +134,29 @@ class TradingDashboard:
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
+        
+        /* Ensure proper font visibility */
+        div[data-testid="stMarkdownContainer"] p {
+            color: #333333 !important;
+        }
+        
+        div[data-testid="stMarkdownContainer"] h1,
+        div[data-testid="stMarkdownContainer"] h2,
+        div[data-testid="stMarkdownContainer"] h3,
+        div[data-testid="stMarkdownContainer"] h4 {
+            color: inherit !important;
+        }
+        
+        /* System health card improvements */
+        .system-health-card {
+            background: white !important;
+            color: #333333 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+        }
+        
+        .system-health-card * {
+            color: inherit !important;
+        }
         </style>
         """, unsafe_allow_html=True)
     
@@ -187,7 +210,7 @@ class TradingDashboard:
         elif page == "🧠 Cognitive Insights":
             CognitiveInsightsPage(self.cognitive_data).render()
         elif page == "🛡️ Risk Monitor":
-            RiskMonitorPage(self.trade_data, self.system_data).render()
+            RiskMonitorPage(self.trade_data).render()
         elif page == "📈 Strategy Performance":
             StrategyPerformancePage(self.trade_data).render()
     

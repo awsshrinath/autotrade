@@ -227,7 +227,11 @@ def get_cognitive_status():
     """Get cached cognitive system status"""
     try:
         cognitive_data = CognitiveDataProvider()
-        return cognitive_data.get_cognitive_summary()
+        cognitive_summary = cognitive_data.get_cognitive_summary()
+        # Add mode information for better status display
+        if hasattr(cognitive_data, 'mode'):
+            cognitive_summary['mode'] = cognitive_data.mode
+        return cognitive_summary
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -282,7 +286,14 @@ def render_sidebar():
     
     # Cognitive status
     cognitive_status = get_cognitive_status()
-    if cognitive_status.get("system_status", {}).get("initialized", False):
+    cognitive_mode = cognitive_status.get("mode", "unknown")
+    cognitive_initialized = cognitive_status.get("system_status", {}).get("initialized", False)
+    
+    if cognitive_mode == "hybrid":
+        st.sidebar.markdown('<div class="connection-status status-healthy">🧠 Cognitive Online (AI)</div>', unsafe_allow_html=True)
+    elif cognitive_mode == "full":
+        st.sidebar.markdown('<div class="connection-status status-healthy">🧠 Cognitive Online (Full)</div>', unsafe_allow_html=True)
+    elif cognitive_initialized:
         st.sidebar.markdown('<div class="connection-status status-healthy">🧠 Cognitive Online</div>', unsafe_allow_html=True)
     else:
         st.sidebar.markdown('<div class="connection-status status-warning">🧠 Cognitive Offline</div>', unsafe_allow_html=True)
@@ -339,12 +350,27 @@ def render_overview_page():
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        cognitive_mode = cognitive_status.get("mode", "unknown")
         cognitive_initialized = cognitive_status.get("system_status", {}).get("initialized", False)
+        
+        if cognitive_mode == "hybrid":
+            cog_status = "AI Active"
+            cog_delta = "OpenAI Processing"
+        elif cognitive_mode == "full":
+            cog_status = "Full Online"
+            cog_delta = "GCP + AI Active"
+        elif cognitive_initialized:
+            cog_status = "Active"
+            cog_delta = "AI Analysis"
+        else:
+            cog_status = "Offline"
+            cog_delta = "Fallback mode"
+        
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric(
             label="🧠 Cognitive AI",
-            value="Active" if cognitive_initialized else "Offline",
-            delta="AI Analysis" if cognitive_initialized else "Fallback mode"
+            value=cog_status,
+            delta=cog_delta
         )
         st.markdown('</div>', unsafe_allow_html=True)
     
