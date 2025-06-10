@@ -71,7 +71,7 @@ ALERTS_WEBHOOK_URL = _trading_config.alerts_webhook_url
 TEST_MODE = False   # Set to True for testing
 
 # Offline Mode is now determined by the main config, not hardcoded.
-OFFLINE_MODE = _trading_config.get('offline_mode', False)
+OFFLINE_MODE = _trading_config.offline_mode
 
 def get_config_manager():
     """Get the configuration manager instance"""
