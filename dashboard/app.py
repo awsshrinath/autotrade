@@ -32,6 +32,7 @@ from dashboard.data.cognitive_data_provider import CognitiveDataProvider
 from dashboard.utils.auth import authenticate_user
 from dashboard.utils.config import DashboardConfig
 from dashboard.utils.notifications import NotificationManager
+from runner.market_monitor import MarketMonitor
 
 
 class TradingDashboard:
@@ -39,18 +40,28 @@ class TradingDashboard:
     
     def __init__(self):
         self.config = DashboardConfig()
+        
+        # These are lightweight and should be safe to initialize
         self.trade_data = TradeDataProvider()
         self.system_data = SystemDataProvider()
         self.cognitive_data = CognitiveDataProvider()
         self.notification_manager = NotificationManager()
         
+        # This will be initialized safely in its own method
+        self.market_monitor = None
+        
         self._initialize_data_providers()
         self._initialize_session_state()
         
-        self.risk_monitor_page = RiskMonitorPage(self.trade_data, self.market_monitor)
-        self.strategy_performance_page = StrategyPerformancePage(self.trade_data)
-        self.predictive_alerts = PredictiveAlerts(self.market_monitor)
-        
+    def _initialize_data_providers(self):
+        """
+        Safely initialize potentially problematic data providers.
+        """
+        try:
+            self.market_monitor = MarketMonitor()
+        except Exception as e:
+            st.toast(f"Market monitor is offline: {e}", icon="⚠️")
+
     def _initialize_session_state(self):
         """Initialize Streamlit session state variables"""
         if 'authenticated' not in st.session_state:
@@ -198,29 +209,52 @@ class TradingDashboard:
         # Header
         self._show_header()
         
-        # Add the predictive alerts component
-        self.predictive_alerts.render()
-        
-        # Sidebar
-        self._show_sidebar()
-        
         # Main content based on selected page
         page = st.session_state.get('selected_page', '🏠 Overview')
         
         if page == "🏠 Overview":
-            OverviewPage(self.trade_data, self.system_data).render()
+            try:
+                OverviewPage(self.trade_data, self.system_data).render()
+            except Exception as e:
+                st.error(f"Failed to load Overview page: {e}")
         elif page == "📊 Live Trades":
-            LiveTradesPage(self.trade_data).render()
+            try:
+                LiveTradesPage(self.trade_data).render()
+            except Exception as e:
+                st.error(f"Failed to load Live Trades page: {e}")
         elif page == "💰 P&L Analysis":
-            PnLAnalysisPage(self.trade_data).render()
+            try:
+                PnLAnalysisPage(self.trade_data).render()
+            except Exception as e:
+                st.error(f"Failed to load P&L Analysis page: {e}")
         elif page == "⚙️ System Health":
-            SystemHealthPage(self.system_data).render()
+            try:
+                SystemHealthPage(self.system_data).render()
+            except Exception as e:
+                st.error(f"Failed to load System Health page: {e}")
         elif page == "🧠 Cognitive Insights":
-            CognitiveInsightsPage(self.cognitive_data).render()
+            try:
+                CognitiveInsightsPage(self.cognitive_data).render()
+            except Exception as e:
+                st.error(f"Failed to load Cognitive Insights page: {e}")
         elif page == "🛡️ Risk Monitor":
-            self.risk_monitor_page.render()
+            if self.market_monitor:
+                try:
+                    risk_monitor_page = RiskMonitorPage(self.trade_data, self.market_monitor)
+                    risk_monitor_page.render()
+                except Exception as e:
+                    st.error(f"Failed to load Risk Monitor page: {e}")
+            else:
+                st.warning("Risk Monitor is unavailable because the Market Monitor is offline.")
         elif page == "📈 Strategy Performance":
-            self.strategy_performance_page.render()
+            try:
+                strategy_performance_page = StrategyPerformancePage(self.trade_data)
+                strategy_performance_page.render()
+            except Exception as e:
+                st.error(f"Failed to load Strategy Performance page: {e}")
+        
+        # Sidebar
+        self._show_sidebar()
     
     def _show_header(self):
         """Show dashboard header with key metrics"""
@@ -326,6 +360,14 @@ class TradingDashboard:
                 portfolio_value_display,
                 portfolio_change_display
             )
+        
+        # Add the predictive alerts component
+        if self.market_monitor:
+            try:
+                predictive_alerts = PredictiveAlerts(self.market_monitor)
+                predictive_alerts.render()
+            except Exception as e:
+                st.info(f"Predictive alerts unavailable: {e}")
     
     def _show_sidebar(self):
         """Show sidebar with navigation and controls"""
