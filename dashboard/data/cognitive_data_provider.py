@@ -87,44 +87,53 @@ class CognitiveDataProvider:
         self.logger = logging.getLogger(__name__)
         self.offline_mode = OFFLINE_MODE
         
-        # Determine mode based on available capabilities
-        self.production_manager = None
-        self.cognitive_system = None
+        # Defer initialization of production_manager
+        self._production_manager = None
+        self._cognitive_system = None
         
-        # Try to initialize cognitive system with GCP (full mode)
-        if not self.offline_mode and COGNITIVE_AVAILABLE:
+        # Determine mode based on available capabilities
+        self.mode = self._determine_mode()
+    
+    @property
+    def production_manager(self):
+        """Lazy-loaded production manager"""
+        if self._production_manager is None and not self.offline_mode and COGNITIVE_AVAILABLE:
             try:
                 from runner.production_manager import ProductionManager
-                self.production_manager = ProductionManager()
-                self.cognitive_system = self.production_manager.cognitive_system
-                
-                # Test if cognitive system is actually available (not just initialized)
-                if hasattr(self.cognitive_system, 'available') and self.cognitive_system.available:
-                    self.mode = "full"
-                    self.logger.info("✅ Full Cognitive Mode: Connected to GCP cognitive system with AI processing")
-                else:
-                    raise Exception("Cognitive system initialized but not available")
-                    
+                self._production_manager = ProductionManager()
             except Exception as e:
-                self.logger.warning(f"⚠️ GCP cognitive system unavailable: {e}")
-                self.production_manager = None
-                self.cognitive_system = None
-                
-                # Fall back to hybrid mode if OpenAI is available
-                if OPENAI_AVAILABLE and openai_client:
-                    self.mode = "hybrid"
-                    self.logger.info(f"🧠 Hybrid Mode: Using OpenAI for AI processing (API key from {API_KEY_SOURCE})")
-                else:
-                    self.mode = "unavailable"
-                    self.logger.info(f"❌ Cognitive Services Unavailable: OpenAI API key {API_KEY_SOURCE}")
-        else:
-            # Choose between hybrid and unavailable based on OpenAI availability
-            if OPENAI_AVAILABLE and openai_client and not self.offline_mode:
-                self.mode = "hybrid"
-                self.logger.info(f"🧠 Hybrid Mode: Using OpenAI for AI processing (API key from {API_KEY_SOURCE})")
-            else:
-                self.mode = "unavailable"
-                self.logger.info(f"❌ Cognitive Services Unavailable: OpenAI API key {API_KEY_SOURCE}")
+                self.logger.warning(f"Failed to initialize ProductionManager on demand: {e}")
+                self._production_manager = None  # Explicitly set to None on failure
+        return self._production_manager
+    
+    @property
+    def cognitive_system(self):
+        """Lazy-loaded cognitive system"""
+        if self._cognitive_system is None and self.production_manager:
+            self._cognitive_system = self.production_manager.cognitive_system
+        return self._cognitive_system
+
+    def _determine_mode(self):
+        """Determine operating mode based on available components"""
+        # Try to initialize cognitive system with GCP (full mode)
+        if not self.offline_mode and COGNITIVE_AVAILABLE:
+            # Check availability without full initialization
+            try:
+                from runner.production_manager import ProductionManager # Quick check
+                # A more lightweight check should be implemented in ProductionManager
+                # For now, we assume if the import works, we can attempt full mode.
+                self.logger.info("✅ Full Cognitive Mode available (GCP + AI)")
+                return "full"
+            except Exception:
+                pass # Fallback to hybrid
+
+        # Fall back to hybrid mode if OpenAI is available
+        if OPENAI_AVAILABLE and openai_client and not self.offline_mode:
+            self.logger.info(f"🧠 Hybrid Mode: Using OpenAI for AI processing (API key from {API_KEY_SOURCE})")
+            return "hybrid"
+        
+        self.logger.info(f"❌ Cognitive Services Unavailable: OpenAI API key {API_KEY_SOURCE}")
+        return "unavailable"
     
     def _query_openai(self, prompt: str, system_prompt: str = None) -> str:
         """Query OpenAI directly for AI insights"""
