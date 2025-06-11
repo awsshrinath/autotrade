@@ -102,7 +102,7 @@ def render_overview_page(get_system_data, get_cognitive_data, get_trade_data):
     # --- Quick Actions (Placeholder) ---
     st.markdown("### Quick Actions")
     st.markdown("<hr/>", unsafe_allow_html=True)
-    with st.container(border=True):
+    with st.container():
         st.markdown("Quick actions will be implemented next.")
 
 

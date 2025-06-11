@@ -45,5 +45,5 @@ else:
 
 # --- Future Feature: Thought Explorer ---
 st.subheader("Thought Explorer")
-with st.container(border=True):
+with st.container():
     st.info("A more advanced thought explorer with search and filtering will be implemented here.")

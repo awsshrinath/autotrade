@@ -51,11 +51,11 @@ else:
 st.subheader("Portfolio Risk Analysis")
 col1, col2 = st.columns(2)
 with col1:
-    with st.container(border=True):
+    with st.container():
         st.markdown("<h6>Correlation Matrix</h6>", unsafe_allow_html=True)
         st.info("Correlation matrix will be displayed here.")
 
 with col2:
-    with st.container(border=True):
+    with st.container():
         st.markdown("<h6>Concentration Risk</h6>", unsafe_allow_html=True)
         st.info("Concentration risk analysis will be displayed here.")

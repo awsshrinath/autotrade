@@ -56,4 +56,7 @@ class CognitiveDataProvider:
         return []
 
     def get_performance_insights(self) -> Dict[str, Any]:
-        return {'status': 'unavailable', 'message': 'Handled by backend.'} 
+        return {'status': 'unavailable', 'message': 'Handled by backend.'}
+
+    def get_recent_thoughts(self, limit: int = 50):
+        return self._get(f"cognitive/thoughts/recent?limit={limit}") 

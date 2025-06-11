@@ -42,6 +42,9 @@ class SystemDataProvider:
         """Get current system resource metrics from the backend."""
         return self._get("/api/system/metrics")
 
+    def get_recent_system_logs(self, limit: int = 100):
+        return self._get(f"system/logs/recent?limit={limit}")
+
     # The methods below are now either fetched from the backend or are no longer the
     # responsibility of the frontend data provider. They can be removed or adapted.
     # For now, we'll provide default/mock data to avoid breaking the UI.
