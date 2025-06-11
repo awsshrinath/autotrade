@@ -1,4 +1,4 @@
-# Deployment Guide: Tron Dashboard (Backend + Frontend)
+g# Deployment Guide: Tron Dashboard (Backend + Frontend)
 
 This guide provides the instructions to run the re-architected Tron Dashboard, which consists of two main components:
 1.  **FastAPI Backend:** Handles all data processing and external connections.
