@@ -116,9 +116,6 @@ jobs:
           docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
           docker push $IMAGE_PREFIX/futures-trader:latest
 
-          docker build -f dashboard/Dockerfile -t $IMAGE_PREFIX/trading-dashboard:latest .
-          docker push $IMAGE_PREFIX/trading-dashboard:latest
-
   setup-gcp-service-account:
     name: 🔐 Setup GCP Service Account & Workload Identity
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
