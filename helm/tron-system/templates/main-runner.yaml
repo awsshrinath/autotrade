@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mainRunner.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.mainRunner.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mainRunner.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ .Values.mainRunner.name }}
+          image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.mainRunner.image.tag }}"
+          resources:
+            {{- toYaml .Values.mainRunner.resources | nindent 12 }}
+          env:
+            {{- range $key, $val := .Values.mainRunner.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }} 

@@ -13,7 +13,7 @@ permissions:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: ${{ secrets.GCP_REGION }}
-  IMAGE_PREFIX: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gpt-repo
+  IMAGE_PREFIX: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tron-system
 
 jobs:
   test-and-build:
@@ -81,11 +81,18 @@ jobs:
         # Always build on push, only build on dispatch if images don't exist
         if: github.event_name == 'push' || (github.event_name == 'repository_dispatch' && steps.check_images.outputs.images_exist == 'false')
         run: |
-          docker build -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
-          docker build -t $IMAGE_PREFIX/gpt-runner:v1748245661 --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
-          docker push $IMAGE_PREFIX/gpt-runner:latest
-          docker push $IMAGE_PREFIX/gpt-runner:v1748245661
+          # Build and push the backend image
+          docker build -f dashboard_api/Dockerfile -t $IMAGE_PREFIX/tron-backend:latest ./dashboard_api
+          docker push $IMAGE_PREFIX/tron-backend:latest
 
+          # Build and push the frontend image
+          docker build -f frontend/Dockerfile -t $IMAGE_PREFIX/tron-frontend:latest ./frontend
+          docker push $IMAGE_PREFIX/tron-frontend:latest
+
+          # Keep other runners if they are still needed, otherwise remove
+          docker build -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
+          docker push $IMAGE_PREFIX/gpt-runner:latest
+          
           docker build -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_trading/stock_runner.py .
           docker push $IMAGE_PREFIX/stock-trader:latest
 
@@ -456,7 +463,7 @@ jobs:
     name: 🚀 Deploy to GKE
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
-    needs: [test-and-build, setup-gcp-service-account, setup-gcs-buckets]  # Restore all original dependencies
+    needs: [test-and-build, setup-gcp-service-account, setup-gcs-buckets]
 
     steps:
       - name: 📥 Checkout repository
@@ -467,103 +474,23 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: 🔎 Check if GKE Cluster Exists
-        id: check_cluster
+      - name: 🪢 Get GKE Credentials
         run: |
-          echo "Checking for cluster: ${{ secrets.GKE_CLUSTER_NAME }}"
-          if gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-            --region ${{ secrets.GKE_REGION }} \
-            --project ${{ secrets.GCP_PROJECT_ID }} --quiet; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Cluster found"
-          else
-            echo "❌ Cluster not found"
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: ⏳ Wait for cluster to be ready (repository_dispatch only)
-        if: github.event_name == 'repository_dispatch' && steps.check_cluster.outputs.exists == 'true'
-        run: |
-          echo "Waiting for cluster to be fully ready..."
-          sleep 60  # Give the cluster time to be fully ready
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
           
-          # Wait for cluster to be in RUNNING state
-          timeout 300 bash -c '
-            while true; do
-              STATUS=$(gcloud container clusters describe ${{ secrets.GKE_CLUSTER_NAME }} \
-                --region ${{ secrets.GKE_REGION }} \
-                --project ${{ secrets.GCP_PROJECT_ID }} \
-                --format="value(status)")
-              echo "Cluster status: $STATUS"
-              if [ "$STATUS" = "RUNNING" ]; then
-                echo "✅ Cluster is ready"
-                break
-              fi
-              echo "⏳ Waiting for cluster to be ready..."
-              sleep 10
-            done
-          '
-
-      - name: ⚙️ Get GKE Credentials
-        if: steps.check_cluster.outputs.exists == 'true'
-        uses: google-github-actions/get-gke-credentials@v1
+      - name: ⚙️ Install Helm
+        uses: azure/setup-helm@v3
         with:
-          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
-          location: ${{ secrets.GKE_REGION  }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          version: 'v3.9.0' # Specify a stable version
 
-      - name: 🏗️ Create GPT Namespace
-        if: steps.check_cluster.outputs.exists == 'true'
+      - name: 🚀 Deploy with Helm
         run: |
-          echo "Creating namespace..."
-          kubectl apply -f deployments/namespace.yaml
-          
-          # Wait for namespace to be ready
-          kubectl wait --for=condition=Ready namespace/gpt --timeout=60s || true
-
-      - name: 🔐 Apply Service Account and RBAC First
-        if: steps.check_cluster.outputs.exists == 'true'
-        run: |
-          echo "🔐 Creating Kubernetes service account and RBAC..."
-          kubectl apply -f deployments/service-account.yaml
-          
-          echo "⏳ Waiting for service account to be ready..."
-          kubectl wait --for=condition=Ready serviceaccount/gpt-runner-sa -n gpt --timeout=60s || true
-          
-          echo "✅ Service account and RBAC configured"
-
-      - name: 📦 Apply Remaining Kubernetes Manifests
-        if: steps.check_cluster.outputs.exists == 'true'
-        run: |
-          echo "📦 Applying remaining Kubernetes manifests..."
-          
-          # Apply all manifests except service-account.yaml (already applied)
-          kubectl apply -f deployments/main.yaml
-          kubectl apply -f deployments/stock-trader.yaml
-          kubectl apply -f deployments/options-trader.yaml
-          kubectl apply -f deployments/futures-trader.yaml
-          kubectl apply -f deployments/dashboard.yaml
-          
-          echo "⏳ Waiting for main-runner deployment to be ready..."
-          kubectl rollout status deployment main-runner -n gpt --timeout=300s
-
-      - name: 🔄 Restart All Deployments (force pod recreation)
-        if: steps.check_cluster.outputs.exists == 'true'
-        run: |
-          echo "🔄 Restarting all deployments to ensure latest images..."
-          kubectl rollout restart deployment stock-trader -n gpt || true
-          kubectl rollout restart deployment options-trader -n gpt || true
-          kubectl rollout restart deployment futures-trader -n gpt || true
-          kubectl rollout restart deployment main-runner -n gpt || true
-          kubectl rollout restart deployment trading-dashboard -n gpt || true
-          
-          echo "⏳ Waiting for all deployments to be ready..."
-          kubectl rollout status deployment stock-trader -n gpt --timeout=300s || true
-          kubectl rollout status deployment options-trader -n gpt --timeout=300s || true
-          kubectl rollout status deployment futures-trader -n gpt --timeout=300s || true
-          kubectl rollout status deployment main-runner -n gpt --timeout=300s || true
-          kubectl rollout status deployment trading-dashboard -n gpt --timeout=300s || true
-
+          helm upgrade --install tron-system ./helm/tron-system \
+            --namespace tron-system \
+            --create-namespace \
+            --set backend.image.tag=${{ github.sha }} \
+            --set frontend.image.tag=${{ github.sha }}
+            
       - name: 🔎 Verify Final Deployment Status
         if: steps.check_cluster.outputs.exists == 'true'
         run: |

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.stockTrader.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.stockTrader.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.stockTrader.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ .Values.stockTrader.name }}
+          image: "{{ .Values.stockTrader.image.repository }}:{{ .Values.stockTrader.image.tag }}"
+          resources:
+            {{- toYaml .Values.stockTrader.resources | nindent 12 }}
+          env:
+            {{- range $key, $val := .Values.stockTrader.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }} 

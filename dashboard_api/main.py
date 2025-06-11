@@ -12,10 +12,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS Middleware to allow requests from the Streamlit frontend
+# CORS Middleware to allow requests from the Next.js frontend
+origins = [
+    "http://localhost:3000",  # Default Next.js port
+    "http://localhost:3001",  # Common alternative Next.js port
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,0 +1,106 @@
+# Default values for tron-system.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+backend:
+  name: tron-backend
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+
+frontend:
+  name: tron-frontend
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 80
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+
+namespace: tron-system
+serviceAccountName: gpt-runner-sa
+
+mainRunner:
+  name: main-runner
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner
+    tag: latest
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "runner/main_runner_lightweight.py"
+
+stockTrader:
+  name: stock-trader
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/stock-trader
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "stock_trading/stock_runner.py"
+
+optionsTrader:
+  name: options-trader
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "options_trading/options_runner.py"
+
+futuresTrader:
+  name: futures-trader
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/futures-trader
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "futures_trading/futures_runner.py" 

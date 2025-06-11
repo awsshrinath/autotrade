@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tron-frontend-deployment
+  namespace: tron-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tron-frontend
+  template:
+    metadata:
+      labels:
+        app: tron-frontend
+    spec:
+      containers:
+        - name: tron-frontend
+          image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tron-frontend-service
+  namespace: tron-system
+spec:
+  selector:
+    app: tron-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer 
