@@ -105,9 +105,17 @@ class TradeDataProvider:
             portfolio_value = 100000  # Default
             if self.portfolio_manager:
                 try:
-                    capital_data = asyncio.run(self.portfolio_manager.get_real_time_capital())
+                    # Use the running event loop to avoid RuntimeError in Streamlit
+                    try:
+                        loop = asyncio.get_running_loop()
+                    except RuntimeError:  # 'get_running_loop' fails in a new thread
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                    
+                    capital_data = loop.run_until_complete(self.portfolio_manager.get_real_time_capital())
                     portfolio_value = capital_data.total_capital
-                except:
+                except Exception as e:
+                    self.logger.log_event(f"Could not fetch real-time capital: {e}")
                     pass
             
             return {
