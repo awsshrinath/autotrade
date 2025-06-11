@@ -75,7 +75,13 @@ class SystemDataProvider:
         try:
             if self.production_manager:
                 # Get comprehensive health check
-                health_data = asyncio.run(self.production_manager.comprehensive_health_check())
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:  # 'get_running_loop' fails in a new thread
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                health_data = loop.run_until_complete(self.production_manager.comprehensive_health_check())
                 
                 # Ensure overall_status is a string, not enum object
                 overall_status = health_data.get('overall_status', 'unknown')
@@ -112,7 +118,13 @@ class SystemDataProvider:
         """Get detailed health check results"""
         try:
             if self.production_manager:
-                health_data = asyncio.run(self.production_manager.comprehensive_health_check())
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                health_data = loop.run_until_complete(self.production_manager.comprehensive_health_check())
                 checks = health_data.get('checks', [])
                 
                 # Clean up enum objects and format for display
