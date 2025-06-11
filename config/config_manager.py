@@ -19,6 +19,7 @@ class TradingConfig:
     # Environment settings
     environment: str = "development"
     paper_trade: bool = True
+    offline_mode: bool = False
 
     # Capital settings
     default_capital: float = 100000

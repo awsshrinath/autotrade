@@ -44,6 +44,9 @@ alerts_email_enabled: false
 alerts_slack_enabled: false
 alerts_webhook_url: ""
 
+# Offline mode
+offline_mode: false
+
 # Technical Indicators Settings
 technical_indicators:
   rsi_period: 14
