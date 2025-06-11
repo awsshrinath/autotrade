@@ -95,26 +95,29 @@ jobs:
         # Always build on push, only build on dispatch if images don't exist
         if: github.event_name == 'push' || (github.event_name == 'repository_dispatch' && steps.check_images.outputs.images_exist == 'false')
         run: |
+          # Use the full commit SHA for a unique, immutable tag
+          TAG=${{ github.sha }}
+
           # Build and push the backend image
-          docker build -f dashboard_api/Dockerfile -t $IMAGE_PREFIX/tron-backend:latest ./dashboard_api
-          docker push $IMAGE_PREFIX/tron-backend:latest
+          docker build -f dashboard_api/Dockerfile -t $IMAGE_PREFIX/tron-backend:$TAG -t $IMAGE_PREFIX/tron-backend:latest ./dashboard_api
+          docker push --all-tags $IMAGE_PREFIX/tron-backend
 
           # Build and push the frontend image
-          docker build -f frontend/Dockerfile -t $IMAGE_PREFIX/tron-frontend:latest ./frontend
-          docker push $IMAGE_PREFIX/tron-frontend:latest
+          docker build -f frontend/Dockerfile -t $IMAGE_PREFIX/tron-frontend:$TAG -t $IMAGE_PREFIX/tron-frontend:latest ./frontend
+          docker push --all-tags $IMAGE_PREFIX/tron-frontend
 
-          # Keep other runners if they are still needed, otherwise remove
-          docker build -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
-          docker push $IMAGE_PREFIX/gpt-runner:latest
+          # Build and push the runner images
+          docker build -t $IMAGE_PREFIX/gpt-runner:$TAG -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
+          docker push --all-tags $IMAGE_PREFIX/gpt-runner
           
-          docker build -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_trading/stock_runner.py .
-          docker push $IMAGE_PREFIX/stock-trader:latest
+          docker build -t $IMAGE_PREFIX/stock-trader:$TAG -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_trading/stock_runner.py .
+          docker push --all-tags $IMAGE_PREFIX/stock-trader
 
-          docker build -t $IMAGE_PREFIX/options-trader:latest --build-arg RUNNER_SCRIPT=options_trading/options_runner.py .
-          docker push $IMAGE_PREFIX/options-trader:latest
+          docker build -t $IMAGE_PREFIX/options-trader:$TAG -t $IMAGE_PREFIX/options-trader:latest --build-arg RUNNER_SCRIPT=options_trading/options_runner.py .
+          docker push --all-tags $IMAGE_PREFIX/options-trader
 
-          docker build -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
-          docker push $IMAGE_PREFIX/futures-trader:latest
+          docker build -t $IMAGE_PREFIX/futures-trader:$TAG -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
+          docker push --all-tags $IMAGE_PREFIX/futures-trader
 
   setup-gcp-service-account:
     name: 🔐 Setup GCP Service Account & Workload Identity
@@ -472,7 +475,7 @@ jobs:
 
   deploy-to-prod:
     name: 🚀 Deploy to GKE
-    if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
+    if: github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
     needs: [test-and-build, setup-gcp-service-account, setup-gcs-buckets]
 
@@ -484,40 +487,33 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: 🪢 Get GKE Credentials
+      
+      - name: 🏗️ Get GKE Credentials
         run: |
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
           
-      - name: ⚙️ Install Helm
+      - name: 📦 Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'v3.9.0' # Specify a stable version
-
+          version: 'v3.9.4'
+          
       - name: 🚀 Deploy with Helm
         run: |
           helm upgrade --install tron-system ./helm/tron-system \
-            --namespace tron-system \
-            --create-namespace \
+            --namespace tron-system --create-namespace \
+            --set frontend.image.tag=${{ github.sha }} \
             --set backend.image.tag=${{ github.sha }} \
-            --set frontend.image.tag=${{ github.sha }}
-            
-      - name: 🔎 Verify Final Deployment Status
-        if: steps.check_cluster.outputs.exists == 'true'
+            --set mainRunner.image.tag=${{ github.sha }} \
+            --set stockTrader.image.tag=${{ github.sha }} \
+            --set optionsTrader.image.tag=${{ github.sha }} \
+            --set futuresTrader.image.tag=${{ github.sha }} \
+            --set serviceAccountName=gpt-runner-sa \
+            --set namespace=tron-system \
+            --wait
+
+      - name: ✅ Verify Deployment
         run: |
-          echo "🔍 Final deployment verification..."
-          echo "=================================="
-          
-          echo "📊 Deployment Status:"
-          kubectl get deployments -n gpt -o wide
-          
-          echo ""
-          echo "📊 Pod Status:"
-          kubectl get pods -n gpt -o wide
-          
-          echo ""
-          echo "🔐 Service Account Status:"
-          kubectl get serviceaccount gpt-runner-sa -n gpt -o yaml
-          
+          echo "✅ Deployment verification..."
+          kubectl get all -n tron-system
           echo ""
           echo "✅ Deployment completed successfully!"
