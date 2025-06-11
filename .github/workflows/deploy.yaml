@@ -66,6 +66,20 @@ jobs:
       - name: 🐳 Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
+      - name: 🖼️ Setup Artifact Registry Repository
+        run: |
+          if gcloud artifacts repositories describe tron-system --location=${{ env.REGION }} --project=${{ env.PROJECT_ID }} &>/dev/null; then
+            echo "✅ Repository tron-system already exists."
+          else
+            echo "🔨 Creating repository tron-system..."
+            gcloud artifacts repositories create tron-system \
+              --repository-format=docker \
+              --location=${{ env.REGION }} \
+              --description="Docker repository for Tron system components" \
+              --project=${{ env.PROJECT_ID }}
+            echo "✅ Repository created."
+          fi
+
       - name: 🔍 Check if images exist (for repository_dispatch)
         if: github.event_name == 'repository_dispatch'
         id: check_images
