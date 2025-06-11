@@ -1,6 +1,9 @@
 # Stage 1: Build the Next.js application
 FROM node:18-alpine AS builder
 
+# Install build dependencies required by native packages like 'sharp'
+RUN apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev
+
 # Set working directory
 WORKDIR /app
 
