@@ -11,6 +11,101 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 
+def render_overview_page(get_system_data, get_cognitive_data, get_trade_data):
+    """
+    Renders the main overview page with the new card-based design.
+    """
+    
+    # --- Load Data ---
+    system_data = get_system_data()
+    cognitive_data = get_cognitive_data()
+    trade_data = get_trade_data()
+
+    # --- Header Cards ---
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        with st.container(border=True):
+            st.markdown("<h6>System Status</h6>", unsafe_allow_html=True)
+            status = system_data.get('health', {}).get('status', 'Unknown').capitalize()
+            st.markdown(f"## {status}")
+            # Add sub-details later
+
+    with col2:
+        with st.container(border=True):
+            st.markdown("<h6>Cognitive AI Status</h6>", unsafe_allow_html=True)
+            mode = cognitive_data.get('system_status', {}).get('mode', 'Unknown').capitalize()
+            st.markdown(f"## {mode}")
+            # Add sub-details later
+
+    with col3:
+        with st.container(border=True):
+            st.markdown("<h6>System Health</h6>", unsafe_allow_html=True)
+            health = system_data.get('health', {})
+            status = health.get('status', 'Unknown').capitalize()
+            st.markdown(f"## {status}")
+            # Add sub-details later
+
+    # --- Metric Cards ---
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        with st.container(border=True):
+            st.markdown("<h6>AI Thoughts</h6>", unsafe_allow_html=True)
+            thoughts = cognitive_data.get('thought_summary', {}).get('total_thoughts', 0)
+            st.markdown(f"## {thoughts}")
+            
+    with col2:
+        with st.container(border=True):
+            st.markdown("<h6>AI Memories</h6>", unsafe_allow_html=True)
+            memories = cognitive_data.get('memory_summary', {}).get('total_memories', 0)
+            st.markdown(f"## {memories}")
+
+    with col3:
+        with st.container(border=True):
+            st.markdown("<h6>System Uptime</h6>", unsafe_allow_html=True)
+            uptime = system_data.get('health', {}).get('uptime_hours', 0)
+            st.markdown(f"## {uptime:.2f} hrs")
+            
+    with col4:
+        with st.container(border=True):
+            st.markdown("<h6>Processing Speed</h6>", unsafe_allow_html=True)
+            speed = system_data.get('metrics', {}).get('api_response_time_ms', 247) # Mock
+            st.markdown(f"## {speed} ms")
+
+
+    st.markdown("### Analytics Hub Overview")
+    st.markdown("<hr/>", unsafe_allow_html=True)
+
+    # --- Analytics Hub Cards ---
+    col1, col2, col3 = st.columns(3)
+    summary = trade_data.get('summary', {})
+
+    with col1:
+        with st.container(border=True):
+            st.markdown("<h6>Daily P&L</h6>", unsafe_allow_html=True)
+            pnl = summary.get('total_pnl', 0)
+            st.markdown(f"## ${pnl:,.2f}")
+
+    with col2:
+        with st.container(border=True):
+            st.markdown("<h6>Win Rate</h6>", unsafe_allow_html=True)
+            win_rate = summary.get('win_rate', 0)
+            st.markdown(f"## {win_rate:.1f}%")
+
+    with col3:
+        with st.container(border=True):
+            st.markdown("<h6>Max Drawdown</h6>", unsafe_allow_html=True)
+            drawdown = summary.get('max_drawdown', 3241) # Mock
+            st.markdown(f"## ${drawdown:,.2f}")
+            
+    # --- Quick Actions (Placeholder) ---
+    st.markdown("### Quick Actions")
+    st.markdown("<hr/>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("Quick actions will be implemented next.")
+
+
 class OverviewPage:
     """Overview page component for the trading dashboard"""
     

@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+
+# Add other core dependencies from the main project as needed
+# For now, we keep it minimal.
+psutil
+google-cloud-firestore 

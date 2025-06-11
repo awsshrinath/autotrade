@@ -1,488 +1,67 @@
 """
 System Data Provider
-Provides system health and monitoring data for the dashboard
+Provides system health and monitoring data for the dashboard by fetching it from the new FastAPI backend.
 """
-
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-import psutil
-import os
-
-# Import existing system components
-from runner.production.deployment_manager import ProductionManager
-from runner.logger import Logger
-
+import requests
+from datetime import datetime
+from typing import Dict, Any, List
 
 class SystemDataProvider:
-    """Provides system health and monitoring data for dashboard components"""
+    """
+    Provides system health data by making requests to the Tron Dashboard API backend.
+    """
     
-    def __init__(self):
-        self.logger = Logger(datetime.now().strftime("%Y-%m-%d"))
-        
-        # Initialize production manager for health checks
+    def __init__(self, api_base_url: str = "http://localhost:8000"):
+        self.api_base_url = api_base_url
+
+    def _get(self, endpoint: str) -> Dict[str, Any]:
+        """Helper function to make a GET request to the backend."""
         try:
-            self.production_manager = ProductionManager(logger=self.logger)
-        except Exception as e:
-            self.logger.log_event(f"Failed to initialize production manager: {e}")
-            self.production_manager = None
-    
+            response = requests.get(f"{self.api_base_url}{endpoint}", timeout=10)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            # Return a structured error that the UI can understand
+            return {'status': 'error', 'message': f"API connection error: {e}"}
+
     def get_system_health(self) -> Dict[str, Any]:
-        """Get overall system health summary"""
-        try:
-            # Get basic status
-            status_data = self.get_system_status()
-            
-            # Get health checks
-            health_checks = self.get_health_checks()
-            
-            # Count health check statuses
-            healthy_count = sum(1 for check in health_checks if check.get('status') == 'healthy')
-            degraded_count = sum(1 for check in health_checks if check.get('status') == 'degraded')
-            critical_count = sum(1 for check in health_checks if check.get('status') in ['critical', 'unhealthy'])
-            
-            # Determine overall health
-            if critical_count > 0:
-                overall_health = "critical"
-            elif degraded_count > 0:
-                overall_health = "degraded" 
-            elif healthy_count > 0:
-                overall_health = "healthy"
-            else:
-                overall_health = "unknown"
-            
-            return {
-                'status': overall_health,
-                'overall_status': status_data.get('overall_status', 'unknown'),
-                'uptime_hours': status_data.get('uptime_hours', 0),
-                'healthy_services': healthy_count,
-                'degraded_services': degraded_count,
-                'critical_services': critical_count,
-                'total_services': len(health_checks),
-                'last_check': datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            self.logger.log_event(f"Error getting system health: {e}")
-            return {
-                'status': 'error',
-                'message': str(e),
-                'last_check': datetime.now().isoformat()
-            }
+        """Get overall system health summary from the backend."""
+        return self._get("/api/system/health")
 
     def get_system_status(self) -> Dict[str, Any]:
-        """Get overall system status"""
-        try:
-            if self.production_manager:
-                # Get comprehensive health check
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:  # 'get_running_loop' fails in a new thread
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
-                health_data = loop.run_until_complete(self.production_manager.comprehensive_health_check())
-                
-                # Ensure overall_status is a string, not enum object
-                overall_status = health_data.get('overall_status', 'unknown')
-                overall_status = str(overall_status)
-                
-                return {
-                    'overall_status': overall_status,
-                    'uptime_hours': self._get_uptime_hours(),
-                    'last_check_time': health_data.get('timestamp', datetime.now().isoformat()),
-                    'critical_failures': health_data.get('critical_failures', 0),
-                    'system_ready': health_data.get('system_ready', False)
-                }
-            else:
-                # Fallback status
-                return {
-                    'overall_status': 'degraded',
-                    'uptime_hours': self._get_uptime_hours(),
-                    'last_check_time': datetime.now().isoformat(),
-                    'critical_failures': 0,
-                    'system_ready': True
-                }
-                
-        except Exception as e:
-            self.logger.log_event(f"Error getting system status: {e}")
-            return {
-                'overall_status': 'unknown',
-                'uptime_hours': 0,
-                'last_check_time': datetime.now().isoformat(),
-                'critical_failures': 1,
-                'system_ready': False
-            }
-    
+        """Get detailed system status from the backend."""
+        return self._get("/api/system/status")
+
     def get_health_checks(self) -> List[Dict[str, Any]]:
-        """Get detailed health check results"""
-        try:
-            if self.production_manager:
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
-                health_data = loop.run_until_complete(self.production_manager.comprehensive_health_check())
-                checks = health_data.get('checks', [])
-                
-                # Clean up enum objects and format for display
-                formatted_checks = []
-                for check in checks:
-                    formatted_check = dict(check)
-                    
-                    # Convert HealthStatus enum to string
-                    if 'status' in formatted_check:
-                        status = formatted_check['status']
-                        if hasattr(status, 'value'):
-                            formatted_check['status'] = status.value
-                        else:
-                            formatted_check['status'] = str(status).replace('HealthStatus.', '').lower()
-                    
-                    # Clean up service names for display
-                    service_name = formatted_check.get('service', 'Unknown')
-                    formatted_check['service'] = service_name.replace('_', ' ').title()
-                    
-                    # Ensure response_time is a number
-                    if 'response_time' in formatted_check:
-                        formatted_check['response_time'] = float(formatted_check.get('response_time', 0))
-                    
-                    formatted_checks.append(formatted_check)
-                
-                return formatted_checks
-            else:
-                # Return mock health checks with proper formatting
-                return self._get_mock_health_checks()
-                
-        except Exception as e:
-            self.logger.log_event(f"Error getting health checks: {e}")
-            # Return error status for display
-            return [{
-                'service': 'System Health',
-                'status': 'critical',
-                'response_time': 999,
-                'timestamp': datetime.now().isoformat(),
-                'details': {'error': str(e)},
-                'is_critical': True
-            }]
-    
+        """Get detailed health check results from the backend."""
+        # Assuming the backend's /status endpoint returns a 'checks' list
+        status_data = self._get("/api/system/status")
+        return status_data.get('checks', [])
+
     def get_system_metrics(self) -> Dict[str, Any]:
-        """Get current system resource metrics"""
-        try:
-            # Get CPU usage
-            cpu_usage = psutil.cpu_percent(interval=1)
-            
-            # Get memory usage
-            memory = psutil.virtual_memory()
-            memory_usage = memory.percent
-            memory_available_gb = memory.available / (1024**3)
-            
-            # Get disk usage
-            disk = psutil.disk_usage('/')
-            disk_usage = disk.percent
-            
-            # Get network connections
-            network_connections = len(psutil.net_connections())
-            
-            return {
-                'cpu_usage': cpu_usage,
-                'memory_usage': memory_usage,
-                'memory_available_gb': memory_available_gb,
-                'disk_usage': disk_usage,
-                'network_connections': network_connections,
-                'timestamp': datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            self.logger.log_event(f"Error getting system metrics: {e}")
-            return {
-                'cpu_usage': 0,
-                'memory_usage': 0,
-                'memory_available_gb': 0,
-                'disk_usage': 0,
-                'network_connections': 0,
-                'timestamp': datetime.now().isoformat()
-            }
-    
+        """Get current system resource metrics from the backend."""
+        return self._get("/api/system/metrics")
+
+    # The methods below are now either fetched from the backend or are no longer the
+    # responsibility of the frontend data provider. They can be removed or adapted.
+    # For now, we'll provide default/mock data to avoid breaking the UI.
+
     def get_market_overview(self) -> Dict[str, Any]:
-        """Get market overview data"""
-        try:
-            # This would typically fetch from market data API
-            # For now, return mock data
-            return {
-                'nifty': {
-                    'price': 19850.25,
-                    'change_pct': 0.75
-                },
-                'banknifty': {
-                    'price': 45320.80,
-                    'change_pct': -0.25
-                },
-                'vix': {
-                    'price': 13.45,
-                    'change_pct': -2.15
-                },
-                'sentiment': 'Bullish'
-            }
-            
-        except Exception as e:
-            self.logger.log_event(f"Error getting market overview: {e}")
-            return {}
-    
+        """Mock market overview data."""
+        return {'status': 'unavailable', 'message': 'This is now handled by the backend.'}
+
     def get_service_status(self) -> Dict[str, Any]:
-        """Get status of individual services"""
-        try:
-            services = {
-                'main_runner': self._check_service_status('main-runner'),
-                'stock_trader': self._check_service_status('stock-trader'),
-                'options_trader': self._check_service_status('options-trader'),
-                'futures_trader': self._check_service_status('futures-trader'),
-                'firestore': self._check_firestore_status(),
-                'kite_api': self._check_kite_api_status()
-            }
-            
-            return services
-            
-        except Exception as e:
-            self.logger.log_event(f"Error getting service status: {e}")
-            return {}
-    
+        """Mock service status."""
+        return {'status': 'unavailable', 'message': 'This is now handled by the backend.'}
+
     def get_performance_metrics(self) -> Dict[str, Any]:
-        """Get system performance metrics"""
-        try:
-            return {
-                'api_response_time_ms': 150,
-                'database_query_time_ms': 45,
-                'trade_execution_time_ms': 200,
-                'memory_usage_trend': 'stable',
-                'cpu_usage_trend': 'stable',
-                'error_rate_pct': 0.1,
-                'uptime_pct': 99.8
-            }
-            
-        except Exception as e:
-            self.logger.log_event(f"Error getting performance metrics: {e}")
-            return {}
-    
+        """Mock performance metrics."""
+        return {'pnl': 0, 'trades': 0, 'win_rate': 0}
+
     def get_alerts(self) -> List[Dict[str, Any]]:
-        """Get system alerts"""
-        try:
-            # This would typically come from an alerting system
-            alerts = []
-            
-            # Check for high resource usage
-            metrics = self.get_system_metrics()
-            
-            if metrics.get('cpu_usage', 0) > 80:
-                alerts.append({
-                    'type': 'warning',
-                    'message': f"High CPU usage: {metrics['cpu_usage']:.1f}%",
-                    'timestamp': datetime.now().isoformat(),
-                    'severity': 'medium'
-                })
-            
-            if metrics.get('memory_usage', 0) > 85:
-                alerts.append({
-                    'type': 'critical',
-                    'message': f"High memory usage: {metrics['memory_usage']:.1f}%",
-                    'timestamp': datetime.now().isoformat(),
-                    'severity': 'high'
-                })
-            
-            return alerts
-            
-        except Exception as e:
-            self.logger.log_event(f"Error getting alerts: {e}")
-            return []
-    
+        """Mock alerts."""
+        return []
+
     def get_log_summary(self) -> Dict[str, Any]:
-        """Get log summary statistics"""
-        try:
-            today = datetime.now().strftime("%Y-%m-%d")
-            log_dir = f"logs/{today}"
-            
-            if os.path.exists(log_dir):
-                log_files = os.listdir(log_dir)
-                total_log_files = len(log_files)
-                
-                # Count log entries (simplified)
-                total_entries = 0
-                error_entries = 0
-                
-                for log_file in log_files:
-                    if log_file.endswith('.txt'):
-                        log_path = os.path.join(log_dir, log_file)
-                        try:
-                            with open(log_path, 'r') as f:
-                                lines = f.readlines()
-                                total_entries += len(lines)
-                                error_entries += sum(1 for line in lines if 'ERROR' in line)
-                        except:
-                            continue
-                
-                return {
-                    'total_log_files': total_log_files,
-                    'total_entries': total_entries,
-                    'error_entries': error_entries,
-                    'warning_entries': 0,  # Would need to parse logs
-                    'last_updated': datetime.now().isoformat()
-                }
-            else:
-                return {
-                    'total_log_files': 0,
-                    'total_entries': 0,
-                    'error_entries': 0,
-                    'warning_entries': 0,
-                    'last_updated': datetime.now().isoformat()
-                }
-                
-        except Exception as e:
-            self.logger.log_event(f"Error getting log summary: {e}")
-            return {}
-    
-    def _get_uptime_hours(self) -> float:
-        """Calculate system uptime in hours"""
-        try:
-            # Get system boot time
-            boot_time = datetime.fromtimestamp(psutil.boot_time())
-            uptime = datetime.now() - boot_time
-            return uptime.total_seconds() / 3600
-        except:
-            return 0.0
-    
-    def _check_service_status(self, service_name: str) -> Dict[str, Any]:
-        """Check status of a specific service"""
-        try:
-            # This would typically check Kubernetes pod status
-            # For now, return mock status
-            return {
-                'status': 'running',
-                'health': 'healthy',
-                'last_restart': datetime.now().isoformat(),
-                'cpu_usage': 25.0,
-                'memory_usage': 45.0
-            }
-        except:
-            return {
-                'status': 'unknown',
-                'health': 'unknown',
-                'last_restart': None,
-                'cpu_usage': 0,
-                'memory_usage': 0
-            }
-    
-    def _check_firestore_status(self) -> Dict[str, Any]:
-        """Check Firestore connectivity status"""
-        try:
-            # This would test Firestore connection
-            return {
-                'status': 'connected',
-                'health': 'healthy',
-                'response_time_ms': 45,
-                'last_check': datetime.now().isoformat()
-            }
-        except:
-            return {
-                'status': 'disconnected',
-                'health': 'unhealthy',
-                'response_time_ms': 999,
-                'last_check': datetime.now().isoformat()
-            }
-    
-    def _check_kite_api_status(self) -> Dict[str, Any]:
-        """Check Kite API connectivity status"""
-        try:
-            # This would test Kite API connection
-            return {
-                'status': 'connected',
-                'health': 'healthy',
-                'response_time_ms': 120,
-                'last_check': datetime.now().isoformat()
-            }
-        except:
-            return {
-                'status': 'disconnected',
-                'health': 'unhealthy',
-                'response_time_ms': 999,
-                'last_check': datetime.now().isoformat()
-            }
-    
-    def _get_mock_health_checks(self) -> List[Dict[str, Any]]:
-        """Get mock health check data when production manager is not available"""
-        return [
-            {
-                'service': 'kite_api',
-                'status': 'healthy',
-                'response_time': 0.12,
-                'timestamp': datetime.now().isoformat(),
-                'details': {
-                    'mode': 'paper_trade',
-                    'connection_status': 'connected',
-                    'last_order_time': '10:30:45'
-                },
-                'is_critical': True
-            },
-            {
-                'service': 'firestore',
-                'status': 'degraded',
-                'response_time': 0.245,
-                'timestamp': datetime.now().isoformat(),
-                'details': {
-                    'connection': 'slow',
-                    'latency_ms': 245,
-                    'retry_count': 2
-                },
-                'is_critical': False
-            },
-            {
-                'service': 'system_resources',
-                'status': 'healthy',
-                'response_time': 0.01,
-                'timestamp': datetime.now().isoformat(),
-                'details': {
-                    'cpu_usage': 36.2,
-                    'memory_usage': 15.6,
-                    'disk_usage': 15.6,
-                    'available_memory_gb': 13.2
-                },
-                'is_critical': True
-            },
-            {
-                'service': 'trading_services',
-                'status': 'healthy',
-                'response_time': 0.08,
-                'timestamp': datetime.now().isoformat(),
-                'details': {
-                    'main_runner': 'running',
-                    'options_trader': 'running',
-                    'futures_trader': 'running',
-                    'active_strategies': 3
-                },
-                'is_critical': True
-            },
-            {
-                'service': 'network_connectivity',
-                'status': 'healthy',
-                'response_time': 0.15,
-                'timestamp': datetime.now().isoformat(),
-                'details': {
-                    'google_connectivity': 'ok',
-                    'kite_api_connectivity': 'ok',
-                    'success_rate': 1.0
-                },
-                'is_critical': True
-            },
-            {
-                'service': 'cognitive_system',
-                'status': 'critical',
-                'response_time': 2.5,
-                'timestamp': datetime.now().isoformat(),
-                'details': {
-                    'gcp_connectivity': 'failed',
-                    'memory_system': 'offline',
-                    'error': 'GCP authentication failed'
-                },
-                'is_critical': True
-            }
-        ] 
+        """Mock log summary."""
+        return {'total_logs': 0, 'error_count': 0} 
