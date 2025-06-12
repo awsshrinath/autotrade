@@ -3,8 +3,8 @@ FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files (use npm for better compatibility)
-COPY package.json package-lock.json* ./
+# Copy package files
+COPY package.json package-lock.json ./
 RUN npm ci
 
 # Stage 2: Build

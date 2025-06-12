@@ -89,7 +89,6 @@ lerna-debug.log*
 # Node.js
 node_modules/
 .npm
-package-lock.json
 
 # OS-specific
 .DS_Store
