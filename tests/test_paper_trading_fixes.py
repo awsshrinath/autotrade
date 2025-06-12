@@ -36,14 +36,14 @@ def test_configuration():
         
         if not paper_trade_mode:
             print("❌ is_paper_trade() is False - should be True for testing")
-            return False
+            assert False
             
         print("✅ Configuration loaded successfully")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Configuration test failed: {e}")
-        return False
+        assert False
 
 def test_enhanced_logger():
     """Test 2: Enhanced Logger with GCS Integration"""
@@ -66,11 +66,11 @@ def test_enhanced_logger():
         
         enhanced_logger.shutdown()
         print("✅ Enhanced logger test passed")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Enhanced logger test failed: {e}")
-        return False
+        assert False
 
 def test_enhanced_trade_manager():
     """Test 3: EnhancedTradeManager Paper Trading"""
@@ -87,7 +87,7 @@ def test_enhanced_trade_manager():
         
         if not trade_manager.config.paper_trade:
             print("❌ EnhancedTradeManager not in paper trade mode")
-            return False
+            assert False
         
         trade_request = TradeRequest(
             symbol='RELIANCE',
@@ -109,14 +109,14 @@ def test_enhanced_trade_manager():
             assert positions[0]['symbol'] == 'RELIANCE'
         else:
             print("❌ Paper trade execution failed")
-            return False
+            assert False
             
         print("✅ EnhancedTradeManager test passed")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ EnhancedTradeManager test failed: {e}")
-        return False
+        assert False
 
 def test_stock_runner_integration():
     """Test 4: Stock Runner Integration (Import Test)"""
@@ -133,11 +133,11 @@ def test_stock_runner_integration():
         print("✅ Stock runner uses EnhancedTradeManager")
         
         print("✅ Stock runner integration test passed")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Stock runner integration test failed: {e}")
-        return False
+        assert False
 
 def run_all_tests():
     """Run all validation tests"""

@@ -57,11 +57,11 @@ def test_rag_imports():
         print(f"✅ embed_text executed: {len(embedding)} dimensions")
         
         print("✅ All RAG imports and functions working")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ RAG import test failed: {e}")
-        return False
+        assert False
 
 def test_gcs_enhanced_logging():
     """Test 2: Enhanced GCS Logging"""
@@ -97,11 +97,11 @@ def test_gcs_enhanced_logging():
             print(f"⚠️ GCS Logger creation failed (expected without credentials): {gcs_error}")
         
         print("✅ Enhanced GCS Logging components working")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Enhanced GCS logging test failed: {e}")
-        return False
+        assert False
 
 def test_paper_trading_integration():
     """Test 3: Paper Trading Integration"""
@@ -118,7 +118,7 @@ def test_paper_trading_integration():
         
         if not paper_trade_flag:
             print("❌ is_paper_trade() should return True")
-            return False
+            assert False
         
         # Test EnhancedTradeManager paper trading
         from runner.enhanced_trade_manager import create_enhanced_trade_manager
@@ -131,14 +131,14 @@ def test_paper_trading_integration():
         
         if not trade_manager.config.paper_trade:
             print("❌ EnhancedTradeManager should be in paper mode based on its config")
-            return False
+            assert False
         
         print("✅ Paper trading integration working")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Paper trading integration test failed: {e}")
-        return False
+        assert False
 
 def test_enhanced_logger_integration():
     """Test 4: Enhanced Logger Integration"""
@@ -176,11 +176,11 @@ def test_enhanced_logger_integration():
         print("✅ Enhanced logger shutdown successful")
         
         print("✅ Enhanced logger integration working")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Enhanced logger integration test failed: {e}")
-        return False
+        assert False
 
 def test_main_integration():
     """Test 5: Main Integration"""
@@ -218,11 +218,11 @@ def test_main_integration():
             print(f"⚠️ Main runner fixed import issue: {e}")
         
         print("✅ Main integration test completed")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Main integration test failed: {e}")
-        return False
+        assert False
 
 def test_faiss_handling():
     """Test 6: FAISS Handling"""
@@ -242,14 +242,14 @@ def test_faiss_handling():
             print(f"⚠️ FAISS GPU warning (expected): {faiss_error}")
         
         print("✅ FAISS handling test completed")
-        return True
+        assert True
         
     except ImportError:
         print("⚠️ FAISS not available (this is ok)")
-        return True
+        assert True
     except Exception as e:
         print(f"❌ FAISS handling test failed: {e}")
-        return False
+        assert False
 
 def run_all_tests():
     """Run all pod error fix validation tests"""
@@ -300,7 +300,7 @@ def run_all_tests():
         print("⚠️ Some tests failed - check the output above for details")
         print(f"\nFailed tests: {total - passed}")
     
-    return passed == total
+    assert passed == total
 
 if __name__ == "__main__":
     success = run_all_tests()

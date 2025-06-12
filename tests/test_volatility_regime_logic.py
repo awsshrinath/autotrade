@@ -146,7 +146,7 @@ def test_basic_data_fetching():
     cache_stats = monitor.get_cache_statistics()
     print(f"📊 Cache Statistics: {cache_stats}")
     
-    return len(data) > 0
+    assert len(data) > 0
 
 def test_batch_fetching():
     """Test 2: Batch fetching for multiple instruments"""
@@ -188,7 +188,7 @@ def test_batch_fetching():
     avg_time_per_instrument = batch_time / len(instruments)
     print(f"⚡ Average time per instrument: {avg_time_per_instrument:.3f} seconds")
     
-    return len(batch_data) == len(instruments)
+    assert len(batch_data) == len(instruments)
 
 def test_retry_logic():
     """Test 3: Retry logic with simulated errors"""
@@ -222,11 +222,11 @@ def test_retry_logic():
         print(f"📊 API calls made: {kite_client.call_count}")
         print(f"📈 Records retrieved: {len(data)}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Retry logic test failed: {e}")
-        return False
+        assert False
 
 def test_volatility_regimes():
     """Test 4: Enhanced volatility regime calculation"""
@@ -258,7 +258,7 @@ def test_volatility_regimes():
     expected_periods = ['5min', '1hr', '1day']
     calculated_periods = list(vol_regimes.keys())
     
-    return all(period in calculated_periods for period in expected_periods)
+    assert all(period in calculated_periods for period in expected_periods)
 
 def test_multi_instrument_analysis():
     """Test 5: Comprehensive multi-instrument analysis"""
@@ -310,7 +310,7 @@ def test_multi_instrument_analysis():
             for inst2, corr_value in list(corr_data.items())[:2]:
                 print(f"   {inst1} vs {inst2}: {corr_value:.3f}")
     
-    return analysis_time < 15.0 and perf_metrics.get('successful_analysis', 0) > 0
+    assert analysis_time < 15.0 and perf_metrics.get('successful_analysis', 0) > 0
 
 def test_cache_management():
     """Test 6: Cache management and cleanup"""
@@ -347,7 +347,7 @@ def test_cache_management():
     final_stats = monitor.get_cache_statistics()
     print(f"📉 Final cache stats: {final_stats['total_cached_entries']} entries")
     
-    return expired_count > 0
+    assert expired_count > 0
 
 def test_configuration_updates():
     """Test 7: Configuration updates and validation"""
@@ -373,7 +373,7 @@ def test_configuration_updates():
     # Test invalid configuration
     monitor.update_historical_config(invalid_key="test")
     
-    return config['cache_ttl_minutes'] == 30 and config['max_retry_attempts'] == 5
+    assert config['cache_ttl_minutes'] == 30 and config['max_retry_attempts'] == 5
 
 def run_performance_benchmark():
     """Performance benchmark: Test system under load"""
@@ -488,10 +488,10 @@ def main():
     
     if passed == total:
         print("\n🎉 ALL TESTS PASSED - Enhanced Historical Data System is PRODUCTION READY! 🚀")
-        return True
+        assert True
     else:
         print(f"\n⚠️  {total - passed} tests failed - Review implementation")
-        return False
+        assert False
 
 if __name__ == "__main__":
     success = main()

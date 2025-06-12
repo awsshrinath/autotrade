@@ -22,7 +22,7 @@ def test_imports():
         print("✓ Basic imports successful")
     except Exception as e:
         print(f"✗ Basic imports failed: {e}")
-        return False
+        assert False
     
     # Test RAG imports
     try:
@@ -57,7 +57,7 @@ def test_imports():
         print("✓ Runner imports successful")
     except Exception as e:
         print(f"✗ Runner imports failed: {e}")
-        return False
+        assert False
     
     # Test dashboard imports if available
     try:
@@ -67,7 +67,7 @@ def test_imports():
         print(f"✗ Dashboard imports failed: {e}")
     
     print("Import testing completed!")
-    return True
+    assert True
 
 if __name__ == "__main__":
     print(f"Python path: {sys.path}")

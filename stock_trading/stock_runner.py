@@ -301,5 +301,9 @@ def run_stock_trading_bot():
     logger.log_event("Trading session stopped and positions closed if any.")
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for stock trading bot"""
     run_stock_trading_bot()
+
+if __name__ == "__main__":
+    main()

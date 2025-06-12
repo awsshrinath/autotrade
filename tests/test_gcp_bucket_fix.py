@@ -28,7 +28,7 @@ def test_bucket_creation_fix():
             client = storage.Client()
         else:
             print("⚠️  No GCP credentials found - simulating test")
-            return True
+            assert True
             
         # Test bucket name
         test_bucket_name = "test-tron-fix-validation"
@@ -66,13 +66,13 @@ def test_bucket_creation_fix():
                 
         except Exception as bucket_error:
             print(f"❌ Bucket creation test failed: {bucket_error}")
-            return False
+            assert False
             
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Test setup failed: {e}")
-        return False
+        assert False
 
 def test_rag_imports():
     """Test RAG module imports"""
@@ -93,14 +93,14 @@ def test_rag_imports():
         result = retrieve_similar_context("test query")
         
         print("✅ RAG function calls successful!")
-        return True
+        assert True
         
     except ImportError as e:
         print(f"❌ RAG import failed: {e}")
-        return False
+        assert False
     except Exception as e:
         print(f"❌ RAG test failed: {e}")
-        return False
+        assert False
 
 def main():
     """Run all tests"""
@@ -136,10 +136,10 @@ def main():
     
     if passed == total:
         print("🎉 All tests passed! Fixes are working correctly.")
-        return True
+        assert True
     else:
         print("⚠️  Some tests failed - check output above.")
-        return False
+        assert False
 
 if __name__ == "__main__":
     success = main()

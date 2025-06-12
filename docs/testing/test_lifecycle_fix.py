@@ -17,11 +17,11 @@ def test_gcs_logger_import():
     try:
         from runner.enhanced_logging.gcs_logger import GCSLogger, GCSBuckets
         print("✅ GCS Logger import successful")
-        return True
+        assert True
     except Exception as e:
         print(f"❌ GCS Logger import failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def test_enhanced_logger_creation():
     """Test that enhanced logger can be created without lifecycle errors"""
@@ -43,18 +43,18 @@ def test_enhanced_logger_creation():
         logger.log_event("Test log entry")
         print("✅ Test log entry successful")
         
-        return True
+        assert True
         
     except Exception as e:
         error_msg = str(e)
         if "'LifecycleRuleDelete' object has no attribute 'action'" in error_msg:
             print("❌ LIFECYCLE POLICY ERROR STILL EXISTS!")
             print(f"   Error: {error_msg}")
-            return False
+            assert False
         else:
             # Other errors might be expected (like auth issues)
             print(f"⚠️  Expected error (likely auth related): {error_msg}")
-            return True
+            assert True
 
 def test_trading_logger_creation():
     """Test that trading logger can be created without lifecycle errors"""
@@ -70,18 +70,18 @@ def test_trading_logger_creation():
         )
         
         print("✅ Trading Logger created successfully")
-        return True
+        assert True
         
     except Exception as e:
         error_msg = str(e)
         if "'LifecycleRuleDelete' object has no attribute 'action'" in error_msg:
             print("❌ LIFECYCLE POLICY ERROR STILL EXISTS!")
             print(f"   Error: {error_msg}")
-            return False
+            assert False
         else:
             # Other errors might be expected (like auth issues)
             print(f"⚠️  Expected error (likely auth related): {error_msg}")
-            return True
+            assert True
 
 def test_lifecycle_manager():
     """Test that lifecycle manager can be created and used without errors"""
@@ -101,21 +101,21 @@ def test_lifecycle_manager():
             error_msg = str(e)
             if "'LifecycleRuleDelete' object has no attribute 'action'" in error_msg:
                 print("❌ LIFECYCLE POLICY ERROR IN COST REPORT!")
-                return False
+                assert False
             else:
                 print(f"⚠️  Expected error in cost report: {error_msg}")
         
-        return True
+        assert True
         
     except Exception as e:
         error_msg = str(e)
         if "'LifecycleRuleDelete' object has no attribute 'action'" in error_msg:
             print("❌ LIFECYCLE POLICY ERROR STILL EXISTS!")
             print(f"   Error: {error_msg}")
-            return False
+            assert False
         else:
             print(f"⚠️  Expected error (likely auth related): {error_msg}")
-            return True
+            assert True
 
 def main():
     """Run all tests"""

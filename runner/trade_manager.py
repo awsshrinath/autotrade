@@ -16,6 +16,15 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.config import PAPER_TRADE
 
+# Cognitive system integration
+try:
+    from runner.cognitive_system import CognitiveSystem
+    from runner.thought_journal import DecisionType
+    from runner.cognitive_state_machine import CognitiveState
+    COGNITIVE_SYSTEM_AVAILABLE = True
+except ImportError:
+    COGNITIVE_SYSTEM_AVAILABLE = False
+
 
 # Global instances for backward compatibility
 _trade_manager_instance = None

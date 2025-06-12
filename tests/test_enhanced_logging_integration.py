@@ -43,11 +43,11 @@ def test_basic_imports():
         from gpt_runner.rag.retriever import retrieve_similar_context, retrieve_with_hybrid_strategy
         print("✅ Enhanced RAG retriever imported successfully")
         
-        return True
+        assert True
         
     except ImportError as e:
         print(f"❌ Import failed: {e}")
-        return False
+        assert False
 
 
 def test_rag_logging():
@@ -130,11 +130,11 @@ def test_rag_logging():
         summary = rag_logger.get_rag_performance_summary()
         print(f"✅ RAG performance summary: {summary['metrics']}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ RAG logging test failed: {e}")
-        return False
+        assert False
 
 
 def test_mcp_logging():
@@ -212,11 +212,11 @@ def test_mcp_logging():
         summary = mcp_logger.get_mcp_performance_summary()
         print(f"✅ MCP performance summary: {summary['metrics']}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ MCP logging test failed: {e}")
-        return False
+        assert False
 
 
 def test_enhanced_context_builder():
@@ -261,11 +261,11 @@ def test_enhanced_context_builder():
         print(f"   - Legacy context keys: {len(legacy_context.keys())}")
         print(f"   - Enhanced context keys: {len(enhanced_context.keys())}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Enhanced context builder test failed: {e}")
-        return False
+        assert False
 
 
 def test_enhanced_retriever():
@@ -308,11 +308,11 @@ def test_enhanced_retriever():
         )
         print(f"✅ Category retrieval completed - {len(category_results)} results")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Enhanced retriever test failed: {e}")
-        return False
+        assert False
 
 
 def test_gcs_bucket_configuration():
@@ -347,11 +347,11 @@ def test_gcs_bucket_configuration():
         except Exception as e:
             print(f"⚠️  GCS logger initialization failed (expected without credentials): {e}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ GCS bucket configuration test failed: {e}")
-        return False
+        assert False
 
 
 def test_firestore_integration():
@@ -379,11 +379,11 @@ def test_firestore_integration():
         except Exception as e:
             print(f"⚠️  Firestore client initialization failed (expected without credentials): {e}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Firestore integration test failed: {e}")
-        return False
+        assert False
 
 
 def test_trace_correlation():
@@ -416,11 +416,11 @@ def test_trace_correlation():
         
         print("✅ Trace ID format validation passed")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Trace correlation test failed: {e}")
-        return False
+        assert False
 
 
 def test_performance_monitoring():
@@ -475,11 +475,11 @@ def test_performance_monitoring():
         print(f"   - MCP contexts: {mcp_summary['metrics']['total_contexts']}")
         print(f"   - MCP avg context time: {mcp_summary['metrics']['avg_context_build_time_ms']:.1f}ms")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Performance monitoring test failed: {e}")
-        return False
+        assert False
 
 
 def run_all_tests():
@@ -526,7 +526,7 @@ def run_all_tests():
     else:
         print("⚠️  Some tests failed. Check the output above for details.")
     
-    return passed == total
+    assert passed == total
 
 
 if __name__ == "__main__":

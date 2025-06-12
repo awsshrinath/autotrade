@@ -25,7 +25,7 @@ def test_imports():
         print("✅ pytz imported successfully")
     except ImportError:
         print("❌ pytz not available - install with: pip install pytz")
-        return False
+        assert False
     
     try:
         from runner.main_runner_improved import (
@@ -36,11 +36,11 @@ def test_imports():
             setup_signal_handlers
         )
         print("✅ All main runner functions imported successfully")
-        return True
+        assert True
     except ImportError as e:
         print(f"❌ Main runner import failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def test_time_functions():
     """Test timezone and market time functions"""
@@ -57,12 +57,12 @@ def test_time_functions():
         market_status = is_market_open()
         print(f"✅ Market open: {market_status}")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Time function test failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def test_safe_imports():
     """Test safe import functionality"""
@@ -84,12 +84,12 @@ def test_safe_imports():
             else:
                 print(f"⚠️ {module} not imported")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Safe imports test failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def test_signal_handlers():
     """Test signal handler setup"""
@@ -100,12 +100,12 @@ def test_signal_handlers():
         
         setup_signal_handlers()
         print("✅ Signal handlers set up successfully")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Signal handler test failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def test_environment_check():
     """Test environment variable checking"""
@@ -116,12 +116,12 @@ def test_environment_check():
         
         env_status = check_environment_variables()
         print(f"✅ Environment check completed: {env_status}")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Environment check failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def test_crashloop_prevention_features():
     """Test crashloop prevention features"""
@@ -148,12 +148,12 @@ def test_crashloop_prevention_features():
             else:
                 print(f"❌ {feature_name}: function '{function_name}' missing")
         
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Crashloop prevention test failed: {e}")
         traceback.print_exc()
-        return False
+        assert False
 
 def main():
     """Run all tests"""

@@ -75,14 +75,14 @@ def test_embedding_system_initialization():
         
         if embedding and len(embedding) > 0:
             print(f"✅ Generated embedding with {len(embedding)} dimensions")
-            return True
+            assert True
         else:
             print(f"❌ Failed to generate embedding")
-            return False
+            assert False
         
     except Exception as e:
         print(f"❌ Initialization failed: {e}")
-        return False
+        assert False
 
 def test_faiss_index_operations():
     """Test 2: FAISS index creation and basic operations"""
@@ -120,14 +120,14 @@ def test_faiss_index_operations():
             trade_index = memory_client.faiss_indices["trade_log"]
             print(f"📊 Trade log index now has {trade_index.ntotal} documents")
             
-            return True
+            assert True
         else:
             print(f"❌ Failed to store document")
-            return False
+            assert False
             
     except Exception as e:
         print(f"❌ FAISS operations failed: {e}")
-        return False
+        assert False
 
 def test_trade_log_embedding_storage():
     """Test 3: Trade log embedding storage and retrieval"""
@@ -198,11 +198,11 @@ def test_trade_log_embedding_storage():
         stats = memory_client.get_embedding_statistics()
         print(f"📊 Embedding Statistics: {stats}")
         
-        return stored_count == len(sample_trades)
+        assert stored_count == len(sample_trades)
         
     except Exception as e:
         print(f"❌ Trade log embedding test failed: {e}")
-        return False
+        assert False
 
 def test_market_sentiment_embedding_storage():
     """Test 4: Market sentiment embedding storage"""
@@ -284,11 +284,11 @@ def test_market_sentiment_embedding_storage():
         
         print(f"✅ Successfully stored {stored_count}/{len(sample_sentiments)} sentiment embeddings")
         
-        return stored_count == len(sample_sentiments)
+        assert stored_count == len(sample_sentiments)
         
     except Exception as e:
         print(f"❌ Market sentiment embedding test failed: {e}")
-        return False
+        assert False
 
 def test_semantic_search_functionality():
     """Test 5: Semantic search and similarity matching"""
@@ -366,11 +366,11 @@ def test_semantic_search_functionality():
         
         print(f"\n📊 Search Results Summary: {successful_searches}/{len(test_queries)} queries returned results")
         
-        return successful_searches >= len(test_queries) * 0.5  # At least 50% success rate
+        assert successful_searches >= len(test_queries) * 0.5  # At least 50% success rate
         
     except Exception as e:
         print(f"❌ Semantic search test failed: {e}")
-        return False
+        assert False
 
 def test_contextual_apis():
     """Test 6: Contextual trade history and market condition APIs"""
@@ -445,11 +445,11 @@ def test_contextual_apis():
         # Check success
         api_success = len(relevant_trades) > 0 or len(similar_conditions) > 0
         
-        return api_success
+        assert api_success
         
     except Exception as e:
         print(f"❌ Contextual APIs test failed: {e}")
-        return False
+        assert False
 
 def test_embedding_statistics_and_health():
     """Test 7: Statistics and health monitoring"""
@@ -500,11 +500,11 @@ def test_embedding_statistics_and_health():
         basic_health = health.get('embedding_system', False) or health.get('faiss_indices', False)
         has_stats = stats.get('total_documents', 0) >= 0
         
-        return basic_health and has_stats
+        assert basic_health and has_stats
         
     except Exception as e:
         print(f"❌ Statistics and health test failed: {e}")
-        return False
+        assert False
 
 def test_performance_benchmark():
     """Performance benchmark: Test system under load"""
@@ -583,11 +583,11 @@ def test_performance_benchmark():
         else:
             print("❌ Performance benchmark needs optimization")
         
-        return performance_good
+        assert performance_good
         
     except Exception as e:
         print(f"❌ Performance benchmark failed: {e}")
-        return False
+        assert False
 
 def main():
     """Run all tests and provide summary"""
@@ -648,10 +648,10 @@ def main():
         print("   ✅ Contextual trade history APIs")
         print("   ✅ GPT-based context enrichment")
         print("   ✅ Production performance benchmarks")
-        return True
+        assert True
     else:
         print(f"\n⚠️  {total - passed} tests failed - Review implementation")
-        return False
+        assert False
 
 if __name__ == "__main__":
     success = main()

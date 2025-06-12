@@ -174,7 +174,9 @@ def test_paper_trader_comprehensive():
     print("PAPER TRADER TEST COMPLETED SUCCESSFULLY!")
     print("=" * 60)
     
-    return trader
+    # Verify trader was created successfully
+    assert trader is not None
+    assert trader.capital.total_capital > 0
 
 def test_margin_calculations():
     """Test margin calculation logic"""

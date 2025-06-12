@@ -54,13 +54,13 @@ def test_connections():
         print("✅ All components initialized successfully!")
         
         print("\n🎉 All tests passed! Dashboard is ready to run.")
-        return True
+        assert True
         
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        assert False
 
 if __name__ == "__main__":
     success = test_connections()

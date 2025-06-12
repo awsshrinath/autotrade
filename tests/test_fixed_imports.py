@@ -13,30 +13,30 @@ def test_basic_imports():
         import time
         import logging  # This should work now
         print("✓ Basic imports successful")
-        return True
+        assert True
     except Exception as e:
         print(f"✗ Basic imports failed: {e}")
-        return False
+        assert False
 
 def test_enhanced_logging():
     """Test our custom enhanced logging imports"""
     try:
         from runner.enhanced_logging import LogLevel, LogCategory
         print("✓ Enhanced logging imports successful")
-        return True
+        assert True
     except Exception as e:
         print(f"✗ Enhanced logging imports failed: {e}")
-        return False
+        assert False
 
 def test_config_imports():
     """Test config imports"""
     try:
         from config.config_manager import get_config
         print("✓ Config imports successful")
-        return True
+        assert True
     except Exception as e:
         print(f"✗ Config imports failed: {e}")
-        return False
+        assert False
 
 def test_gpt_runner_package():
     """Test gpt_runner package structure"""
@@ -47,10 +47,10 @@ def test_gpt_runner_package():
         # Test if rag subpackage exists
         import gpt_runner.rag
         print("✓ gpt_runner.rag subpackage importable")
-        return True
+        assert True
     except Exception as e:
         print(f"✗ gpt_runner package test failed: {e}")
-        return False
+        assert False
 
 def main():
     """Run all import tests"""
@@ -79,10 +79,10 @@ def main():
     
     if passed == total:
         print("🎉 All import fixes working correctly!")
-        return True
+        assert True
     else:
         print("❌ Some imports still have issues")
-        return False
+        assert False
 
 if __name__ == "__main__":
     sys.exit(0 if main() else 1) 
