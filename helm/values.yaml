@@ -1,0 +1,197 @@
+# Default values for tron-system.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+backend:
+  name: tron-backend
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+
+frontend:
+  name: tron-frontend
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 3000
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+
+namespace: gpt
+serviceAccountName: gpt-runner-sa
+gcpProjectId: autotrade-453303
+environment: production
+paperTrade: true
+logLevel: INFO
+realTimeUpdates: true
+autoRefreshInterval: 30
+
+mainRunner:
+  name: main-runner
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner
+    tag: latest
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "runner/main_runner_lightweight.py"
+
+stockTrader:
+  name: stock-trader
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/stock-trader
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "stock_trading/stock_runner.py"
+
+optionsTrader:
+  name: options-trader
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "options_trading/options_runner.py"
+
+futuresTrader:
+  name: futures-trader
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/futures-trader
+    tag: latest
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    PAPER_TRADE: "true"
+    RUNNER_SCRIPT: "futures_trading/futures_runner.py"
+
+# Log Aggregator configuration
+logAggregator:
+  name: log-aggregator
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/log-aggregator
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+
+# Dashboard configuration
+dashboard:
+  enabled: true
+  name: trading-dashboard
+  replicaCount: 1
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/trading-dashboard
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8501
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  auth:
+    enabled: true
+    username: admin
+    password: "" # Will be auto-generated if empty
+  features:
+    liveTrading: false
+    cognitiveInsights: true
+    riskMonitoring: true
+    alerts: true
+  secretName: dashboard-secrets
+  ingress:
+    enabled: false
+    annotations:
+      kubernetes.io/ingress.class: "gce"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: dashboard.tron-trading.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - dashboard.tron-trading.com
+        secretName: dashboard-tls
+
+# Ingress configuration for main services
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.tron-trading.com
+  tls:
+    - hosts:
+        - api.tron-trading.com
+      secretName: api-tls
+
+# Secrets configuration
+secrets:
+  create: true
+  openaiApiKey: ""
+  kiteApiKey: ""
+  kiteApiSecret: ""
+  gcpServiceAccountKey: "" 
