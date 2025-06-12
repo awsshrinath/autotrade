@@ -3,6 +3,8 @@ VWAP Strategy - Self-contained implementation
 Calculates VWAP and generates trading signals without external dependencies
 """
 
+from .base_strategy import BaseStrategy
+
 
 def calculate_simple_atr(candles, period=14):
     """
@@ -189,3 +191,29 @@ def vwap_exit_strategy(trade, current_candles):
             return True, "VWAP reversal signal"
     
     return False, "Hold position"
+
+
+class VWAPStrategy(BaseStrategy):
+    """VWAP Strategy implementation"""
+    
+    def __init__(self, vwap_period=20, confidence_threshold=0.6):
+        super().__init__()
+        self.vwap_period = vwap_period
+        self.confidence_threshold = confidence_threshold
+        self.name = "VWAP"
+    
+    def calculate_vwap(self, candles):
+        """Calculate VWAP for the given candles"""
+        return calculate_vwap(candles, self.vwap_period)
+    
+    def generate_signal(self, symbol, candles, capital):
+        """Generate trading signal using VWAP strategy"""
+        return vwap_strategy(symbol, candles, capital)
+    
+    def check_exit(self, trade, current_candles):
+        """Check if position should be exited"""
+        return vwap_exit_strategy(trade, current_candles)
+    
+    def execute(self, symbol, candles, capital):
+        """Execute VWAP strategy"""
+        return self.generate_signal(symbol, candles, capital)

@@ -56,6 +56,30 @@ class TradingConfig:
     alerts_slack_enabled: bool = False
     alerts_webhook_url: str = ""
 
+    # Technical indicators settings
+    technical_indicators: Dict = None
+
+    # Options settings
+    options: Dict = None
+
+    # Portfolio settings
+    portfolio: Dict = None
+
+    # Production settings
+    production: Dict = None
+
+    # Performance settings
+    performance: Dict = None
+
+    # Circuit breakers settings
+    circuit_breakers: Dict = None
+
+    # Backup settings
+    backup: Dict = None
+
+    # Compliance settings
+    compliance: Dict = None
+
     def __post_init__(self):
         if self.scalp_config is None:
             self.scalp_config = {
@@ -65,6 +89,47 @@ class TradingConfig:
                 "target_buffer": 60,
                 "quantity": 75,
             }
+        
+        if self.technical_indicators is None:
+            self.technical_indicators = {
+                "rsi_period": 14,
+                "atr_period": 14,
+                "macd_fast": 12,
+                "macd_slow": 26,
+                "macd_signal": 9,
+                "bollinger_period": 20,
+                "bollinger_std": 2.0,
+            }
+        
+        if self.options is None:
+            self.options = {
+                "risk_free_rate": 0.06,
+                "default_iv": 0.20,
+                "max_iv": 5.0,
+                "min_iv": 0.01,
+            }
+        
+        if self.portfolio is None:
+            self.portfolio = {
+                "max_positions": 10,
+                "correlation_limit": 0.7,
+                "diversification_threshold": 0.3,
+            }
+        
+        if self.production is None:
+            self.production = {}
+        
+        if self.performance is None:
+            self.performance = {}
+        
+        if self.circuit_breakers is None:
+            self.circuit_breakers = {}
+        
+        if self.backup is None:
+            self.backup = {}
+        
+        if self.compliance is None:
+            self.compliance = {}
 
 
 class ConfigManager:
@@ -183,6 +248,41 @@ class ConfigManager:
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
+    def get_config(self) -> Dict[str, Any]:
+        """Get complete configuration as dictionary"""
+        return {
+            "environment": self.environment,
+            "paper_trade": self.config.paper_trade,
+            "offline_mode": self.config.offline_mode,
+            "default_capital": self.config.default_capital,
+            "max_daily_loss": self.config.max_daily_loss,
+            "max_daily_loss_pct": self.config.max_daily_loss_pct,
+            "stock_position_limit": self.config.stock_position_limit,
+            "option_position_limit": self.config.option_position_limit,
+            "future_position_limit": self.config.future_position_limit,
+            "margin_utilization_limit": self.config.margin_utilization_limit,
+            "max_volatility_threshold": self.config.max_volatility_threshold,
+            "min_trade_value": self.config.min_trade_value,
+            "api_rate_limit": self.config.api_rate_limit,
+            "api_timeout": self.config.api_timeout,
+            "monitoring_interval": self.config.monitoring_interval,
+            "backup_frequency": self.config.backup_frequency,
+            "auto_square_off_time": self.config.auto_square_off_time,
+            "log_level": self.config.log_level,
+            "scalp_config": self.config.scalp_config,
+            "alerts_email_enabled": self.config.alerts_email_enabled,
+            "alerts_slack_enabled": self.config.alerts_slack_enabled,
+            "alerts_webhook_url": self.config.alerts_webhook_url,
+            "technical_indicators": self.config.technical_indicators,
+            "options": self.config.options,
+            "portfolio": self.config.portfolio,
+            "production": self.config.production,
+            "performance": self.config.performance,
+            "circuit_breakers": self.config.circuit_breakers,
+            "backup": self.config.backup,
+            "compliance": self.config.compliance,
+        }
+
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value"""
         return getattr(self.config, key, default)
@@ -193,6 +293,12 @@ class ConfigManager:
             setattr(self.config, key, value)
         else:
             raise ValueError(f"Unknown configuration key: {key}")
+
+    def switch_environment(self, environment: str):
+        """Switch to a different environment and reload configuration"""
+        self.environment = environment
+        self._load_configuration()
+        logging.info(f"Switched to environment: {environment}")
 
     def is_paper_trade(self) -> bool:
         """Check if paper trading is enabled"""
