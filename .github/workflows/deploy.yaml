@@ -475,7 +475,7 @@ jobs:
 
   deploy-to-prod:
     name: 🚀 Deploy to GKE
-    if: github.event_name == 'repository_dispatch'
+    if: github.event_name == 'repository_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     needs: [test-and-build, setup-gcp-service-account, setup-gcs-buckets]
 
