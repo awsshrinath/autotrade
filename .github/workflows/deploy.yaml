@@ -487,10 +487,18 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: 🔧 Install GKE Auth Plugin
+        run: |
+          echo "🔧 Installing gke-gcloud-auth-plugin..."
+          gcloud components install gke-gcloud-auth-plugin --quiet
+          echo "✅ GKE auth plugin installed successfully"
       
       - name: 🏗️ Get GKE Credentials
         run: |
+          echo "🏗️ Getting GKE credentials..."
           gcloud container clusters get-credentials gpt-runner --region asia-south1 --project ${{ secrets.GCP_PROJECT_ID }}
+          echo "✅ GKE credentials configured successfully"
           
       - name: 📦 Setup Helm
         uses: azure/setup-helm@v3

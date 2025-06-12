@@ -20,9 +20,14 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 # Add the runner directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'runner'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'runner'))
 
-from gcp_memory_client import GCPMemoryClient
+try:
+    from runner.gcp_memory_client import GCPMemoryClient
+except ImportError:
+    # Fallback for test environment
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from runner.gcp_memory_client import GCPMemoryClient
 
 class MockLogger:
     """Mock logger for testing"""
