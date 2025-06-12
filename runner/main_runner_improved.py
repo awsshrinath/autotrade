@@ -27,6 +27,22 @@ sys.path.insert(0, '/app')
 sys.path.insert(0, '/app/runner')
 sys.path.insert(0, '/app/gpt_runner')
 
+# Initialize global variables for imported modules
+sync_firestore_to_faiss = None
+embed_logs_for_today = None
+create_daily_folders = None
+FirestoreClient = None
+Logger = None
+create_enhanced_logger = None
+LogLevel = None
+LogCategory = None
+run_gpt_reflection = None
+KiteConnectManager = None
+OpenAIManager = None
+create_cognitive_system = None
+DecisionType = None
+ConfidenceLevel = None
+
 def setup_signal_handlers():
     """Setup signal handlers for graceful shutdown"""
     def signal_handler(signum, frame):
@@ -43,13 +59,20 @@ SHUTDOWN_REQUESTED = False
 
 def safe_import_with_fallback():
     """Safely import modules with detailed error reporting and fallbacks"""
+    global sync_firestore_to_faiss, embed_logs_for_today, create_daily_folders
+    global FirestoreClient, Logger, create_enhanced_logger, LogLevel, LogCategory
+    global run_gpt_reflection, KiteConnectManager, OpenAIManager
+    global create_cognitive_system, DecisionType, ConfidenceLevel
+    
     imports_status = {}
     imported_modules = {}
     
     # RAG modules
     try:
-        from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
-        from gpt_runner.rag.rag_worker import embed_logs_for_today
+        from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss as sf_sync
+        from gpt_runner.rag.rag_worker import embed_logs_for_today as elt
+        sync_firestore_to_faiss = sf_sync
+        embed_logs_for_today = elt
         imports_status['rag_modules'] = True
         imported_modules.update({
             'sync_firestore_to_faiss': sync_firestore_to_faiss,
@@ -75,10 +98,16 @@ def safe_import_with_fallback():
     
     # Core runner modules
     try:
-        from runner.common_utils import create_daily_folders
-        from runner.firestore_client import FirestoreClient
-        from runner.logger import Logger
-        from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
+        from runner.common_utils import create_daily_folders as cdf
+        from runner.firestore_client import FirestoreClient as FC
+        from runner.logger import Logger as L
+        from runner.enhanced_logger import create_enhanced_logger as cel, LogLevel as LL, LogCategory as LC
+        create_daily_folders = cdf
+        FirestoreClient = FC
+        Logger = L
+        create_enhanced_logger = cel
+        LogLevel = LL
+        LogCategory = LC
         imports_status['core_runner'] = True
         imported_modules.update({
             'create_daily_folders': create_daily_folders,
@@ -96,7 +125,8 @@ def safe_import_with_fallback():
     
     # GPT reflection module
     try:
-        from runner.gpt_self_improvement_monitor import run_gpt_reflection
+        from runner.gpt_self_improvement_monitor import run_gpt_reflection as rgr
+        run_gpt_reflection = rgr
         imports_status['gpt_reflection'] = True
         imported_modules['run_gpt_reflection'] = run_gpt_reflection
         print("✅ GPT reflection module imported successfully")
@@ -112,8 +142,10 @@ def safe_import_with_fallback():
     
     # Trading modules
     try:
-        from runner.kiteconnect_manager import KiteConnectManager
-        from runner.openai_manager import OpenAIManager
+        from runner.kiteconnect_manager import KiteConnectManager as KCM
+        from runner.openai_manager import OpenAIManager as OAM
+        KiteConnectManager = KCM
+        OpenAIManager = OAM
         imports_status['trading_modules'] = True
         imported_modules.update({
             'KiteConnectManager': KiteConnectManager,
@@ -133,8 +165,11 @@ def safe_import_with_fallback():
         # Force garbage collection before loading heavy modules
         gc.collect()
         
-        from runner.cognitive_system import create_cognitive_system
-        from runner.thought_journal import DecisionType, ConfidenceLevel
+        from runner.cognitive_system import create_cognitive_system as ccs
+        from runner.thought_journal import DecisionType as DT, ConfidenceLevel as CL
+        create_cognitive_system = ccs
+        DecisionType = DT
+        ConfidenceLevel = CL
         imports_status['cognitive_modules'] = True
         imported_modules.update({
             'create_cognitive_system': create_cognitive_system,

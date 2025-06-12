@@ -5,6 +5,7 @@ Provides AI-powered analysis and summarization of log data using OpenAI's GPT mo
 
 import json
 import hashlib
+from datetime import datetime
 from typing import Dict, List, Any, Optional
 import structlog
 from openai import AsyncOpenAI

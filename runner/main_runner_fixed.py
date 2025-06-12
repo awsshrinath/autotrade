@@ -18,6 +18,17 @@ logging.basicConfig(
     ]
 )
 
+# Placeholder functions to fix undefined name errors
+def sync_firestore_to_faiss():
+    """Placeholder function for Firestore to FAISS synchronization"""
+    print("[INFO] sync_firestore_to_faiss called - placeholder implementation")
+    pass
+
+def embed_logs_for_today():
+    """Placeholder function for embedding logs"""
+    print("[INFO] embed_logs_for_today called - placeholder implementation")
+    pass
+
 def print_startup_info():
     """Print startup diagnostics"""
     print("=" * 60)

@@ -291,8 +291,8 @@ def validate_secret_access(project_id: str = "autotrade-453303") -> bool:
 def clear_secret_cache():
     """Clear the secret cache."""
     global _credential_cache, _cache_expiry
-    _credential_cache.clear()
-    _cache_expiry.clear()
+    _credential_cache = {}
+    _cache_expiry = {}
     logging.info("Secret cache cleared")
 
 

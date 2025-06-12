@@ -25,7 +25,34 @@ try:
 except ImportError:
     PAPER_TRADING_AVAILABLE = False
 
+# Add missing PAPER_TRADE variable
+PAPER_TRADE = is_paper_trade()
+
 IST = pytz.timezone("Asia/Kolkata")
+
+# Add missing simulate_exit function
+def simulate_exit(trade, exit_candles):
+    """Simulate exit for paper trading"""
+    if not exit_candles:
+        return
+    
+    exit_price = exit_candles[-1]['close']
+    trade['exit_price'] = exit_price
+    trade['exit_time'] = datetime.now().isoformat()
+    trade['status'] = 'closed'
+    
+    # Calculate P&L
+    entry_price = trade.get('entry_price', 0)
+    quantity = trade.get('quantity', 0)
+    trade_type = trade.get('trade_type', 'BUY')
+    
+    if trade_type == 'BUY':
+        pnl = (exit_price - entry_price) * quantity
+    else:
+        pnl = (entry_price - exit_price) * quantity
+    
+    trade['pnl'] = pnl
+    print(f"[PAPER-EXIT] {trade['symbol']}: Entry={entry_price}, Exit={exit_price}, PnL={pnl}")
 
 
 def wait_until_market_opens(logger):

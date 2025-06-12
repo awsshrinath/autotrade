@@ -28,6 +28,10 @@ import pytz
 sys.path.insert(0, '/app')
 sys.path.insert(0, '/app/runner')
 
+# Global variables for imports
+LogLevel = None
+LogCategory = None
+
 def setup_signal_handlers():
     """Setup signal handlers for graceful shutdown"""
     def signal_handler(signum, frame):
@@ -56,10 +60,16 @@ def is_market_open():
 
 def safe_initialize_loggers():
     """Initialize loggers with fallback"""
+    global LogLevel, LogCategory
+    
     try:
         from runner.common_utils import create_daily_folders
         from runner.logger import Logger
-        from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
+        from runner.enhanced_logger import create_enhanced_logger, LogLevel as LL, LogCategory as LC
+        
+        # Set global variables
+        LogLevel = LL
+        LogCategory = LC
         
         # Basic logger
         today_date = get_ist_time().strftime("%Y-%m-%d")
