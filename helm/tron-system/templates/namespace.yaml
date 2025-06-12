@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: {{ include "tron-system.name" . }}
+    app.kubernetes.io/name: tron-system
     app.kubernetes.io/instance: {{ .Release.Name }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}

@@ -542,13 +542,13 @@ jobs:
               echo "✅ Helm upgrade completed successfully"
             elif helm upgrade tron-system ./helm/tron-system "${HELM_ARGS[@]}" --force; then
               echo "✅ Helm upgrade completed with --force (resource adoption)"
-            else
-              echo "⚠️ Upgrade failed, trying fresh install with resource replacement..."
-              helm uninstall tron-system -n gpt --ignore-not-found
-              sleep 10
-              helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}" --replace
-              echo "✅ Fresh install completed with resource replacement"
-            fi
+                         else
+               echo "⚠️ Upgrade failed, trying fresh install with resource replacement..."
+               helm uninstall tron-system -n gpt || true
+               sleep 10
+               helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}" --replace
+               echo "✅ Fresh install completed with resource replacement"
+             fi
           else
             # For fresh installs, try install with adoption capabilities
             if helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}"; then
