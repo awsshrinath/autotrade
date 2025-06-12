@@ -510,6 +510,20 @@ jobs:
         env:
           USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
         run: |
+          echo "🧹 Cleaning up existing namespace if it exists without Helm management..."
+          # Check if namespace exists and is not managed by Helm
+          if kubectl get namespace gpt &>/dev/null; then
+            if ! kubectl get namespace gpt -o jsonpath='{.metadata.labels.app\.kubernetes\.io/managed-by}' | grep -q "Helm"; then
+              echo "⚠️ Namespace 'gpt' exists but is not managed by Helm. Deleting it..."
+              kubectl delete namespace gpt --ignore-not-found=true
+              echo "⏳ Waiting for namespace deletion..."
+              kubectl wait --for=delete namespace/gpt --timeout=60s || true
+            else
+              echo "✅ Namespace 'gpt' is already managed by Helm"
+            fi
+          fi
+          
+          echo "🚀 Deploying with Helm..."
           helm upgrade --install tron-system ./helm/tron-system \
             --namespace gpt --create-namespace \
             --set frontend.image.tag=${{ github.sha }} \
