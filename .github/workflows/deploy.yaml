@@ -488,14 +488,14 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: 🔧 Install GKE Auth Plugin
-        run: |
-          echo "🔧 Installing gke-gcloud-auth-plugin..."
-          sudo apt-get update
-          sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
-          echo "✅ GKE auth plugin installed successfully"
+      - name: 🔧 Setup Google Cloud CLI & GKE Auth Plugin
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          install_components: 'gke-gcloud-auth-plugin'
       
       - name: 🏗️ Get GKE Credentials
+        env:
+          USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
         run: |
           echo "🏗️ Getting GKE credentials..."
           gcloud container clusters get-credentials gpt-runner --region asia-south1 --project ${{ secrets.GCP_PROJECT_ID }}
@@ -507,6 +507,8 @@ jobs:
           version: 'v3.9.4'
           
       - name: 🚀 Deploy with Helm
+        env:
+          USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
         run: |
           helm upgrade --install tron-system ./helm/tron-system \
             --namespace gpt --create-namespace \
@@ -521,6 +523,8 @@ jobs:
             --wait
 
       - name: ✅ Verify Deployment
+        env:
+          USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
         run: |
           echo "✅ Deployment verification..."
           kubectl get all -n gpt

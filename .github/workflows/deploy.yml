@@ -29,6 +29,8 @@ jobs:
 
     - name: Set up Cloud SDK
       uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        install_components: 'gke-gcloud-auth-plugin'
 
     - name: Configure Docker
       run: gcloud auth configure-docker --quiet
@@ -38,6 +40,7 @@ jobs:
         GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
         GKE_ZONE: ${{ secrets.GKE_ZONE }}
+        USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
       run: |
         gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
         kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' --dry-run=client -o yaml | kubectl apply -f -
@@ -50,4 +53,5 @@ jobs:
         GKE_CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
         GKE_ZONE: ${{ secrets.GKE_ZONE }}
         DOCKER_IMAGE: ${{ steps.build.outputs.image }}
+        USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
       run: ./scripts/deploy_log_aggregator.sh 
