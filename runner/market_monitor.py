@@ -176,7 +176,7 @@ class MarketMonitor:
         self.logger = logger
         self.kite_client = kite_client
         self.firestore_client = firestore_client
-        self.data_fetcher = MarketDataFetcher(logger, kite_client)
+        self.data_fetcher = MarketDataFetcher(logger)
         self.regime_classifier = MarketRegimeClassifier(logger)
         self.correlation_monitor = CorrelationMonitor(logger, self.data_fetcher)
         

@@ -11,7 +11,7 @@ import traceback
 # Add paths like the entrypoint does
 sys.path.insert(0, '/app' if os.path.exists('/app') else '.')
 
-def test_import(module_name, import_statement, critical=True):
+def test_import_function(module_name, import_statement, critical=True):
     """Test a specific import and return result"""
     try:
         exec(import_statement)
@@ -42,7 +42,7 @@ def main():
     ]
     
     for module, statement in basic_tests:
-        if not test_import(module, statement, critical=True):
+        if not test_import_function(module, statement, critical=True):
             all_critical_passed = False
     
     # Test 2: Enhanced logging system  
@@ -54,7 +54,7 @@ def main():
     ]
     
     for module, statement in enhanced_logging_tests:
-        if not test_import(module, statement, critical=True):
+        if not test_import_function(module, statement, critical=True):
             all_critical_passed = False
     
     # Test 3: Core runner modules
@@ -71,7 +71,7 @@ def main():
     ]
     
     for module, statement in runner_tests:
-        if not test_import(module, statement, critical=True):
+        if not test_import_function(module, statement, critical=True):
             all_critical_passed = False
     
     # Test 4: RAG imports (non-critical, should fallback gracefully)
@@ -84,7 +84,7 @@ def main():
     ]
     
     for module, statement in rag_tests:
-        test_import(module, statement, critical=False)
+        test_import_function(module, statement, critical=False)
     
     # Test 5: Dashboard specific imports  
     print("\n🎛️ Dashboard Specific:")
@@ -93,7 +93,7 @@ def main():
     ]
     
     for module, statement in dashboard_tests:
-        test_import(module, statement, critical=False)
+        test_import_function(module, statement, critical=False)
     
     # Test 6: Configuration system
     print("\n⚙️ Configuration System:")
@@ -105,7 +105,7 @@ def main():
     ]
     
     for module, statement in config_tests:
-        if not test_import(module, statement, critical=True):
+        if not test_import_function(module, statement, critical=True):
             all_critical_passed = False
     
     # Test 7: Main runner imports
@@ -116,7 +116,7 @@ def main():
     ]
     
     for module, statement in main_tests:
-        if not test_import(module, statement, critical=True):
+        if not test_import_function(module, statement, critical=True):
             all_critical_passed = False
     
     # Summary
@@ -129,6 +129,11 @@ def main():
         print("❌ CRITICAL IMPORT FAILURES DETECTED!")  
         print("🚨 Pod may fail to start")
         return 1
+
+def test_import():
+    """Pytest test function for imports"""
+    result = main()
+    assert result == 0, "Critical import failures detected"
 
 if __name__ == "__main__":
     exit(main()) 

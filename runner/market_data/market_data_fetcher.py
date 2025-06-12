@@ -212,6 +212,15 @@ class MarketDataFetcher:
             
         return premarket_data
 
+    def fetch_historical_data(self, instrument_token, from_date, to_date, interval="day"):
+        """Fetch historical data - placeholder implementation for compatibility"""
+        if self.logger:
+            self.logger.log_event(f"[INFO] Fetching historical data for {instrument_token} from {from_date} to {to_date}")
+        
+        # Return empty DataFrame for now - this would be implemented with real data source
+        import pandas as pd
+        return pd.DataFrame()
+
     def _determine_overall_sentiment(self, sgx_data: dict, dow_data: dict) -> str:
         """Determine overall market sentiment from multiple sources"""
         bullish_signals = 0
