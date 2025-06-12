@@ -500,7 +500,7 @@ jobs:
       - name: 🚀 Deploy with Helm
         run: |
           helm upgrade --install tron-system ./helm/tron-system \
-            --namespace tron-system --create-namespace \
+            --namespace gpt --create-namespace \
             --set frontend.image.tag=${{ github.sha }} \
             --set backend.image.tag=${{ github.sha }} \
             --set mainRunner.image.tag=${{ github.sha }} \
@@ -508,12 +508,12 @@ jobs:
             --set optionsTrader.image.tag=${{ github.sha }} \
             --set futuresTrader.image.tag=${{ github.sha }} \
             --set serviceAccountName=gpt-runner-sa \
-            --set namespace=tron-system \
+            --set namespace=gpt \
             --wait
 
       - name: ✅ Verify Deployment
         run: |
           echo "✅ Deployment verification..."
-          kubectl get all -n tron-system
+          kubectl get all -n gpt
           echo ""
           echo "✅ Deployment completed successfully!"

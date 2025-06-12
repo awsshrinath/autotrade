@@ -38,7 +38,7 @@ frontend:
       cpu: "250m"
       memory: "256Mi"
 
-namespace: tron-system
+namespace: gpt
 serviceAccountName: gpt-runner-sa
 
 mainRunner:
