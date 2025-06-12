@@ -510,31 +510,56 @@ jobs:
         env:
           USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
         run: |
-          echo "🧹 Cleaning up existing namespace if it exists without Helm management..."
-          # Check if namespace exists and is not managed by Helm
-          if kubectl get namespace gpt &>/dev/null; then
-            if ! kubectl get namespace gpt -o jsonpath='{.metadata.labels.app\.kubernetes\.io/managed-by}' | grep -q "Helm"; then
-              echo "⚠️ Namespace 'gpt' exists but is not managed by Helm. Deleting it..."
-              kubectl delete namespace gpt --ignore-not-found=true
-              echo "⏳ Waiting for namespace deletion..."
-              kubectl wait --for=delete namespace/gpt --timeout=60s || true
-            else
-              echo "✅ Namespace 'gpt' is already managed by Helm"
-            fi
+          echo "🚀 Deploying with Helm (smart resource management)..."
+          
+          # Check if release already exists
+          if helm list -n gpt | grep -q "tron-system"; then
+            echo "📦 Existing Helm release found, performing upgrade..."
+            HELM_ACTION="upgrade"
+          else
+            echo "🆕 No existing release found, performing fresh install..."
+            HELM_ACTION="install"
           fi
           
-          echo "🚀 Deploying with Helm..."
-          helm upgrade --install tron-system ./helm/tron-system \
-            --namespace gpt --create-namespace \
-            --set frontend.image.tag=${{ github.sha }} \
-            --set backend.image.tag=${{ github.sha }} \
-            --set mainRunner.image.tag=${{ github.sha }} \
-            --set stockTrader.image.tag=${{ github.sha }} \
-            --set optionsTrader.image.tag=${{ github.sha }} \
-            --set futuresTrader.image.tag=${{ github.sha }} \
-            --set serviceAccountName=gpt-runner-sa \
-            --set namespace=gpt \
-            --wait
+          # Define common Helm arguments
+          HELM_ARGS=(
+            --namespace gpt --create-namespace
+            --set frontend.image.tag=${{ github.sha }}
+            --set backend.image.tag=${{ github.sha }}
+            --set mainRunner.image.tag=${{ github.sha }}
+            --set stockTrader.image.tag=${{ github.sha }}
+            --set optionsTrader.image.tag=${{ github.sha }}
+            --set futuresTrader.image.tag=${{ github.sha }}
+            --set serviceAccountName=gpt-runner-sa
+            --set namespace=gpt
+            --wait --timeout=10m
+          )
+          
+          # Try deployment with progressive fallback strategies
+          if [ "$HELM_ACTION" = "upgrade" ]; then
+            # For upgrades, try normal upgrade first
+            if helm upgrade tron-system ./helm/tron-system "${HELM_ARGS[@]}"; then
+              echo "✅ Helm upgrade completed successfully"
+            elif helm upgrade tron-system ./helm/tron-system "${HELM_ARGS[@]}" --force; then
+              echo "✅ Helm upgrade completed with --force (resource adoption)"
+            else
+              echo "⚠️ Upgrade failed, trying fresh install with resource replacement..."
+              helm uninstall tron-system -n gpt --ignore-not-found
+              sleep 10
+              helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}" --replace
+              echo "✅ Fresh install completed with resource replacement"
+            fi
+          else
+            # For fresh installs, try install with adoption capabilities
+            if helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}"; then
+              echo "✅ Helm install completed successfully"
+            elif helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}" --replace; then
+              echo "✅ Helm install completed with --replace (resource adoption)"
+            else
+              echo "❌ All deployment strategies failed"
+              exit 1
+            fi
+          fi
 
       - name: ✅ Verify Deployment
         env:
