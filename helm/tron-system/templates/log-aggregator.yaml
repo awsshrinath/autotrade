@@ -1,24 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.mainRunner.name }}
+  name: {{ .Values.logAggregator.name }}-deployment
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.mainRunner.name }}
+      app: {{ .Values.logAggregator.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.mainRunner.name }}
+        app: {{ .Values.logAggregator.name }}
     spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
-        - name: {{ .Values.mainRunner.name }}
-          image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.mainRunner.image.tag }}"
-          resources:
-            {{- toYaml .Values.mainRunner.resources | nindent 12 }}
+        - name: {{ .Values.logAggregator.name }}
+          image: "{{ .Values.logAggregator.image.repository }}:{{ .Values.logAggregator.image.tag }}"
+          imagePullPolicy: {{ .Values.logAggregator.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.logAggregator.service.port }}
           env:
             - name: GCP_PROJECT_ID
               valueFrom:
@@ -41,19 +42,21 @@ spec:
                   name: api-secrets
                   key: openai-api-key
                   optional: true
-            - name: KITE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: api-secrets
-                  key: kite-api-key
-                  optional: true
-            - name: KITE_API_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: api-secrets
-                  key: kite-api-secret
-                  optional: true
-            {{- range $key, $val := .Values.mainRunner.env }}
-            - name: {{ $key }}
-              value: "{{ $val }}"
-            {{- end }} 
+          resources:
+            {{- toYaml .Values.logAggregator.resources | nindent 12 }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.logAggregator.name }}-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.logAggregator.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.logAggregator.service.port }}
+      targetPort: {{ .Values.logAggregator.service.port }}
+  type: {{ .Values.logAggregator.service.type }} 

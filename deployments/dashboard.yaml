@@ -35,9 +35,15 @@ spec:
             - name: ENVIRONMENT
               value: "production"
             - name: DASHBOARD_USERNAME
-              value: "admin"
+              valueFrom:
+                secretKeyRef:
+                  name: dashboard-secrets
+                  key: username
             - name: DASHBOARD_PASSWORD
-              value: "tron2024"
+              valueFrom:
+                secretKeyRef:
+                  name: dashboard-secrets
+                  key: password
             - name: AUTH_ENABLED
               value: "true"
             - name: REAL_TIME_UPDATES

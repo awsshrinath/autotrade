@@ -1,40 +1,40 @@
-# Stage 1: Build the Next.js application
-FROM node:18-alpine AS builder
-
-# Install build dependencies required by native packages like 'sharp'
-RUN apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev
-
-# Set working directory
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package.json and lock file
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-COPY .npmrc ./
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
-# Install dependencies using pnpm
-RUN npm install -g pnpm
-RUN pnpm install
-
-# Copy the rest of the application source code
+# Stage 2: Build
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the Next.js application
-RUN npm run build
+# Build the application
+RUN npm install -g pnpm && pnpm run build
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:1.21-alpine
+# Stage 3: Production
+FROM node:18-alpine AS runner
+WORKDIR /app
 
-# Copy built assets from the builder stage
-COPY --from=builder /app/public /usr/share/nginx/html
-COPY --from=builder /app/.next /usr/share/nginx/html/.next
+ENV NODE_ENV production
 
-# Copy Nginx configuration
-# We will need to create this nginx.conf file next
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Expose port 80
-EXPOSE 80
+# Copy the standalone build
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"] 
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"] 

@@ -13,10 +13,28 @@ app = FastAPI(
 )
 
 # CORS Middleware to allow requests from the Next.js frontend
-origins = [
-    "http://localhost:3000",  # Default Next.js port
-    "http://localhost:3001",  # Common alternative Next.js port
-]
+import os
+
+# Get environment-specific origins
+environment = os.getenv("ENVIRONMENT", "development")
+
+if environment == "production":
+    origins = [
+        "https://tron-trading.com",
+        "https://www.tron-trading.com", 
+        "https://dashboard.tron-trading.com",
+        "https://api.tron-trading.com",
+        # Add LoadBalancer IP when known
+        "http://localhost:3000",  # Keep for local testing
+    ]
+else:
+    origins = [
+        "http://localhost:3000",  # Default Next.js port
+        "http://localhost:3001",  # Common alternative Next.js port
+        "http://localhost:8080",  # Additional dev port
+        "http://127.0.0.1:3000",
+        "*",  # Allow all in development
+    ]
 
 app.add_middleware(
     CORSMiddleware,

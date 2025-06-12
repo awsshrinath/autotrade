@@ -29,11 +29,51 @@ spec:
       labels:
         app: {{ .Values.backend.name }}
     spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: {{ .Values.backend.name }}
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.backend.service.port }}
+          env:
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: GCP_PROJECT_ID
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ENVIRONMENT
+            - name: PAPER_TRADE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: PAPER_TRADE
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOG_LEVEL
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: openai-api-key
+                  optional: true
+            - name: KITE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: kite-api-key
+                  optional: true
+            - name: KITE_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: kite-api-secret
+                  optional: true
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }} 

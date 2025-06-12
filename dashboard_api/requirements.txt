@@ -1,9 +1,46 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-requests
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+pydantic==2.5.0
 
-# Add other core dependencies from the main project as needed
-# For now, we keep it minimal.
-psutil
-google-cloud-firestore 
+# HTTP and async dependencies
+requests==2.31.0
+aiohttp==3.9.1
+httpx==0.25.2
+
+# Data processing and analysis
+pandas>=1.3.0
+numpy>=1.21.0,<2.0.0
+scipy>=1.9.0
+
+# Google Cloud dependencies
+google-cloud-storage==2.10.0
+google-cloud-secret-manager==2.16.4
+google-cloud-firestore==2.13.1
+
+# AI/ML dependencies
+openai==1.3.5
+tiktoken==0.5.1
+
+# Trading and market data dependencies
+yfinance>=0.2.18
+kiteconnect==4.2.0
+
+# Configuration and validation
+PyYAML>=6.0
+pydantic-settings==2.1.0
+
+# System monitoring
+psutil==5.9.6
+
+# Security and authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Development and testing (optional)
+pytest==7.4.3
+pytest-asyncio==0.21.1 

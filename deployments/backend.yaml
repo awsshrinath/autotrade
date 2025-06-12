@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: tron-backend-service
-  namespace: tron-system
+  namespace: gpt
 spec:
   selector:
     app: tron-backend
@@ -18,7 +18,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tron-backend-deployment
-  namespace: tron-system
+  namespace: gpt
 spec:
   replicas: 2
   selector:
@@ -29,6 +29,7 @@ spec:
       labels:
         app: tron-backend
     spec:
+      serviceAccountName: gpt-runner-sa
       containers:
         - name: tron-backend
           image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend:latest
