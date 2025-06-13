@@ -134,7 +134,7 @@ jobs:
           docker push --all-tags $IMAGE_PREFIX/futures-trader
 
           # Build and push the log aggregator image
-          docker build -f gpt_runner/log_aggregator/Dockerfile -t $IMAGE_PREFIX/log-aggregator:$TAG -t $IMAGE_PREFIX/log-aggregator:latest ./gpt_runner/log_aggregator
+          docker build -f gpt_runner/log_aggregator/Dockerfile -t $IMAGE_PREFIX/log-aggregator:$TAG -t $IMAGE_PREFIX/log-aggregator:latest .
           docker push --all-tags $IMAGE_PREFIX/log-aggregator
 
   setup-gcp-service-account:

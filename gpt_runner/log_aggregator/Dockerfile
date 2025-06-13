@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY gpt_runner/log_aggregator/ .
 
 # Set the python path to include the app directory
-ENV PYTHONPATH "${PYTHONPATH}:/app"
+ENV PYTHONPATH="${PYTHONPATH}:/app"
 
 # Make port 8001 available to the world outside this container
 EXPOSE 8001
