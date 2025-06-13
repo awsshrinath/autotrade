@@ -26,6 +26,20 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🔍 Verify GCP Secrets
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ ERROR: GCP_SA_KEY secret is not set or empty"
+            echo "Please ensure the GCP_SA_KEY secret is configured in your repository settings"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "❌ ERROR: GCP_PROJECT_ID secret is not set or empty"
+            echo "Please ensure the GCP_PROJECT_ID secret is configured in your repository settings"
+            exit 1
+          fi
+          echo "✅ Required GCP secrets are available"
+
       - name: ⚙️ Set up Python
         uses: actions/setup-python@v5
         with:
@@ -42,7 +56,7 @@ jobs:
           python -m pytest -v --tb=short -k "not test_imports" || true
 
       - name: 🔐 Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
@@ -132,8 +146,22 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🔍 Verify GCP Secrets
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ ERROR: GCP_SA_KEY secret is not set or empty"
+            echo "Please ensure the GCP_SA_KEY secret is configured in your repository settings"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "❌ ERROR: GCP_PROJECT_ID secret is not set or empty"
+            echo "Please ensure the GCP_PROJECT_ID secret is configured in your repository settings"
+            exit 1
+          fi
+          echo "✅ Required GCP secrets are available"
+
       - name: 🔐 Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
@@ -210,8 +238,22 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🔍 Verify GCP Secrets
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ ERROR: GCP_SA_KEY secret is not set or empty"
+            echo "Please ensure the GCP_SA_KEY secret is configured in your repository settings"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "❌ ERROR: GCP_PROJECT_ID secret is not set or empty"
+            echo "Please ensure the GCP_PROJECT_ID secret is configured in your repository settings"
+            exit 1
+          fi
+          echo "✅ Required GCP secrets are available"
+
       - name: 🔐 Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
@@ -487,8 +529,22 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🔍 Verify GCP Secrets
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ ERROR: GCP_SA_KEY secret is not set or empty"
+            echo "Please ensure the GCP_SA_KEY secret is configured in your repository settings"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "❌ ERROR: GCP_PROJECT_ID secret is not set or empty"
+            echo "Please ensure the GCP_PROJECT_ID secret is configured in your repository settings"
+            exit 1
+          fi
+          echo "✅ Required GCP secrets are available"
+
       - name: 🔐 Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
@@ -574,7 +630,7 @@ jobs:
             fi
           fi
 
-      - name: 🐞 Debug: Get Pod Statuses and Events
+      - name: 🐞 Debug Pod Statuses and Events
         if: failure()
         run: |
           echo "🔍 Debugging failed deployment..."
