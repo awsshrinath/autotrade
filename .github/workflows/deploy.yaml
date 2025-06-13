@@ -506,12 +506,17 @@ jobs:
         with:
           version: 'v3.9.4'
           
+      - name: 🏷️ Patch Namespace for Helm Ownership
+        run: |
+          kubectl label namespace gpt app.kubernetes.io/managed-by=Helm --overwrite || true
+          kubectl annotate namespace gpt meta.helm.sh/release-name=tron-system --overwrite || true
+          kubectl annotate namespace gpt meta.helm.sh/release-namespace=gpt --overwrite || true
+
       - name: 🚀 Deploy with Helm
         env:
           USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
         run: |
           echo "🚀 Deploying with Helm (smart resource management)..."
-          
           # Check if release already exists
           if helm list -n gpt | grep -q "tron-system"; then
             echo "📦 Existing Helm release found, performing upgrade..."
@@ -520,7 +525,6 @@ jobs:
             echo "🆕 No existing release found, performing fresh install..."
             HELM_ACTION="install"
           fi
-          
           # Define common Helm arguments
           HELM_ARGS=(
             --namespace gpt --create-namespace
@@ -534,7 +538,6 @@ jobs:
             --set namespace=gpt
             --wait --timeout=10m
           )
-          
           # Try deployment with progressive fallback strategies
           if [ "$HELM_ACTION" = "upgrade" ]; then
             # For upgrades, try normal upgrade first
@@ -542,13 +545,13 @@ jobs:
               echo "✅ Helm upgrade completed successfully"
             elif helm upgrade tron-system ./helm/tron-system "${HELM_ARGS[@]}" --force; then
               echo "✅ Helm upgrade completed with --force (resource adoption)"
-                         else
-               echo "⚠️ Upgrade failed, trying fresh install with resource replacement..."
-               helm uninstall tron-system -n gpt || true
-               sleep 10
-               helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}" --replace
-               echo "✅ Fresh install completed with resource replacement"
-             fi
+            else
+              echo "⚠️ Upgrade failed, trying fresh install with resource replacement..."
+              helm uninstall tron-system -n gpt || true
+              sleep 10
+              helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}" --replace
+              echo "✅ Fresh install completed with resource replacement"
+            fi
           else
             # For fresh installs, try install with adoption capabilities
             if helm install tron-system ./helm/tron-system "${HELM_ARGS[@]}"; then
