@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import Dict, Any
 
-from ..services.system_service import SystemService, get_system_service
+from services.system_service import SystemService, get_system_service
 
 router = APIRouter()
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import Dict, Any, List
 
-from ..services.trade_service import TradeService, get_trade_service
+from services.trade_service import TradeService, get_trade_service
 
 router = APIRouter()
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import Dict, Any, List
 
-from ..services.cognitive_service import CognitiveService, get_cognitive_service
+from services.cognitive_service import CognitiveService, get_cognitive_service
 
 router = APIRouter()
 
