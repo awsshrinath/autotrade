@@ -512,6 +512,12 @@ jobs:
           kubectl annotate namespace gpt meta.helm.sh/release-name=tron-system --overwrite || true
           kubectl annotate namespace gpt meta.helm.sh/release-namespace=gpt --overwrite || true
 
+      - name: 🏷️ Patch ServiceAccount for Helm Ownership
+        run: |
+          kubectl label serviceaccount gpt-runner-sa -n gpt app.kubernetes.io/managed-by=Helm --overwrite || true
+          kubectl annotate serviceaccount gpt-runner-sa -n gpt meta.helm.sh/release-name=tron-system --overwrite || true
+          kubectl annotate serviceaccount gpt-runner-sa -n gpt meta.helm.sh/release-namespace=gpt --overwrite || true
+
       - name: 🚀 Deploy with Helm
         env:
           USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
