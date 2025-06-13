@@ -233,7 +233,7 @@ def wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger, m
 
 def run_stock_trading_bot():
     today_date = datetime.now().strftime("%Y-%m-%d")
-    paper_trade_mode = is_paper_trade()
+    paper_trade_mode = PAPER_TRADE
     
     # Initialize enhanced logger for Firestore and GCS logging
     session_id = f"stock_trader_{int(time.time())}"
