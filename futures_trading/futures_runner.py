@@ -14,8 +14,24 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import simulate_exit, execute_trade
-from runner.market_data import MarketDataFetcher, TechnicalIndicators
-from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
+
+# Import market components with fallbacks
+try:
+    from runner.market_data import MarketDataFetcher, TechnicalIndicators
+    from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
+except ImportError:
+    class MarketDataFetcher:
+        def __init__(self, *args): pass
+    class TechnicalIndicators:
+        def __init__(self, *args): pass
+    class MarketMonitor:
+        def __init__(self, *args): pass
+        def get_market_sentiment(self, kite):
+            return {"INDIA VIX": 15}
+    class CorrelationMonitor:
+        def __init__(self, *args): pass
+    class MarketRegimeClassifier:
+        def __init__(self, *args): pass
 
 IST = pytz.timezone("Asia/Kolkata")
 

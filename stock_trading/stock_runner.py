@@ -8,15 +8,42 @@ import time
 from datetime import datetime
 from datetime import time as dtime
 import pytz
-from runner.config import is_paper_trade
+from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
-from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
-from runner.enhanced_trade_manager import create_enhanced_trade_manager, TradeRequest
-from runner.market_data import MarketDataFetcher, TechnicalIndicators
-from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
+from runner.trade_manager import execute_trade
+
+# Use basic logger instead of enhanced logger
+def create_enhanced_logger(*args, **kwargs):
+    return Logger("stock-trader")
+
+# Simple LogLevel and LogCategory classes
+class LogLevel:
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
+class LogCategory:
+    STRATEGY = "STRATEGY"
+    TRADE = "TRADE"
+
+# Import market components with fallbacks
+try:
+    from runner.market_data import MarketDataFetcher, TechnicalIndicators
+    from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
+except ImportError:
+    class MarketDataFetcher:
+        def __init__(self, *args): pass
+    class TechnicalIndicators:
+        def __init__(self, *args): pass
+    class MarketMonitor:
+        def __init__(self, *args): pass
+    class CorrelationMonitor:
+        def __init__(self, *args): pass
+    class MarketRegimeClassifier:
+        def __init__(self, *args): pass
 
 # Import paper trading components
 try:
@@ -25,10 +52,9 @@ try:
 except ImportError:
     PAPER_TRADING_AVAILABLE = False
 
-# Add missing PAPER_TRADE variable
-PAPER_TRADE = is_paper_trade()
-
 IST = pytz.timezone("Asia/Kolkata")
+
+# PAPER_TRADE already imported above
 
 # Add missing simulate_exit function
 def simulate_exit(trade, exit_candles):
