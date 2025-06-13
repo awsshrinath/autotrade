@@ -24,4 +24,4 @@ ENV FASTAPI_HOST=0.0.0.0
 ENV FASTAPI_PORT=8001
 
 # Run uvicorn server
-CMD ["uvicorn", "main:app", "--host", "$FASTAPI_HOST", "--port", "$FASTAPI_PORT"] 
+CMD ["sh", "-c", "uvicorn main:app --host $FASTAPI_HOST --port $FASTAPI_PORT"] 

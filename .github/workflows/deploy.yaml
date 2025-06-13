@@ -119,6 +119,10 @@ jobs:
           docker build -t $IMAGE_PREFIX/futures-trader:$TAG -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
           docker push --all-tags $IMAGE_PREFIX/futures-trader
 
+          # Build and push the log aggregator image
+          docker build -f gpt_runner/log_aggregator/Dockerfile -t $IMAGE_PREFIX/log-aggregator:$TAG -t $IMAGE_PREFIX/log-aggregator:latest ./gpt_runner/log_aggregator
+          docker push --all-tags $IMAGE_PREFIX/log-aggregator
+
   setup-gcp-service-account:
     name: 🔐 Setup GCP Service Account & Workload Identity
     if: github.event_name == 'push' || github.event_name == 'repository_dispatch'
@@ -542,7 +546,7 @@ jobs:
             --set futuresTrader.image.tag=${{ github.sha }}
             --set serviceAccountName=gpt-runner-sa
             --set namespace=gpt
-            --wait --timeout=10m
+            --wait --timeout=20m
           )
           # Try deployment with progressive fallback strategies
           if [ "$HELM_ACTION" = "upgrade" ]; then
@@ -569,6 +573,28 @@ jobs:
               exit 1
             fi
           fi
+
+      - name: 🐞 Debug: Get Pod Statuses and Events
+        if: failure()
+        run: |
+          echo "🔍 Debugging failed deployment..."
+          echo "================================"
+          echo ""
+          echo "📋 Pods in gpt namespace:"
+          kubectl get pods -n gpt -o wide
+          echo ""
+          echo "📅 Recent events in gpt namespace:"
+          kubectl get events -n gpt --sort-by=.metadata.creationTimestamp
+          echo ""
+          echo "🔍 Detailed pod descriptions:"
+          for pod in $(kubectl get pods -n gpt -o jsonpath='{.items[*].metadata.name}'); do
+            echo "---- Describing pod: $pod ----"
+            kubectl describe pod $pod -n gpt
+            echo ""
+            echo "---- Logs for pod: $pod ----"
+            kubectl logs $pod -n gpt --tail=50 || echo "No logs available for $pod"
+            echo ""
+          done
 
       - name: ✅ Verify Deployment
         env:

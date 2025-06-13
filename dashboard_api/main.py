@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Import routers
-from .routers import system, cognitive, trade
+from routers import system, cognitive, trade
 
 # Initialize FastAPI app
 app = FastAPI(
