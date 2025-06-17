@@ -6,25 +6,38 @@ import sys
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# Mock external modules before imports
+from tests.test_mocks import setup_all_mocks
+setup_all_mocks()
+
 from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
-from runner.config.config_manager import ConfigManager
+from config.config_manager import ConfigManager
 
 class TestEnhancedTradeManager(unittest.TestCase):
 
     def setUp(self):
         """Set up the test environment before each test."""
-        self.mock_config_manager = MagicMock(spec=ConfigManager)
-        self.mock_config_manager.get_config.return_value = {
-            "paper_trade": True,
-            "features": {"enhanced_trade_execution": True},
-            "gcp": {"project_id": "test-project"}
-        }
+        # Create a proper config mock with all required attributes
+        self.mock_config = MagicMock()
+        self.mock_config.paper_trade = True
+        self.mock_config.default_capital = 100000
+        self.mock_config.max_daily_loss = 5000
+        self.mock_config.features = {"enhanced_trade_execution": True}
+        self.mock_config.gcp = {"project_id": "test-project"}
 
-        with patch('runner.enhanced_trade_manager.get_trading_config', return_value=self.mock_config_manager):
-            self.trade_manager = EnhancedTradeManager(
-                enable_firestore=False,
-                enable_gcs=False
-            )
+        # Mock the enhanced logger creation
+        mock_logger = MagicMock()
+        mock_logger.log_event = MagicMock()
+        mock_logger.log_trade = MagicMock()
+        
+        with patch('runner.enhanced_trade_manager.get_trading_config', return_value=self.mock_config):
+            with patch('runner.enhanced_trade_manager.create_portfolio_manager', return_value=MagicMock()):
+                with patch('runner.enhanced_trade_manager.CognitiveSystem', return_value=MagicMock()):
+                    with patch('runner.enhanced_trade_manager.create_trading_logger', return_value=mock_logger):
+                        self.trade_manager = EnhancedTradeManager(
+                            enable_firestore=False,
+                            enable_gcs=False
+                        )
 
         self.mock_kite_client = MagicMock()
         self.trade_manager.kite_client = self.mock_kite_client

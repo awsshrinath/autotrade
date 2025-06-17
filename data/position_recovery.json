@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-06-17T15:28:51.539617",
+  "positions": [
+    {
+      "id": "RELIANCE_test_strategy_1750154331",
+      "symbol": "RELIANCE",
+      "strategy": "test_strategy",
+      "bot_type": "stock-trader",
+      "direction": "bullish",
+      "quantity": 5,
+      "entry_price": 2500.0,
+      "current_price": 2500.0,
+      "entry_time": "2025-06-17 15:28:51.539587",
+      "exit_strategy": {
+        "stop_loss": 2450.0,
+        "target": 2600.0,
+        "trailing_stop_enabled": false,
+        "trailing_stop_distance": 0,
+        "trailing_stop_trigger": 0,
+        "time_based_exit_minutes": 0,
+        "breakeven_trigger_pct": 0,
+        "partial_exit_levels": [],
+        "max_loss_pct": 5.0,
+        "max_hold_time_minutes": 240
+      },
+      "status": "TradeStatus.OPEN",
+      "unrealized_pnl": 0.0,
+      "realized_pnl": 0.0,
+      "exit_price": null,
+      "exit_time": null,
+      "exit_reason": null,
+      "trailing_stop_price": null,
+      "highest_price": 2500.0,
+      "lowest_price": 2500.0,
+      "partial_exits": [],
+      "last_update": "2025-06-17 15:28:51.539611",
+      "paper_trade": true
+    }
+  ],
+  "exit_stats": {
+    "total_exits": 0,
+    "stop_loss_exits": 0,
+    "target_exits": 0,
+    "trailing_stop_exits": 0,
+    "manual_exits": 0,
+    "system_exits": 0
+  }
+}

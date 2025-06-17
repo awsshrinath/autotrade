@@ -12,17 +12,18 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import execute_trade
-from utils.enhanced_logging import EnhancedLogger, LogCategory, LogLevel
-from utils.config_loader import load_config
+from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
+from runner.enhanced_logging import LogLevel, LogCategory
+from config.config_manager import get_trading_config
 from runner.trade_manager import TradeManager
-from data.data_provider import DataProvider
-from strategies.strategy_factory import get_strategy
-from kite.kite_manager import KiteManager
-from utils.gcp_utils import get_firestore_client
-from utils.notifications import send_slack_notification
+from runner.market_data.market_data_fetcher import MarketDataFetcher
+from runner.strategy_factory import get_strategy
+# from kite.kite_manager import KiteManager  # Not available
+# from utils.gcp_utils import get_firestore_client  # Not available
+# from utils.notifications import send_slack_notification  # Not available
 
-# Enhanced logging imports
-from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+# Enhanced logging imports (already imported above)
+# from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
 from runner.enhanced_trade_manager import create_enhanced_trade_manager
 
 import logging
