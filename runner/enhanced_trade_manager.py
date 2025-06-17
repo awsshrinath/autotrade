@@ -26,11 +26,6 @@ from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigge
 from runner.metacognition import DecisionOutcome
 from config.config_manager import get_trading_config
 
-def create_enhanced_logger(*args, **kwargs):
-    """Wrapper for backward compatibility"""
-    return create_trading_logger(*args, **kwargs)
-
-
 @dataclass
 class TradeRequest:
     """Trade request data structure"""
@@ -63,7 +58,7 @@ class EnhancedTradeManager:
         self.firestore_client = firestore_client
         
         # Initialize enhanced logger
-        self.enhanced_logger = create_enhanced_logger(
+        self.enhanced_logger = create_trading_logger(
             session_id=f"trade_manager_{int(time.time())}",
             bot_type="trade-manager",
             enable_firestore=enable_firestore,

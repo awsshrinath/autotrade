@@ -8,7 +8,7 @@ import time
 import datetime
 from typing import List, Dict, Any
 
-from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest, create_enhanced_trade_manager
+from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
 from runner.position_monitor import PositionMonitor, ExitStrategy, ExitReason, TradeStatus
 from runner.firestore_client import FirestoreClient
 from runner.logger import Logger
@@ -73,10 +73,12 @@ class EnhancedTradingSystemTest:
         print("Setting up test environment...")
         
         # Create enhanced trade manager
-        self.trade_manager = create_enhanced_trade_manager(
+        self.trade_manager = EnhancedTradeManager(
             logger=self.logger,
             kite_manager=self.mock_kite,
-            firestore_client=self.firestore
+            firestore_client=self.firestore,
+            enable_firestore=False, # Disable for testing
+            enable_gcs=False # Disable for testing
         )
         
         # Start trading session
@@ -304,10 +306,12 @@ class EnhancedTradingSystemTest:
         # Simulate system restart by creating new trade manager
         print("   Simulating system restart...")
         
-        new_trade_manager = create_enhanced_trade_manager(
+        new_trade_manager = EnhancedTradeManager(
             logger=self.logger,
             kite_manager=self.mock_kite,
-            firestore_client=self.firestore
+            firestore_client=self.firestore,
+            enable_firestore=False, # Disable for testing
+            enable_gcs=False # Disable for testing
         )
         
         new_trade_manager.start_trading_session()

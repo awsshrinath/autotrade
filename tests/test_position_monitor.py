@@ -10,7 +10,7 @@ import threading
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from runner.position_monitor import PositionMonitor, ExitStrategy, TradeStatus, ExitReason
-from runner.config.config_manager import ConfigManager
+from config.config_manager import ConfigManager
 from runner.trade_manager import TradeRequest
 from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
 

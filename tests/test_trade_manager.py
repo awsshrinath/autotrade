@@ -1,4 +1,4 @@
-from runner.enhanced_trade_manager import create_enhanced_trade_manager, TradeRequest
+from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
 from unittest.mock import Mock, patch
 
 
@@ -45,8 +45,12 @@ class MockStrategy:
 def test_run_strategy_once():
     kite_manager = MockKiteManager()
     firestore = MockFirestoreClient()
-    trade_manager = create_enhanced_trade_manager(
-        logger=MockLogger(), kite_manager=kite_manager, firestore_client=firestore
+    trade_manager = EnhancedTradeManager(
+        logger=MockLogger(),
+        kite_manager=kite_manager,
+        firestore_client=firestore,
+        enable_firestore=False, # Disable for testing
+        enable_gcs=False # Disable for testing
     )
     trade_manager.start_trading_session()
     
