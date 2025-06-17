@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: options-trader
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: options-trader
+  template:
+    metadata:
+      labels:
+        app: options-trader
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: options-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader:latest
+        env:
+        - name: RUNNER_TYPE
+          value: "options"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: futures-trader
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: futures-trader
+  template:
+    metadata:
+      labels:
+        app: futures-trader
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: futures-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/futures-trader:latest
+        env:
+        - name: RUNNER_TYPE
+          value: "futures"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi 

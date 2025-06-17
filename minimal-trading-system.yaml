@@ -1,0 +1,311 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unified-trader
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unified-trader
+  template:
+    metadata:
+      labels:
+        app: unified-trader
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: unified-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner"
+        - name: TRADING_MODE
+          value: "unified"
+        command: ["/bin/bash"]
+        args: ["-c", "echo 'Starting unified trading system...' && python -c '
+import sys
+import time
+import threading
+from datetime import datetime
+
+# Add paths
+sys.path.append(\"/app\")
+sys.path.append(\"/app/runner\")
+
+print(\"[UNIFIED] Starting all trading components...\")
+
+def run_stock_trading():
+    try:
+        print(\"[STOCK] Starting stock trading...\")
+        from stock_trading.stock_runner import run_stock_trading_bot
+        run_stock_trading_bot()
+    except Exception as e:
+        print(f\"[STOCK] Error: {e}\")
+
+def run_options_trading():
+    try:
+        print(\"[OPTIONS] Starting options trading...\")
+        from options_trading.options_runner import run_options_trading_bot
+        run_options_trading_bot()
+    except Exception as e:
+        print(f\"[OPTIONS] Error: {e}\")
+
+def run_futures_trading():
+    try:
+        print(\"[FUTURES] Starting futures trading...\")
+        from futures_trading.futures_runner import run_futures_trading_bot
+        run_futures_trading_bot()
+    except Exception as e:
+        print(f\"[FUTURES] Error: {e}\")
+
+# Start all trading bots in separate threads
+threads = []
+for func in [run_stock_trading, run_options_trading, run_futures_trading]:
+    thread = threading.Thread(target=func)
+    thread.daemon = True
+    thread.start()
+    threads.append(thread)
+    time.sleep(5)  # Stagger startup
+
+print(\"[UNIFIED] All trading bots started\")
+
+# Keep main thread alive
+try:
+    while True:
+        time.sleep(60)
+        print(f\"[UNIFIED] System running at {datetime.now()}\")
+except KeyboardInterrupt:
+    print(\"[UNIFIED] Shutting down...\")
+'"]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi
+      readinessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 10
+      livenessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 15
+        periodSeconds: 20
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temp-backend
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temp-backend
+  template:
+    metadata:
+      labels:
+        app: temp-backend
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: temp-backend
+        image: gcr.io/your-project-id/tron-backend:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner"
+        - name: TRADING_MODE
+          value: "unified"
+        command: ["/bin/bash"]
+        args: ["-c", "echo 'Starting unified trading system...' && python -c '
+import sys
+import time
+import threading
+from datetime import datetime
+
+# Add paths
+sys.path.append(\"/app\")
+sys.path.append(\"/app/runner\")
+
+print(\"[UNIFIED] Starting all trading components...\")
+
+def run_stock_trading():
+    try:
+        print(\"[STOCK] Starting stock trading...\")
+        from stock_trading.stock_runner import run_stock_trading_bot
+        run_stock_trading_bot()
+    except Exception as e:
+        print(f\"[STOCK] Error: {e}\")
+
+def run_options_trading():
+    try:
+        print(\"[OPTIONS] Starting options trading...\")
+        from options_trading.options_runner import run_options_trading_bot
+        run_options_trading_bot()
+    except Exception as e:
+        print(f\"[OPTIONS] Error: {e}\")
+
+def run_futures_trading():
+    try:
+        print(\"[FUTURES] Starting futures trading...\")
+        from futures_trading.futures_runner import run_futures_trading_bot
+        run_futures_trading_bot()
+    except Exception as e:
+        print(f\"[FUTURES] Error: {e}\")
+
+# Start all trading bots in separate threads
+threads = []
+for func in [run_stock_trading, run_options_trading, run_futures_trading]:
+    thread = threading.Thread(target=func)
+    thread.daemon = True
+    thread.start()
+    threads.append(thread)
+    time.sleep(5)  # Stagger startup
+
+print(\"[UNIFIED] All trading bots started\")
+
+# Keep main thread alive
+try:
+    while True:
+        time.sleep(60)
+        print(f\"[UNIFIED] System running at {datetime.now()}\")
+except KeyboardInterrupt:
+    print(\"[UNIFIED] Shutting down...\")
+'"]
+        ports:
+        - containerPort: 8001
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8001
+          initialDelaySeconds: 20
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tron-frontend-simple
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tron-frontend-simple
+  template:
+    metadata:
+      labels:
+        app: tron-frontend-simple
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: tron-frontend-simple
+        image: gcr.io/your-project-id/tron-frontend:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner"
+        - name: TRADING_MODE
+          value: "unified"
+        command: ["/bin/bash"]
+        args: ["-c", "echo 'Starting unified trading system...' && python -c '
+import sys
+import time
+import threading
+from datetime import datetime
+
+# Add paths
+sys.path.append(\"/app\")
+sys.path.append(\"/app/runner\")
+
+print(\"[UNIFIED] Starting all trading components...\")
+
+def run_stock_trading():
+    try:
+        print(\"[STOCK] Starting stock trading...\")
+        from stock_trading.stock_runner import run_stock_trading_bot
+        run_stock_trading_bot()
+    except Exception as e:
+        print(f\"[STOCK] Error: {e}\")
+
+def run_options_trading():
+    try:
+        print(\"[OPTIONS] Starting options trading...\")
+        from options_trading.options_runner import run_options_trading_bot
+        run_options_trading_bot()
+    except Exception as e:
+        print(f\"[OPTIONS] Error: {e}\")
+
+def run_futures_trading():
+    try:
+        print(\"[FUTURES] Starting futures trading...\")
+        from futures_trading.futures_runner import run_futures_trading_bot
+        run_futures_trading_bot()
+    except Exception as e:
+        print(f\"[FUTURES] Error: {e}\")
+
+# Start all trading bots in separate threads
+threads = []
+for func in [run_stock_trading, run_options_trading, run_futures_trading]:
+    thread = threading.Thread(target=func)
+    thread.daemon = True
+    thread.start()
+    threads.append(thread)
+    time.sleep(5)  # Stagger startup
+
+print(\"[UNIFIED] All trading bots started\")
+
+# Keep main thread alive
+try:
+    while True:
+        time.sleep(60)
+        print(f\"[UNIFIED] System running at {datetime.now()}\")
+except KeyboardInterrupt:
+    print(\"[UNIFIED] Shutting down...\")
+'"]
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi 

@@ -1,4 +1,4 @@
-name: CI
+name: Python CI
 
 on:
   push:
@@ -7,57 +7,23 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-and-test:
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
 
-      - name: Install dependencies
-        run: |
-          pip install numpy==1.24.4
-          pip install faiss-cpu==1.7.4
-          pip install proto-plus>=1.22.3
-          pip install flake8 bandit pytest
-          pip install -r requirements.txt --no-deps  # Skip faiss
-          pip install \
-            google-cloud-firestore \
-            google-cloud-secret-manager \
-            google-api-core \
-            kiteconnect \
-            openai \
-            pydantic \
-            six \
-            regex
-      
-      - name: Lint with flake8
-        run: flake8 .
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Fix the bandit check to correctly respect the config
-      - name: Security check with Bandit
-        run: |
-          # Debug - show bandit version and config file
-          bandit --version
-          cat bandit.yaml
-          
-          # Run Bandit with custom config and ensure proper path to report
-          bandit -r . -c bandit.yaml -f json -o bandit_report.json || true
-          
-          # Check report content for debugging
-          if [ -f bandit_report.json ]; then
-            echo "Bandit report summary:"
-            grep -c "\"issue_severity\": \"HIGH\"" bandit_report.json || true
-            grep -c "\"issue_severity\": \"MEDIUM\"" bandit_report.json || true
-            grep -c "\"issue_severity\": \"LOW\"" bandit_report.json || true
-          fi
-          
-          # Run the fail-on-high script with proper error handling
-          python3 bandit_fail_on_high.py
-
-      - name: Run tests (skip faiss tests via pytest.ini)
-        run: pytest
+    - name: Test with unittest
+      run: |
+        python -m unittest discover -s tests

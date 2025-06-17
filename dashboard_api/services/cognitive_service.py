@@ -3,16 +3,72 @@ import logging
 from datetime import datetime, timedelta
 import asyncio
 import os
+import openai
+
+from .log_service import LogService, get_log_service
 
 logger = logging.getLogger(__name__)
 
 class CognitiveService:
     """Service for handling cognitive AI insights and analysis."""
     
-    def __init__(self):
+    def __init__(self, log_service: LogService):
         self.logger = logger
-        self.is_enabled = os.getenv("FEATURE_COGNITIVE_INSIGHTS", "true").lower() == "true"
-        
+        self.log_service = log_service
+        self.is_enabled = bool(os.getenv("OPENAI_API_KEY"))
+        if self.is_enabled:
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+        else:
+            logger.warning("OPENAI_API_KEY not found. Cognitive insights will be disabled.")
+
+    async def get_log_summary(self, source: str, identifier: str) -> Dict[str, Any]:
+        """
+        Generates a summary for logs from a specific source (gcs, firestore, k8s).
+        """
+        if not self.is_enabled:
+            return {"status": "disabled", "message": "Cognitive features are disabled due to missing OPENAI_API_KEY."}
+
+        try:
+            # 1. Fetch logs using the LogService
+            if source == "k8s":
+                logs = await self.log_service.get_k8s_pod_logs(pod_name=identifier, limit=200)
+                log_content = "\n".join(logs)
+            elif source == "gcs":
+                log_data = await self.log_service.get_gcs_log_content(file_path=identifier)
+                log_content = log_data.get("content", "")
+            else:
+                return {"status": "error", "message": "Invalid log source specified."}
+
+            if not log_content:
+                return {"summary": "No log content available to summarize."}
+
+            # 2. Call OpenAI to summarize
+            prompt = f"""
+            Analyze the following log entries from a trading bot system and provide a concise summary.
+            Focus on errors, warnings, key trades, and system status changes.
+
+            Logs:
+            ---
+            {log_content[:4000]}
+            ---
+            
+            Summary:
+            """
+
+            response = openai.Completion.create(
+                model="text-davinci-003",
+                prompt=prompt,
+                max_tokens=150,
+                temperature=0.3,
+            )
+
+            summary = response.choices[0].text.strip()
+            return {"source": identifier, "summary": summary}
+
+        except Exception as e:
+            self.logger.error(f"Error generating log summary for {identifier}: {e}")
+            return {"status": "error", "message": str(e)}
+
     async def get_cognitive_summary(self) -> Dict[str, Any]:
         """Get overall cognitive system summary."""
         try:
@@ -127,6 +183,12 @@ class CognitiveService:
             return []
 
 # Dependency injection
-def get_cognitive_service() -> CognitiveService:
-    """Get cognitive service instance."""
-    return CognitiveService()
+_cognitive_service_instance = None
+
+def get_cognitive_service() -> Optional[CognitiveService]:
+    """Get cognitive service instance, injecting LogService."""
+    global _cognitive_service_instance
+    if _cognitive_service_instance is None:
+        log_service = get_log_service()
+        _cognitive_service_instance = CognitiveService(log_service=log_service)
+    return _cognitive_service_instance

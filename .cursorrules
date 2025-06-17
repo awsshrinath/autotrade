@@ -1,0 +1,65 @@
+# .cursorrules - Enhanced Memory System for Tron Trading Project
+
+# This file defines the behavior and memory for the Cursor AI assistant.
+# It ensures the AI follows project standards and uses the established documentation.
+
+---
+### 1. Core Instructions & Behavior
+
+-   **Always read `README.md` first.** Before starting any task, read the main `README.md` to understand the current status, priorities, and high-level architecture. This is your primary entry point to the project's context.
+-   **Consult detailed documentation.** For specific information, refer to the files in the `docs/` directory. Don't guess; look it up.
+    -   For features: `docs/REQUIREMENTS.md`
+    -   For system design: `docs/ARCHITECTURE.md`
+    -   For coding style: `docs/PATTERNS.md`
+    -   For historical context: `docs/DECISIONS.md`
+-   **Follow established patterns.** When writing or modifying code, strictly adhere to the conventions defined in `docs/PATTERNS.md`. If a new pattern is needed, document it first in `docs/DECISIONS.md`.
+-   **Update the memory system.** After making significant progress or learning something new, you MUST update the relevant memory files:
+    -   Update `.cursor/context.md` with session-specific notes and learnings.
+    -   Update `README.md`'s "Current Status & Priorities" section after completing a major feature or fix.
+    -   Add a new ADR to `docs/DECISIONS.md` if a new architectural choice is made.
+-   **Use the provided templates.** When creating a new feature plan, bug fix report, or code review checklist, use the templates from the `.cursor/templates/` directory to ensure consistency.
+
+---
+### 2. Project-Specific Coding Standards
+
+-   **Language:** Python 3.9+
+-   **Style:** Follow PEP 8 standards.
+-   **Logging:** All output must go through the `enhanced_logging` module. Do not use `print()` for any production-related output. Logs must be structured and sent to both Firestore and GCS.
+-   **Error Handling:** Always catch specific exceptions. Never use a bare `except:`. Provide clear error messages and log the full traceback.
+-   **Configuration:** All secrets and environment-specific configs must be handled via environment variables, loaded from Kubernetes Secrets in production.
+
+---
+### 3. Prompts for Common Scenarios
+
+#### Daily Workflow Start
+
+```
+"Good morning. Please start our session by reviewing the project's status and priorities from the README.md and our last session's notes from .cursor/context.md. Then, suggest the first task we should tackle today based on the active priorities."
+```
+
+#### New Feature Development
+
+```
+"Let's start developing a new feature. Please use the '.cursor/templates/new_feature.md' template to create a development plan for [FEATURE_DESCRIPTION]. Refer to 'docs/REQUIREMENTS.md' and 'docs/ARCHITECTURE.md' to fill in the details."
+```
+
+#### Bug Fix
+
+```
+"We need to fix a bug. Please use the '.cursor/templates/bug_fix.md' template to document this issue: [BUG_DESCRIPTION]. Start by outlining the steps to reproduce it and analyzing the logs."
+```
+
+#### Proposing an Architecture Change
+
+```
+"I'm considering a change to our architecture. Please use the '.cursor/templates/adr.md' template to create a new Architectural Decision Record. The proposed change is [CHANGE_DESCRIPTION]. Fill in the context and let's discuss the consequences and alternatives."
+```
+
+#### After a Major Change
+
+```
+"We've just completed [TASK_DESCRIPTION]. Please update the project's memory by:
+1. Updating the 'Current Status & Priorities' section in README.md.
+2. Adding the key takeaways from this task to '.cursor/context.md'.
+3. If we made a new architectural choice, creating a new ADR in 'docs/DECISIONS.md'."
+``` 

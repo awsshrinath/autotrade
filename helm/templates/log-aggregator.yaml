@@ -14,6 +14,11 @@ spec:
         app: {{ .Values.logAggregator.name }}
     spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
+      volumes:
+        - name: gcp-key
+          secret:
+            secretName: gcp-service-account-key
+            optional: true
       containers:
         - name: {{ .Values.logAggregator.name }}
           image: "{{ .Values.logAggregator.image.repository }}:{{ .Values.logAggregator.image.tag }}"
@@ -22,26 +27,33 @@ spec:
             - containerPort: {{ .Values.logAggregator.service.port }}
           env:
             - name: GCP_PROJECT_ID
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: GCP_PROJECT_ID
+              value: {{ .Values.gcpProjectId | quote }}
+            - name: FIRESTORE_PROJECT_ID
+              value: {{ .Values.gcpProjectId | quote }}
             - name: ENVIRONMENT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: ENVIRONMENT
+              value: {{ .Values.environment | quote }}
             - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            - name: API_PORT
+              value: {{ .Values.logAggregator.env.API_PORT | default "8001" | quote }}
+            - name: GCS_BUCKET_NAME
+              value: {{ .Values.logAggregator.env.GCS_BUCKET_NAME | default "tron-trade-logs" | quote }}
+            - name: KUBERNETES_NAMESPACE
+              value: {{ .Values.namespace | quote }}
+            - name: AUTH_ENABLED
+              value: {{ .Values.logAggregator.env.AUTH_ENABLED | default "false" | quote }}
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: api-secrets
                   key: openai-api-key
                   optional: true
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/var/secrets/google/key.json"
+          volumeMounts:
+            - name: gcp-key
+              mountPath: /var/secrets/google
+              readOnly: true
           resources:
             {{- toYaml .Values.logAggregator.resources | nindent 12 }}
 

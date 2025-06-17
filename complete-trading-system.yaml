@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stock-trader-simple
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stock-trader-simple
+  template:
+    metadata:
+      labels:
+        app: stock-trader-simple
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: stock-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/stock-trader:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner:/app/stock_trading"
+        command: ["/bin/bash"]
+        args: ["-c", "cd /app && python stock_trading/stock_runner.py"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: options-trader-simple
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: options-trader-simple
+  template:
+    metadata:
+      labels:
+        app: options-trader-simple
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: options-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner:/app/options_trading"
+        command: ["/bin/bash"]
+        args: ["-c", "cd /app && python options_trading/options_runner.py"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: futures-trader-simple
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: futures-trader-simple
+  template:
+    metadata:
+      labels:
+        app: futures-trader-simple
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: futures-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/futures-trader:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner:/app/futures_trading"
+        command: ["/bin/bash"]
+        args: ["-c", "cd /app && python futures_trading/futures_runner.py"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: main-runner-simple
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: main-runner-simple
+  template:
+    metadata:
+      labels:
+        app: main-runner-simple
+    spec:
+      serviceAccountName: gpt-runner-sa
+      containers:
+      - name: main-runner
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner:latest
+        env:
+        - name: PAPER_TRADE
+          value: "true"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PYTHONPATH
+          value: "/app:/app/runner"
+        command: ["/bin/bash"]
+        args: ["-c", "cd /app && python runner/main_runner_combined.py"]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi 

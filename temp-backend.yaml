@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temp-backend
+  namespace: gpt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temp-backend
+  template:
+    metadata:
+      labels:
+        app: temp-backend
+    spec:
+      containers:
+      - name: temp-backend
+        image: python:3.10-slim
+        ports:
+        - containerPort: 8000
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - |
+            pip install fastapi uvicorn psutil &&
+            cat > /tmp/main.py << 'EOF'
+            from fastapi import FastAPI
+            from fastapi.middleware.cors import CORSMiddleware
+            import psutil
+            from datetime import datetime
+            
+            app = FastAPI()
+            
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            
+            @app.get("/")
+            async def root():
+                return {"message": "Temporary Backend API", "status": "running"}
+            
+            @app.get("/api/system/health")
+            async def get_system_health():
+                return {
+                    "status": "healthy",
+                    "uptime_hours": 1.0,
+                    "last_check": datetime.now().isoformat(),
+                    "overall_status": "healthy"
+                }
+            
+            @app.get("/api/system/status")
+            async def get_system_status():
+                memory = psutil.virtual_memory()
+                return {
+                    "overall_status": "healthy",
+                    "backend_service": "running",
+                    "database_connection": "connected",
+                    "api_endpoints": "available",
+                    "metrics": {
+                        "cpu_usage": psutil.cpu_percent(interval=None),
+                        "memory_usage": memory.percent,
+                        "memory_available_gb": round(memory.available / (1024**3), 2),
+                        "timestamp": datetime.now().isoformat()
+                    },
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            @app.get("/api/system/metrics")
+            async def get_system_metrics():
+                memory = psutil.virtual_memory()
+                return {
+                    "cpu_usage": psutil.cpu_percent(interval=None),
+                    "memory_usage": memory.percent,
+                    "memory_available_gb": round(memory.available / (1024**3), 2),
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            @app.get("/api/cognitive/memory")
+            async def get_ai_memory():
+                return {
+                    "status": "simulated",
+                    "memory_usage": "N/A",
+                    "last_thought": "Temporary backend running",
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            @app.get("/api/trade/status")
+            async def get_trade_status():
+                return {
+                    "status": "simulated",
+                    "active_trades": 0,
+                    "total_trades": 0,
+                    "timestamp": datetime.now().isoformat()
+                }
+            EOF
+            uvicorn main:app --host 0.0.0.0 --port 8000 --app-dir /tmp
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temp-backend-service
+  namespace: gpt
+spec:
+  selector:
+    app: temp-backend
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP 

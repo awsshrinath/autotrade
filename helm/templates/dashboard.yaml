@@ -55,6 +55,19 @@ spec:
               value: {{ .Values.dashboard.features.riskMonitoring | default true | quote }}
             - name: ALERTS_ENABLED
               value: {{ .Values.dashboard.features.alerts | default true | quote }}
+            # API Endpoint Configuration
+            - name: BACKEND_API_URL
+              value: "http://{{ .Values.backend.name }}-service:{{ .Values.backend.service.port }}"
+            - name: LOG_AGGREGATOR_API_URL
+              value: "http://{{ .Values.logAggregator.name }}-service:{{ .Values.logAggregator.service.port }}/api/v1"
+            - name: FASTAPI_BASE_URL
+              value: "http://{{ .Values.logAggregator.name }}-service:{{ .Values.logAggregator.service.port }}/api/v1"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: openai-api-key
+                  optional: true
           livenessProbe:
             httpGet:
               path: /_stcore/health

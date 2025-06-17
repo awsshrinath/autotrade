@@ -17,7 +17,7 @@ from runner.position_monitor import PositionMonitor, ExitStrategy, ExitReason, T
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
-from runner.enhanced_logger import EnhancedLogger, LogLevel, LogCategory, create_enhanced_logger
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
 from runner.capital.portfolio_manager import PortfolioManager, create_portfolio_manager
 from runner.risk_governor import RiskGovernor
 from runner.cognitive_system import CognitiveSystem, create_cognitive_system
@@ -25,6 +25,10 @@ from runner.thought_journal import DecisionType, ConfidenceLevel
 from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigger
 from runner.metacognition import DecisionOutcome
 from config.config_manager import get_trading_config
+
+def create_enhanced_logger(*args, **kwargs):
+    """Wrapper for backward compatibility"""
+    return create_trading_logger(*args, **kwargs)
 
 
 @dataclass
@@ -60,8 +64,7 @@ class EnhancedTradeManager:
         # Initialize enhanced logger
         self.enhanced_logger = create_enhanced_logger(
             session_id=f"trade_manager_{int(time.time())}",
-            enable_gcs=True,
-            enable_firestore=True
+            bot_type="trade-manager"
         )
         
         # Configuration

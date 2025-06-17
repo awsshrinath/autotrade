@@ -18,6 +18,11 @@ from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 from runner.openai_manager import OpenAIManager
 from runner.strategy_selector import StrategySelector
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+
+def create_enhanced_logger(*args, **kwargs):
+    """Wrapper for backward compatibility"""
+    return create_trading_logger(*args, **kwargs)
 
 # Load trading mode (PAPER or LIVE)
 PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
@@ -75,8 +80,33 @@ def stop_bot(bot_type, logger):
 
 def main():
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    # Initialize enhanced logger
+    session_id = f"main_runner_{int(time.time())}"
+    enhanced_logger = create_enhanced_logger(
+        session_id=session_id,
+        bot_type="main-runner"
+    )
+    
+    # Initialize basic logger for backward compatibility
     logger = Logger(today_date)
     create_daily_folders(today_date)
+    
+    # Log startup with enhanced logger
+    enhanced_logger.log_event(
+        f"GPT Runner+ Orchestrator Started - Paper Trade Mode: {PAPER_TRADE}",
+        LogLevel.INFO,
+        LogCategory.SYSTEM,
+        data={
+            'session_id': session_id,
+            'date': today_date,
+            'bot_type': 'main-runner',
+            'startup_time': datetime.datetime.now().isoformat(),
+            'paper_trade_mode': PAPER_TRADE
+        },
+        source="main_runner_startup"
+    )
+    
     logger.log_event("✅ GPT Runner+ Orchestrator Started")
 
     # Init memory + RAG sync

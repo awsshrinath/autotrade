@@ -1,257 +1,166 @@
-# 🤖 TRON Trading System
+# Tron Trading System: Enhanced README & Memory Hub
 
-> **Advanced AI-Powered Trading Platform with Enhanced Logging & Cognitive Intelligence**
+**Last Updated:** 2024-07-16
 
-[![Build Status](https://github.com/awsshrinath/autotrade/workflows/CI%2FCD%20-%20Test%2C%20Build%2C%20Deploy/badge.svg)](https://github.com/awsshrinath/autotrade/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
-[![Kubernetes](https://img.shields.io/badge/platform-kubernetes-blue.svg)](https://kubernetes.io)
-
-## 🎯 Overview
-
-TRON is a sophisticated, AI-powered trading system that combines machine learning, cognitive intelligence, and advanced logging to provide automated trading across **stocks**, **options**, and **futures**. Built with a cloud-native architecture, it features real-time monitoring, intelligent decision-making, and comprehensive risk management.
-
-## ✨ Key Features
-
-### 🧠 **Cognitive Intelligence**
-- AI-powered decision making with learning capabilities
-- Real-time market sentiment analysis
-- Self-improving trading strategies
-- Cognitive state management and reflection
-
-### 📊 **Trading Dashboard**
-- Real-time Streamlit-based monitoring interface
-- Live trade tracking and P&L analysis
-- System health monitoring
-- Cognitive insights visualization
-
-### 🔄 **Enhanced Logging**
-- **Firestore**: Real-time operational data
-- **GCS**: Long-term archival with lifecycle management
-- **Cost-optimized**: 75-80% reduction in logging costs
-- **Structured**: JSON-based with intelligent routing
-
-### 🤖 **Multi-Asset Trading**
-- **Stock Trading**: Equity market automation
-- **Options Trading**: Complex derivatives strategies
-- **Futures Trading**: Commodity and index futures
-
-### ☁️ **Cloud-Native Architecture**
-- Kubernetes deployment with auto-scaling
-- Google Cloud Platform integration
-- Artifact Registry for container management
-- CI/CD with GitHub Actions
-
-## 🚀 Quick Start
-
-### Prerequisites
-```bash
-# Required tools
-kubectl    # Kubernetes CLI
-gcloud     # Google Cloud SDK
-docker     # Container runtime
-```
-
-### 1. Clone and Setup
-```bash
-git clone <repository-url>
-cd Tron
-export PROJECT_ID="autotrade-453303"
-export REGION="asia-south1"
-```
-
-### 2. Deploy Trading Dashboard
-```bash
-# Quick deployment (recommended)
-kubectl port-forward service/trading-dashboard-service 8501:8501 -n gpt
-
-# Access dashboard at: http://localhost:8501
-# Username: admin | Password: tron2024
-```
-
-### 3. Full System Deployment
-```bash
-# Deploy all components
-kubectl apply -f deployments/
-kubectl rollout status deployment/main-runner -n gpt
-```
-
-## 📁 Project Structure
-
-```
-Tron/
-├── 📚 docs/                     # Comprehensive documentation
-├── 🚀 deployments/              # Kubernetes configurations  
-├── 🧪 tests/                    # Automated test suite
-├── 🛠️ tools/                    # Development & security tools
-├── ⚙️ config/                   # Configuration management
-├── 🏃 runner/                   # Core trading engine
-├── 📊 dashboard/                # Real-time monitoring UI
-├── 💹 stock_trading/            # Stock trading bot
-├── 📈 options_trading/          # Options trading bot
-├── 📉 futures_trading/          # Futures trading bot
-├── 🤖 agents/                   # AI trading agents
-├── 🧠 gpt_runner/               # GPT-powered analytics
-└── 🔌 mcp/                      # Model Context Protocol
-```
-
-## 📖 Documentation
-
-| Guide | Description |
-|-------|-------------|
-| [📊 Dashboard Deployment](docs/TRADING_DASHBOARD_DEPLOYMENT.md) | Complete dashboard setup guide |
-| [🏗️ Project Structure](docs/PROJECT_STRUCTURE.md) | Detailed project organization |
-| [📁 File Organization](docs/FILE_ORGANIZATION.md) | File organization guidelines and rules |
-| [⚡ Quick Start](docs/QUICK_START_GUIDE.md) | Fast setup instructions |
-| [📝 Enhanced Logging](docs/ENHANCED_LOGGING_SYSTEM.md) | Logging infrastructure guide |
-| [⚙️ Configuration](docs/CONFIG_GUIDE.md) | System configuration details |
-| [🔒 Production Setup](docs/PRODUCTION_READINESS_ANALYSIS.md) | Production deployment guide |
-
-## 🎯 Core Components
-
-### 🧠 Cognitive Trading Engine
-- **Intelligent Decision Making**: AI-powered trade decisions
-- **Learning System**: Continuous strategy improvement
-- **Risk Management**: Real-time risk assessment
-- **Market Analysis**: Advanced sentiment and technical analysis
-
-### 📊 Real-Time Dashboard
-- **Live Monitoring**: Trade execution tracking
-- **Performance Analytics**: P&L analysis with interactive charts  
-- **System Health**: Component status monitoring
-- **Cognitive Insights**: AI decision visualization
-
-### 🔄 Enhanced Logging System
-- **Dual Storage**: Firestore (real-time) + GCS (archival)
-- **Cost Optimization**: Intelligent data lifecycle management
-- **Structured Data**: JSON-based with metadata
-- **Performance**: Batch processing for efficiency
-
-## 🛠️ Technology Stack
-
-### **Backend**
-- **Python 3.10+**: Core application runtime
-- **FastAPI**: High-performance API framework
-- **Streamlit**: Interactive dashboard framework
-
-### **AI & ML**
-- **OpenAI GPT**: Advanced language models
-- **FAISS**: Vector similarity search
-- **Custom RAG**: Retrieval-Augmented Generation
-
-### **Cloud Infrastructure**
-- **Google Cloud Platform**: Primary cloud provider
-- **Kubernetes (GKE)**: Container orchestration
-- **Firestore**: Real-time NoSQL database
-- **Cloud Storage**: Long-term data archival
-
-### **Trading APIs**
-- **Zerodha Kite**: Indian stock market API
-- **Custom Adapters**: Multi-broker support
-
-## 🔧 Development
-
-### Running Tests
-```bash
-# Run all tests
-pytest tests/
-
-# Run specific test categories
-pytest tests/test_dashboard_imports.py
-pytest tests/test_enhanced_logging.py
-```
-
-### Local Development
-```bash
-# Set up virtual environment
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
-
-# Run individual components
-python runner/main_runner_combined.py
-python dashboard/app.py
-```
-
-### Security Scanning
-```bash
-# Run security scans
-bandit -r . -f json -o tools/security/bandit_results.txt
-flake8 --config tools/security/.flake8
-```
-
-## 📈 Performance Metrics
-
-### **Dashboard Performance**
-- **Startup Time**: ~30-60 seconds
-- **Memory Usage**: ~300-800MB  
-- **Response Time**: <2 seconds
-
-### **Logging Efficiency**
-- **Cost Reduction**: 75-80% vs traditional logging
-- **Batch Processing**: 10 writes/5 seconds (Firestore)
-- **Compression**: gzip for GCS storage
-- **Lifecycle**: Automated data management
-
-### **Trading Performance**
-- **Latency**: <100ms trade execution
-- **Uptime**: 99.9% system availability
-- **Accuracy**: AI-enhanced decision making
-
-## 🚨 Troubleshooting
-
-### Dashboard Issues
-```bash
-# Check pod status
-kubectl get pods -n gpt -l app=trading-dashboard
-
-# View logs
-kubectl logs -f deployment/trading-dashboard -n gpt
-
-# Common fix: Wrong image
-kubectl rollout restart deployment/trading-dashboard -n gpt
-```
-
-### Import Errors
-```bash
-# Test imports
-python tests/test_dashboard_imports.py
-
-# Fix Python path
-export PYTHONPATH="/app:$PYTHONPATH"
-```
-
-## 🤝 Contributing
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Test** your changes: `pytest tests/`
-4. **Commit** changes: `git commit -m 'Add amazing feature'`
-5. **Push** to branch: `git push origin feature/amazing-feature`
-6. **Submit** a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: Check [docs/](docs/) directory
-- **Issues**: GitHub Issues for bug reports
-- **Discussions**: GitHub Discussions for questions
-- **Security**: Report security issues privately
-
-## 🔮 Roadmap
-
-- [ ] **Multi-Exchange Support**: Expand beyond Zerodha
-- [ ] **Advanced ML Models**: Enhanced prediction algorithms  
-- [ ] **Mobile Dashboard**: React Native mobile app
-- [ ] **Portfolio Optimization**: Advanced portfolio management
-- [ ] **Paper Trading**: Risk-free strategy testing
+This README serves as the central memory hub for the Tron Trading System. It provides a high-level overview, current status, and quick links to detailed documentation for developers and AI assistants.
 
 ---
 
-**Made with ❤️ by the TRON Trading Team**  
-*Last Updated: May 30, 2024* # GitHub Actions authentication fix
-# Deployment fix - force redeploy after namespace cleanup
-# Trigger deployment
+### 🎯 Current Status & Priorities
+
+-   **Current Phase:** `Production Hardening & Optimization`
+-   **Immediate Focus:** Stabilizing the enhanced logging system and ensuring all trading pods operate flawlessly on GKE.
+-   **Active Priorities:**
+    -   [x] **Fix Critical Logging Bugs:** Validate and deploy fixes for import path errors, missing logs, and API mismatches.
+    -   [ ] **Optimize GKE Deployment:** Continue refining resource limits and high-availability configurations for the minimal trading system.
+    -   [ ] **Enhance Dashboard Resilience:** Improve the dashboard's ability to handle backend service outages gracefully.
+    -   [ ] **Scale Options & Futures Pods:** Fully integrate and stabilize options and futures trading pods alongside the stock trader.
+-   **Blockers:** None at the moment.
+
+---
+
+### 🏗️ Architecture at a Glance
+
+A multi-pod, event-driven trading system deployed on Google Kubernetes Engine (GKE).
+
+-   **Core Logic:** Python
+-   **Trading Pods:** Separate deployments for Stocks, Options, and Futures.
+-   **Orchestration:** A `main-runner` pod that uses AI to generate daily trading plans and manage other pods.
+-   **API Broker:** Zerodha Kite Connect
+-   **Database:** Google Firestore (for real-time data, trades, and plans)
+-   **Log Storage:** Google Cloud Storage (GCS) for archival/bulk logs.
+-   **Frontend:** Streamlit Dashboard (`dashboard_streamlit_backup`)
+-   **Backend API:** FastAPI (`dashboard_api`) for serving data to the dashboard.
+-   **AI/LLM:** GPT models via `gpt_runner` for analysis and strategy.
+-   **Task Management:** Task Master AI (`.taskmaster/`)
+
+---
+
+### 📋 Active Requirements
+
+-   [ ] **High:** Implement a robust, unified logging framework across all trading pods.
+-   [ ] **High:** Ensure the system can execute paper trades for all asset classes (stocks, options, futures) based on AI-generated strategies.
+-   [ ] **Medium:** The dashboard must display real-time system health, pod status, and recent trades.
+-   [ ] **Medium:** The system must gracefully handle market-off hours by exiting open positions.
+-   [ ] **Low:** Implement a CI/CD pipeline for automated testing and deployment.
+
+*For a full list, see [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md).*
+
+---
+
+### 🎨 Coding Patterns We Use
+
+1.  **Enhanced Structured Logging**
+    All services use a centralized `enhanced_logging` module to send structured logs to both Firestore (real-time) and GCS (archive).
+
+    ```python
+    # runner/stock_runner.py
+    from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+
+    enhanced_logger = create_trading_logger(session_id="stock_trader_123", bot_type="stock-trader")
+
+    enhanced_logger.log_event(
+        "Trade signal received",
+        LogLevel.INFO,
+        LogCategory.STRATEGY,
+        data={'symbol': 'RELIANCE', 'signal': 'BUY'},
+        source="vwap_strategy"
+    )
+    ```
+
+2.  **Kubernetes Deployment Manifests**
+    All applications are deployed via `.yaml` files, defining services, deployments, resource limits, and environment variables.
+
+    ```yaml
+    # simple-trading-pods.yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: stock-trader-simple
+    spec:
+      replicas: 1
+      template:
+        spec:
+          containers:
+          - name: stock-trader
+            image: gcr.io/your-project/tron-trader:latest
+            env:
+            - name: TRADING_TYPE
+              value: "stock"
+            - name: PAPER_TRADE
+              value: "true"
+    ```
+
+3.  **AI-Driven Daily Planning**
+    The `main-runner` pod analyzes market sentiment and generates a daily plan, which it stores in Firestore for the trading pods to retrieve.
+
+    ```python
+    # runner/main_runner.py
+    plan = {
+        "stocks": ("vwap", {"atr_multiplier": 2.0}),
+        "options": ("scalp", {"strike_distance": 1}),
+        "mode": "paper",
+        "timestamp": datetime.datetime.now().isoformat(),
+    }
+    firestore_client.db.collection("gpt_runner_daily_plan").document(today_date).set(plan)
+    ```
+
+*For more, see [docs/PATTERNS.md](docs/PATTERNS.md).*
+
+---
+
+### 🚨 Known Issues & Workarounds
+
+-   **Issue:** `CrashLoopBackOff` on initial pod deployment.
+    -   **Workaround:** Check pod logs (`kubectl logs <pod-name>`) for import errors or missing environment variables. Often caused by incorrect image tags or missing secrets.
+-   **Issue:** Dashboard shows "API unavailable".
+    -   **Workaround:** Ensure the `temp-backend` or `dashboard-api` pod is running and the `nginx-proxy` is correctly routing traffic. The dashboard has a local fallback mode for limited functionality.
+
+*For more, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).*
+
+---
+
+### 📚 Quick Reference Links
+
+-   [**Detailed Requirements**](docs/REQUIREMENTS.md)
+-   [**System Architecture**](docs/ARCHITECTURE.md)
+-   [**Coding Patterns**](docs/PATTERNS.md)
+-   [**Architectural Decisions**](docs/DECISIONS.md)
+-   [**Development Setup**](docs/SETUP.md)
+-   [**Troubleshooting Guide**](docs/TROUBLESHOOTING.md)
+
+---
+
+### 🚀 Getting Started
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd Tron
+    ```
+2.  **Set up environment:**
+    -   Ensure you have `gcloud`, `kubectl`, and `docker` installed and configured.
+    -   Create a `.env` file from `.env.example` and populate it with your Zerodha and GCP credentials.
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Deploy to GKE:**
+    ```bash
+    # Apply the minimal system first
+    kubectl apply -f minimal-trading-system.yaml
+    ```
+
+*For detailed instructions, see [docs/SETUP.md](docs/SETUP.md).*
+
+---
+
+### 📝 Recent Updates
+
+-   **2024-07-16:**
+    -   **FIX:** Corrected critical logging import paths and parameter mismatches across all trading pods.
+    -   **FEAT:** Implemented enhanced structured logging to Firestore and GCS.
+    -   **FEAT:** Added dashboard resilience with a local data fallback mode.
+-   **2024-07-15:**
+    -   **FEAT:** Deployed initial minimal trading system on GKE.
+    -   **TASK:** Cleaned up unnecessary pods to optimize resource usage.

@@ -5,14 +5,16 @@ API Client for interacting with the Log Aggregator FastAPI service.
 import requests
 import streamlit as st # For error messages and session state
 from typing import List, Optional, Dict, Any
+import os
 
 # Assuming Pydantic models from FastAPI are similar or can be mapped to dicts for client
 # For simplicity, this client will mostly return JSON/dicts.
 # In a more complex scenario, you might share Pydantic models or have client-side models.
 
 class LogAPIClient:
-    def __init__(self, base_url: str, api_key: Optional[str] = None):
-        self.base_url = base_url.rstrip('/')
+    def __init__(self, api_key: Optional[str] = None):
+        # Base URL now points to the service and will be prefixed with /api/v1
+        self.base_url = os.getenv("DASHBOARD_API_URL", "http://localhost:8001") + "/api/v1"
         self.api_key = api_key
         self.headers = {"Content-Type": "application/json"}
         if self.api_key:
@@ -45,37 +47,125 @@ class LogAPIClient:
 
     # --- Health Check ---
     def health_check(self) -> Optional[Dict[str, Any]]:
+        """Checks the health of the FastAPI service with multiple fallback strategies."""
+        # Try multiple endpoints to test connectivity
+        test_endpoints = ["/", "/health", "/api/v1/", "/status"]
+        
+        for endpoint in test_endpoints:
+            try:
+                response = requests.get(f"{self.base_url}{endpoint}", headers=self.headers, timeout=5)
+                if response.status_code == 200:
+                    result = response.json() if response.content else {"status": "ok"}
+                    return {
+                        "status": "ok",
+                        "message": f"Log Aggregator API is running (endpoint: {endpoint})",
+                        "response_time_ms": response.elapsed.total_seconds() * 1000,
+                        "endpoint_used": endpoint,
+                        "dependencies": {
+                            "gcs_service": "unknown",
+                            "firestore_service": "unknown", 
+                            "k8s_service": "unknown",
+                            "gpt_service_openai": "unknown"
+                        }
+                    }
+            except requests.exceptions.RequestException:
+                continue  # Try next endpoint
+        
+        # If all endpoints fail, return offline status
+        st.warning("Log aggregator service completely unavailable - all endpoints failed")
+        return {
+            "status": "offline",
+            "message": "Log aggregator service is not running. Dashboard running in offline mode.",
+            "attempted_endpoints": test_endpoints,
+            "dependencies": {
+                "gcs_service": "offline",
+                "firestore_service": "offline", 
+                "k8s_service": "offline",
+                "gpt_service_openai": "offline"
+            }
+        }
+
+    # --- System Endpoints ---
+    def get_system_health(self) -> Optional[Dict[str, Any]]:
         """Checks the health of the FastAPI service."""
         try:
-            # Test the root endpoint first since /health is having issues
-            response = requests.get(f"{self.base_url}/", headers=self.headers, timeout=5)
-            result = self._handle_response(response)
-            if result and "Welcome to the Log Aggregator API" in result.get("message", ""):
-                return {
-                    "status": "ok",
-                    "message": "Log Aggregator API is running",
-                    "dependencies": {
-                        "gcs_service": "unknown",
-                        "firestore_service": "unknown", 
-                        "k8s_service": "unknown",
-                        "gpt_service_openai": "unknown"
-                    }
-                }
-            else:
-                raise Exception("Unexpected response from root endpoint")
-        except requests.exceptions.RequestException as e:
-            st.warning(f"Log aggregator service unavailable: {e}")
-            # Return offline status instead of None
-            return {
-                "status": "offline",
-                "message": "Log aggregator service is not running. Dashboard running in offline mode.",
-                "dependencies": {
-                    "gcs_service": "offline",
-                    "firestore_service": "offline", 
-                    "k8s_service": "offline",
-                    "gpt_service_openai": "offline"
-                }
-            }
+            response = requests.get(f"{self.base_url}/system/health", headers=self.headers, timeout=5)
+            return self._handle_response(response)
+        except Exception:
+            return {"status": "offline", "message": "Log aggregator service is not running."}
+
+    # --- Log Retrieval Endpoints ---
+    def list_gcs_log_files(self, prefix: Optional[str] = None, limit: int = 100) -> List[str]:
+        params = {"prefix": prefix, "limit": limit}
+        try:
+            response = requests.get(f"{self.base_url}/logs/gcs", headers=self.headers, params=params, timeout=30)
+            return self._handle_response(response)
+        except Exception as e:
+            st.error(f"Failed to list GCS files: {e}")
+            return []
+
+    def get_gcs_log_content(self, file_path: str) -> Optional[Dict[str, Any]]:
+        params = {"file_path": file_path}
+        try:
+            response = requests.get(f"{self.base_url}/logs/gcs/content", headers=self.headers, params=params, timeout=60)
+            return self._handle_response(response)
+        except Exception as e:
+            st.error(f"Failed to get GCS log content: {e}")
+            return None
+
+    def get_firestore_logs(self, limit: int = 100) -> List[Dict[str, Any]]:
+        params = {"limit": limit}
+        try:
+            response = requests.get(f"{self.base_url}/logs/firestore", headers=self.headers, params=params, timeout=60)
+            return self._handle_response(response)
+        except Exception as e:
+            st.error(f"Failed to get Firestore logs: {e}")
+            return []
+
+    def list_k8s_pods(self) -> List[str]:
+        try:
+            response = requests.get(f"{self.base_url}/logs/k8s/pods", headers=self.headers, timeout=30)
+            return self._handle_response(response)
+        except Exception as e:
+            st.error(f"Failed to list Kubernetes pods: {e}")
+            return []
+
+    def get_k8s_pod_logs(self, pod_name: str, limit: int = 100) -> List[str]:
+        params = {"pod_name": pod_name, "limit": limit}
+        try:
+            # Note: pod_name is now a query parameter
+            response = requests.get(f"{self.base_url}/logs/k8s", headers=self.headers, params=params, timeout=120)
+            return self._handle_response(response)
+        except Exception as e:
+            st.error(f"Failed to get Kubernetes pod logs: {e}")
+            return []
+
+    # --- Cognitive (AI) Endpoints ---
+    def get_log_summary(self, source: str, identifier: str) -> Optional[Dict[str, Any]]:
+        """Gets an AI-powered summary for a specific log."""
+        params = {"source": source, "identifier": identifier}
+        try:
+            response = requests.get(f"{self.base_url}/cognitive/summary/logs", headers=self.headers, params=params, timeout=180) # Longer timeout for GPT
+            return self._handle_response(response)
+        except Exception as e:
+            st.error(f"Log summarization service error: {e}")
+            return None
+
+    def get_portfolio_overview(self):
+        """Fetches the portfolio overview data from the API."""
+        response = requests.get(f"{self.base_url}/portfolio/overview")
+        response.raise_for_status()
+        return response.json()
+
+    def login(self, username, password):
+        """Logs the user in and returns an access token."""
+        login_data = {
+            'username': username,
+            'password': password
+        }
+        response = requests.post(f"{self.base_url}/auth/token", data=login_data)
+        response.raise_for_status()
+        return response.json()
 
     # --- GCS Endpoints ---
     def list_gcs_files(self, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
@@ -126,22 +216,6 @@ class LogAPIClient:
             return None
 
     # --- Kubernetes Endpoints ---
-    def list_k8s_pods(self, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        try:
-            response = requests.get(f"{self.base_url}/k8s/pods", headers=self.headers, params=params, timeout=30)
-            return self._handle_response(response)
-        except Exception as e:
-            st.error(f"Kubernetes service error: {e}")
-            return None
-
-    def get_k8s_pod_logs(self, pod_name: str, filter_params: Dict[str, Any], pagination: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        params = pagination or {}
-        try:
-            response = requests.post(f"{self.base_url}/k8s/{pod_name}/logs", headers=self.headers, json=filter_params, params=params, timeout=120)
-            return self._handle_response(response)
-        except Exception as e:
-            return None
-
     def get_k8s_pod_events(self, pod_name: str, namespace: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
         params = {"namespace": namespace} if namespace else {}
         try:

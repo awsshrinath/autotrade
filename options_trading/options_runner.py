@@ -14,6 +14,11 @@ from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import simulate_exit, execute_trade
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+
+def create_enhanced_logger(*args, **kwargs):
+    """Wrapper for backward compatibility"""
+    return create_trading_logger(*args, **kwargs)
 
 # Import market components with fallbacks
 try:
@@ -117,7 +122,33 @@ def wait_for_daily_plan(firestore_client, today_date, logger, max_wait_minutes=1
 
 def run_options_trading_bot():
     today_date = datetime.now().strftime("%Y-%m-%d")
+    paper_trade_mode = PAPER_TRADE
+    
+    # Initialize enhanced logger
+    session_id = f"options_trader_{int(time.time())}"
+    enhanced_logger = create_enhanced_logger(
+        session_id=session_id,
+        bot_type="options-trader"
+    )
+    
+    # Initialize basic logger for backward compatibility
     logger = Logger(today_date)
+    
+    # Log startup with enhanced logger
+    enhanced_logger.log_event(
+        f"Options Trading Bot Started - Paper Trade Mode: {paper_trade_mode}",
+        LogLevel.INFO,
+        LogCategory.SYSTEM,
+        data={
+            'session_id': session_id,
+            'date': today_date,
+            'bot_type': 'options-trader',
+            'startup_time': datetime.now().isoformat(),
+            'paper_trade_mode': paper_trade_mode
+        },
+        source="options_bot_startup"
+    )
+    
     logger.log_event("[BOOT] Starting Options Trading Bot...")
 
     # Initialize Firestore client to fetch daily plan
@@ -203,10 +234,27 @@ def run_options_trading_bot():
                             logger.log_event(f"[ERROR] Options trade execution exception: {trade_error}")
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
+                        enhanced_logger.log_event(
+                            "No valid trade signal from strategy",
+                            LogLevel.DEBUG,
+                            LogCategory.STRATEGY,
+                            data={'strategy': strategy_name},
+                            source="options_trader"
+                        )
                 else:
                     logger.log_event("[ERROR] Strategy not loaded.")
+                    enhanced_logger.log_error(
+                        Exception("Strategy not loaded"),
+                        context={'strategy': strategy_name},
+                        source="options_trader"
+                    )
             except Exception as e:
                 logger.log_event(f"[ERROR] Strategy loop exception: {e}")
+                enhanced_logger.log_error(
+                    e,
+                    context={'component': 'trading_loop', 'strategy': strategy_name},
+                    source="options_trader"
+                )
             time.sleep(60)
 
         logger.log_event("[CLOSE] Market closed. Sleeping to prevent CrashLoop.")

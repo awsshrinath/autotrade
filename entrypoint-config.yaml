@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: entrypoint-config
+  namespace: gpt
+data:
+  entrypoint.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "🚀 Starting Trading Pod..."
+    echo "PAPER_TRADE: $PAPER_TRADE"
+    echo "GCP_PROJECT_ID: $GCP_PROJECT_ID"
+    echo "PYTHONPATH: $PYTHONPATH"
+    
+    # Set up Python path
+    export PYTHONPATH="/app:/app/runner:$PYTHONPATH"
+    
+    # Create __init__.py files if they don't exist
+    touch /app/__init__.py
+    touch /app/runner/__init__.py
+    
+    # Navigate to app directory
+    cd /app
+    
+    # Determine which script to run based on the image
+    if [[ "$0" == *"stock"* ]] || [[ "$HOSTNAME" == *"stock"* ]]; then
+        echo "🏃 Running Stock Trading Script..."
+        python stock_trading/stock_runner.py
+    elif [[ "$0" == *"options"* ]] || [[ "$HOSTNAME" == *"options"* ]]; then
+        echo "🏃 Running Options Trading Script..."
+        python options_trading/options_runner.py
+    elif [[ "$0" == *"futures"* ]] || [[ "$HOSTNAME" == *"futures"* ]]; then
+        echo "🏃 Running Futures Trading Script..."
+        python futures_trading/futures_runner.py
+    elif [[ "$0" == *"main"* ]] || [[ "$HOSTNAME" == *"main"* ]]; then
+        echo "🏃 Running Main Runner Script..."
+        python runner/main_runner_combined.py
+    else
+        echo "❌ Unknown trading pod type, defaulting to main runner..."
+        python runner/main_runner_combined.py 

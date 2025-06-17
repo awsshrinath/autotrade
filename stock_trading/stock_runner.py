@@ -1,33 +1,33 @@
 import os
 import sys
-
-# Add project root to path BEFORE any other imports
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import time
 from datetime import datetime
 from datetime import time as dtime
 import pytz
+import requests
+import kiteconnect
 from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import Logger
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import execute_trade
+from utils.enhanced_logging import EnhancedLogger, LogCategory, LogLevel
+from utils.config_loader import load_config
+from runner.trade_manager import TradeManager
+from data.data_provider import DataProvider
+from strategies.strategy_factory import get_strategy
+from kite.kite_manager import KiteManager
+from utils.gcp_utils import get_firestore_client
+from utils.notifications import send_slack_notification
 
-# Use basic logger instead of enhanced logger
+# Enhanced logging imports
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+from runner.enhanced_trade_manager import create_enhanced_trade_manager
+
 def create_enhanced_logger(*args, **kwargs):
-    return Logger("stock-trader")
-
-# Simple LogLevel and LogCategory classes
-class LogLevel:
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-
-class LogCategory:
-    STRATEGY = "STRATEGY"
-    TRADE = "TRADE"
+    """Wrapper for backward compatibility"""
+    return create_trading_logger(*args, **kwargs)
 
 # Import market components with fallbacks
 try:
@@ -230,102 +230,70 @@ def wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger, m
     )
     return None
 
+MAX_RETRIES = 5
+RETRY_DELAY_SECONDS = 10
 
 def run_stock_trading_bot():
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    paper_trade_mode = PAPER_TRADE
-    
-    # Initialize enhanced logger for Firestore and GCS logging
-    session_id = f"stock_trader_{int(time.time())}"
-    enhanced_logger = create_enhanced_logger(
-        session_id=session_id,
-        enable_gcs=True,
-        enable_firestore=True
-    )
-    
-    # Initialize basic logger for backward compatibility
-    logger = Logger(today_date)
-    
-    # Log startup with enhanced logger
-    enhanced_logger.log_event(
-        f"Stock Trading Bot Started - Paper Trade Mode: {paper_trade_mode}",
-        LogLevel.INFO,
-        LogCategory.SYSTEM,
-        data={
-            'session_id': session_id,
-            'date': today_date,
-            'bot_type': 'stock-trader',
-            'startup_time': datetime.now().isoformat(),
-            'paper_trade_mode': paper_trade_mode
-        },
-        bot_type="stock-trader",
-        source="stock_bot_startup"
-    )
-
-    # Initialize Firestore Client
-    firestore_client = FirestoreClient(logger)
-    
-    # Initialize KiteConnectManager
-    kite_manager = KiteConnectManager(logger)
-    if not paper_trade_mode:
-        kite_manager.set_access_token()
-
-    # Initialize EnhancedTradeManager
-    trade_manager = create_enhanced_trade_manager(
-        logger=logger,
-        kite_manager=kite_manager,
-        firestore_client=firestore_client
-    )
-    trade_manager.start_trading_session()
-
-    # Strategy selection from daily plan or fallback
-    strategy_name = "vwap"  # Default strategy
-    
-    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger, enhanced_logger)
-    if daily_plan:
-        strategy_tuple = daily_plan.get("stocks", "vwap")
-        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
-        logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
-        
-        enhanced_logger.log_event(
-            "Daily strategy plan loaded",
-            LogLevel.INFO,
-            LogCategory.STRATEGY,
-            data={
-                'strategy': strategy_name,
-                'daily_plan': daily_plan
-            },
-            bot_type="stock-trader",
-            source="strategy_loader"
-        )
-    
-    # The actual strategy logic for getting signals would go here
-    # For now, we'll simulate running the strategy periodically.
-    
-    logger.log_event(f"Starting trading loop with strategy: {strategy_name}")
-
-    while is_market_open():
+    """
+    Main function to run the stock trading bot.
+    Includes retry logic and enhanced error handling.
+    """
+    retries = 0
+    while retries < MAX_RETRIES:
         try:
-            # In a real scenario, a signal generation mechanism would replace this.
-            # This just calls the placeholder `run_strategy_once` method.
-            trade_manager.run_strategy_once(strategy_name, "bullish", "stock")
-            
-            # Sleep for a while before the next cycle
-            time.sleep(300) # 5 minutes
-
-        except Exception as e:
-            logger.log_event(f"[ERROR] An error occurred in the trading loop: {e}")
-            enhanced_logger.log_error(
-                "Trading loop exception",
-                error=str(e),
-                bot_type="stock-trader"
+            config = load_config('config/stock_config.json')
+            firestore_client = get_firestore_client()
+            main_logger = EnhancedLogger(
+                log_category=LogCategory.SYSTEM,
+                log_level=LogLevel.INFO,
+                config=config,
+                firestore_client=firestore_client
             )
-            time.sleep(60)
+            main_logger.log_event("Stock Trading Bot started.")
 
-    logger.log_event("Market is closed. Stopping stock trading bot.")
-    trade_manager.stop_trading_session()
-    logger.log_event("Trading session stopped and positions closed if any.")
+            # ... (rest of the existing setup code inside the loop)
+            kite_manager = KiteManager(
+                api_key=os.getenv('KITE_API_KEY'),
+                access_token=os.getenv('KITE_ACCESS_TOKEN'),
+                firestore_client=firestore_client
+            )
+            # ... (rest of the setup)
+            trade_manager = TradeManager(kite_manager, main_logger, config)
+            data_provider = DataProvider(kite_manager, main_logger, config)
 
+            strategy_name = config.get('strategy', 'default_strategy')
+            strategy = get_strategy(strategy_name, kite_manager, main_logger, config, trade_manager, data_provider)
+
+            main_logger.log_event(f"Using strategy: {strategy_name}")
+
+            while True:
+                if is_market_open():
+                    strategy.run()
+                else:
+                    main_logger.log_event("Market is closed. Pausing.")
+                time.sleep(config.get('update_interval', 60))
+            
+            # If the loop breaks for some reason, we exit the retry loop
+            break
+
+        except (requests.exceptions.ConnectionError, kiteconnect.exceptions.NetworkException) as e:
+            retries += 1
+            main_logger.log_event(
+                f"Connection error: {e}. Retrying ({retries}/{MAX_RETRIES}) in {RETRY_DELAY_SECONDS * retries}s...",
+                level=LogLevel.WARNING
+            )
+            time.sleep(RETRY_DELAY_SECONDS * retries) # Exponential backoff
+        
+        except Exception as e:
+            main_logger.log_event(f"An unexpected error occurred in stock_runner: {e}", level=LogLevel.ERROR)
+            send_slack_notification(f"🚨 CRITICAL ERROR in Stock Trading Bot: {e}")
+            # For critical errors, we might want to break immediately
+            break 
+    
+    if retries >= MAX_RETRIES:
+        final_message = "Stock Trading Bot failed after multiple retries."
+        main_logger.log_event(final_message, level=LogLevel.CRITICAL)
+        send_slack_notification(f"🚨 BOT OFFLINE: {final_message}")
 
 def main():
     """Main entry point for stock trading bot"""

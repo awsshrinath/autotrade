@@ -24,9 +24,26 @@ from dashboard.utils.log_api_client import LogAPIClient
 # Configuration for the API client (could be moved to a config file or Streamlit secrets)
 # Ensure your FastAPI service is running at this address.
 # The API_PREFIX from your FastAPI config should be part of this base_url.
-# Try to get from environment variables first, then use default for development/GKE deployment
+# Get API URLs from environment variables with proper fallbacks
 import os
-FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "http://localhost:8001/api/v1")
+
+# For Kubernetes deployment, use the service URL
+# For local development, use localhost
+def get_api_base_url():
+    """Get the appropriate API base URL based on environment"""
+    # Priority: 1) Environment variable, 2) Kubernetes service discovery, 3) Local development
+    if os.environ.get("FASTAPI_BASE_URL"):
+        return os.environ.get("FASTAPI_BASE_URL")
+    elif os.environ.get("LOG_AGGREGATOR_API_URL"):
+        return os.environ.get("LOG_AGGREGATOR_API_URL")
+    elif os.environ.get("KUBERNETES_SERVICE_HOST"):
+        # Running in Kubernetes - use service discovery
+        return "http://log-aggregator-service:8001/api/v1"
+    else:
+        # Local development
+        return "http://localhost:8001/api/v1"
+
+FASTAPI_BASE_URL = get_api_base_url()
 
 # Auto-get OpenAI API key from multiple sources
 def get_openai_api_key_auto():

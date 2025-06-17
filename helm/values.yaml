@@ -120,7 +120,7 @@ logAggregator:
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
-    port: 8080
+    port: 8001  # Match the actual port from config.py
   resources:
     requests:
       memory: "256Mi"
@@ -128,6 +128,13 @@ logAggregator:
     limits:
       memory: "512Mi"
       cpu: "250m"
+  env:
+    API_PORT: "8001"
+    FIRESTORE_PROJECT_ID: "autotrade-453303"
+    GCS_BUCKET_NAME: "tron-trade-logs"
+    KUBERNETES_NAMESPACE: "gpt"
+    AUTH_ENABLED: "false"
+    LOG_LEVEL: "INFO"
 
 # Dashboard configuration
 dashboard:
