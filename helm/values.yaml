@@ -15,11 +15,11 @@ backend:
     port: 8000
   resources:
     requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
       cpu: "250m"
       memory: "512Mi"
-    limits:
-      cpu: "500m"
-      memory: "1Gi"
 
 frontend:
   name: tron-frontend
@@ -32,11 +32,11 @@ frontend:
     port: 3000
   resources:
     requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "250m"
       memory: "256Mi"
+      cpu: "50m"
+    limits:
+      memory: "512Mi"
+      cpu: "100m"
 
 namespace: gpt
 serviceAccountName: gpt-runner-sa
@@ -70,11 +70,11 @@ stockTrader:
     tag: latest
   resources:
     requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
       memory: "256Mi"
       cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "250m"
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "stock_trading/stock_runner.py"
@@ -86,11 +86,11 @@ optionsTrader:
     tag: latest
   resources:
     requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
       memory: "256Mi"
       cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "250m"
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "options_trading/options_runner.py"
@@ -102,11 +102,11 @@ futuresTrader:
     tag: latest
   resources:
     requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
       memory: "256Mi"
       cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "250m"
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "futures_trading/futures_runner.py"
@@ -123,11 +123,11 @@ logAggregator:
     port: 8001  # Match the actual port from config.py
   resources:
     requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
       memory: "256Mi"
       cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "250m"
   env:
     API_PORT: "8001"
     FIRESTORE_PROJECT_ID: "autotrade-453303"

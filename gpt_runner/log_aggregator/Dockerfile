@@ -22,6 +22,7 @@ EXPOSE 8001
 # Define environment variables (can be overridden)
 ENV FASTAPI_HOST=0.0.0.0
 ENV FASTAPI_PORT=8001
+ENV PYTHONPATH=/
 
 # Run uvicorn server as a module from the root directory
 WORKDIR /
