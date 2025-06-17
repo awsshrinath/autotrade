@@ -1,18 +1,14 @@
-name: Deploy Log Aggregator to GKE
+name: Deploy Tron System to GKE
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'gpt_runner/log_aggregator/**'
-      - '.github/workflows/deploy.yml'
 
 jobs:
-  deploy:
-    name: Build and Deploy
+  build-and-push-images:
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
-
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -24,34 +20,83 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: 'google-github-actions/auth@v1'
       with:
-        workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}' # e.g., projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
-        service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}' # e.g., my-service-account@my-project.iam.gserviceaccount.com
+        workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
+    - name: Set up Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+    - name: Build and Push All Images
+      run: |
+        IMAGE_PREFIX="asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tron-system"
+        TAG=${{ github.sha }}
+
+        docker build -f dashboard_api/Dockerfile -t $IMAGE_PREFIX/tron-backend:$TAG -t $IMAGE_PREFIX/tron-backend:latest .
+        docker push --all-tags $IMAGE_PREFIX/tron-backend
+
+        docker build -f frontend/Dockerfile -t $IMAGE_PREFIX/tron-frontend:$TAG -t $IMAGE_PREFIX/tron-frontend:latest .
+        docker push --all-tags $IMAGE_PREFIX/tron-frontend
+
+        docker build -f gpt_runner/log_aggregator/Dockerfile -t $IMAGE_PREFIX/log-aggregator:$TAG -t $IMAGE_PREFIX/log-aggregator:latest .
+        docker push --all-tags $IMAGE_PREFIX/log-aggregator
+        
+        docker build -t $IMAGE_PREFIX/gpt-runner:$TAG -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
+        docker push --all-tags $IMAGE_PREFIX/gpt-runner
+        
+        docker build -t $IMAGE_PREFIX/stock-trader:$TAG -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_trading/stock_runner.py .
+        docker push --all-tags $IMAGE_PREFIX/stock-trader
+
+        docker build -t $IMAGE_PREFIX/options-trader:$TAG -t $IMAGE_PREFIX/options-trader:latest --build-arg RUNNER_SCRIPT=options_trading/options_runner.py .
+        docker push --all-tags $IMAGE_PREFIX/options-trader
+
+        docker build -t $IMAGE_PREFIX/futures-trader:$TAG -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
+        docker push --all-tags $IMAGE_PREFIX/futures-trader
+
+  deploy-to-gke:
+    name: Deploy to GKE with Helm
+    runs-on: ubuntu-latest
+    needs: build-and-push-images
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Authenticate to Google Cloud
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
     - name: Set up Cloud SDK
       uses: 'google-github-actions/setup-gcloud@v1'
       with:
         install_components: 'gke-gcloud-auth-plugin'
 
-    - name: Configure Docker
-      run: gcloud auth configure-docker --quiet
-
-    - name: Create Kubernetes secrets
+    - name: Configure kubectl
       env:
         GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
         GKE_ZONE: ${{ secrets.GKE_ZONE }}
-        USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
       run: |
         gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
-        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' --dry-run=client -o yaml | kubectl apply -f -
-        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' --dry-run=client -o yaml | kubectl apply -f -
 
-    - name: Run Deploy Script
-      env:
-        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
-        GKE_CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
-        GKE_ZONE: ${{ secrets.GKE_ZONE }}
-        DOCKER_IMAGE: ${{ steps.build.outputs.image }}
-        USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
-      run: ./scripts/deploy_log_aggregator.sh 
+    - name: Create Kubernetes secrets
+      run: |
+        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' --dry-run=client -o yaml | kubectl apply -f - -n gpt
+        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' --dry-run=client -o yaml | kubectl apply -f - -n gpt
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'v3.12.0'
+
+    - name: Deploy with Helm
+      run: |
+        helm dependency update ./helm
+        helm upgrade --install tron-system ./helm --namespace gpt --create-namespace --timeout 10m 
