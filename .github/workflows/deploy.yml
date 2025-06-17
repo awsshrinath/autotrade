@@ -36,7 +36,7 @@ jobs:
         docker build -f dashboard_api/Dockerfile -t $IMAGE_PREFIX/tron-backend:$TAG -t $IMAGE_PREFIX/tron-backend:latest .
         docker push --all-tags $IMAGE_PREFIX/tron-backend
 
-        docker build -f frontend/Dockerfile -t $IMAGE_PREFIX/tron-frontend:$TAG -t $IMAGE_PREFIX/tron-frontend:latest .
+        docker build -f frontend/Dockerfile -t $IMAGE_PREFIX/tron-frontend:$TAG -t $IMAGE_PREFIX/tron-frontend:latest ./frontend
         docker push --all-tags $IMAGE_PREFIX/tron-frontend
 
         docker build -f gpt_runner/log_aggregator/Dockerfile -t $IMAGE_PREFIX/log-aggregator:$TAG -t $IMAGE_PREFIX/log-aggregator:latest .
