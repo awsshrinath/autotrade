@@ -21,7 +21,7 @@ spec:
             optional: true
       containers:
         - name: {{ .Values.logAggregator.name }}
-          image: "{{ .Values.logAggregator.image.repository }}:{{ .Values.logAggregator.image.tag }}"
+          image: "{{ .Values.logAggregator.image.repository }}:{{ .Values.global.imageTag | default .Values.logAggregator.image.tag }}"
           imagePullPolicy: {{ .Values.logAggregator.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.logAggregator.service.port }}

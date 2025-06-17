@@ -16,9 +16,9 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: {{ .Values.mainRunner.name }}
-          image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.mainRunner.image.tag }}"
-          command: ["/bin/bash"]
-          args: ["/entrypoint.sh"]
+          image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.global.imageTag | default .Values.mainRunner.image.tag }}"
+          command: ["/bin/bash", "/entrypoint.sh"]
+          args: ["{{ .Values.mainRunner.env.RUNNER_SCRIPT }}"]
           resources:
             {{- toYaml .Values.mainRunner.resources | nindent 12 }}
           env:

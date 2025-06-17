@@ -97,4 +97,8 @@ jobs:
     - name: Deploy with Helm
       run: |
         helm dependency update ./helm
-        helm upgrade --install tron-system ./helm --namespace gpt --create-namespace --timeout 10m 
+        helm upgrade --install tron-system ./helm \
+          --namespace gpt \
+          --create-namespace \
+          --set-string global.imageTag=${{ github.sha }} \
+          --timeout 10m 

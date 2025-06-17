@@ -16,9 +16,9 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: {{ .Values.stockTrader.name }}
-          image: "{{ .Values.stockTrader.image.repository }}:{{ .Values.stockTrader.image.tag }}"
-          command: ["/bin/bash"]
-          args: ["/entrypoint.sh"]
+          image: "{{ .Values.stockTrader.image.repository }}:{{ .Values.global.imageTag | default .Values.stockTrader.image.tag }}"
+          command: ["/bin/bash", "/entrypoint.sh"]
+          args: ["{{ .Values.stockTrader.env.RUNNER_SCRIPT }}"]
           resources:
             {{- toYaml .Values.stockTrader.resources | nindent 12 }}
           env:

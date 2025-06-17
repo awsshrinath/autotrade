@@ -16,9 +16,9 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: {{ .Values.futuresTrader.name }}
-          image: "{{ .Values.futuresTrader.image.repository }}:{{ .Values.futuresTrader.image.tag }}"
-          command: ["/bin/bash"]
-          args: ["/entrypoint.sh"]
+          image: "{{ .Values.futuresTrader.image.repository }}:{{ .Values.global.imageTag | default .Values.futuresTrader.image.tag }}"
+          command: ["/bin/bash", "/entrypoint.sh"]
+          args: ["{{ .Values.futuresTrader.env.RUNNER_SCRIPT }}"]
           resources:
             {{- toYaml .Values.futuresTrader.resources | nindent 12 }}
           env:
