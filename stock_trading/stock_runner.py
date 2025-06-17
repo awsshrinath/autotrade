@@ -25,6 +25,16 @@ from utils.notifications import send_slack_notification
 from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
 from runner.enhanced_trade_manager import create_enhanced_trade_manager
 
+import logging
+import asyncio
+
+from runner.config import get_trading_config
+from runner.trade_manager import simulate_exit
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+from strategies.opening_range_strategy import OpeningRangeStrategy
+from strategies.vwap_strategy import VwapStrategy
+from strategies.range_reversal import RangeReversalStrategy
+
 def create_enhanced_logger(*args, **kwargs):
     """Wrapper for backward compatibility"""
     return create_trading_logger(*args, **kwargs)

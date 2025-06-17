@@ -23,15 +23,17 @@ class TradingLogger:
     Main trading logger that intelligently routes logs to Firestore and GCS
     """
     
-    def __init__(self, session_id: str = None, bot_type: str = None, project_id: str = None):
+    def __init__(self, session_id: str = None, bot_type: str = None, project_id: str = None, enable_firestore: bool = True, enable_gcs: bool = True):
         self.session_id = session_id or f"session_{int(time.time())}"
         self.bot_type = bot_type or "unknown"
         self.project_id = project_id
+        self.enable_firestore = enable_firestore
+        self.enable_gcs = enable_gcs
         
         # Initialize specialized loggers
-        self.firestore_logger = FirestoreLogger(project_id)
-        self.gcs_logger = GCSLogger(project_id)
-        self.lifecycle_manager = LogLifecycleManager(project_id)
+        self.firestore_logger = FirestoreLogger(project_id) if self.enable_firestore else None
+        self.gcs_logger = GCSLogger(project_id) if self.enable_gcs else None
+        self.lifecycle_manager = LogLifecycleManager(project_id) if self.enable_gcs else None
         
         # Buffering for efficient batch operations
         self.gcs_buffer = []
@@ -62,12 +64,13 @@ class TradingLogger:
         while True:
             try:
                 # Flush GCS buffer periodically
-                if (time.time() - self.last_gcs_flush > self.gcs_flush_interval or 
+                if self.gcs_logger and (time.time() - self.last_gcs_flush > self.gcs_flush_interval or 
                     len(self.gcs_buffer) >= self.buffer_size):
                     self._flush_gcs_buffer()
                 
                 # Flush Firestore batch
-                self.firestore_logger.flush_batch()
+                if self.firestore_logger:
+                    self.firestore_logger.flush_batch()
                 
                 # Sleep before next check
                 time.sleep(30)
@@ -78,7 +81,7 @@ class TradingLogger:
     
     def _flush_gcs_buffer(self):
         """Flush buffered entries to GCS"""
-        if not self.gcs_buffer:
+        if not self.gcs_buffer or not self.gcs_logger:
             return
         
         try:
@@ -133,19 +136,21 @@ class TradingLogger:
         """Route log entry to appropriate storage based on type"""
         try:
             # Always log to Firestore for real-time data
-            if entry.log_type in [LogType.REAL_TIME, LogType.DASHBOARD, LogType.COGNITIVE_LIVE]:
+            if self.firestore_logger and entry.log_type in [LogType.REAL_TIME, LogType.DASHBOARD, LogType.COGNITIVE_LIVE]:
                 self._log_to_firestore(entry)
             
             # Always archive to GCS for bulk/archival data
-            if entry.log_type in [LogType.ARCHIVAL, LogType.BULK, LogType.ANALYTICS]:
+            if self.gcs_logger and entry.log_type in [LogType.ARCHIVAL, LogType.BULK, LogType.ANALYTICS]:
                 self._log_to_gcs(entry)
             
             # Some entries go to both (e.g., critical errors)
             if (entry.level in [LogLevel.ERROR, LogLevel.CRITICAL] or 
                 entry.category == LogCategory.TRADE):
                 # Critical data goes to both for redundancy
-                self._log_to_firestore(entry)
-                self._log_to_gcs(entry)
+                if self.firestore_logger:
+                    self._log_to_firestore(entry)
+                if self.gcs_logger:
+                    self._log_to_gcs(entry)
                 
         except Exception as e:
             print(f"Error routing log: {e}")
@@ -153,6 +158,8 @@ class TradingLogger:
     
     def _log_to_firestore(self, entry: LogEntry):
         """Log entry to Firestore for real-time access"""
+        if not self.firestore_logger:
+            return
         try:
             if entry.category == LogCategory.TRADE:
                 # Real-time trade status
@@ -189,6 +196,8 @@ class TradingLogger:
     
     def _log_to_gcs(self, entry: LogEntry):
         """Buffer entry for GCS archival"""
+        if not self.gcs_logger:
+            return
         self.gcs_buffer.append(entry)
         
         # Auto-flush if buffer is full
@@ -366,7 +375,8 @@ class TradingLogger:
     def log_daily_reflection(self, reflection_text: str):
         """Log GPT daily reflection"""
         # Store in Firestore for current day dashboard
-        self.firestore_logger.log_daily_reflection(self.bot_type, reflection_text)
+        if self.firestore_logger:
+            self.firestore_logger.log_daily_reflection(self.bot_type, reflection_text)
         
         # Also archive to GCS for historical analysis
         reflection_data = [{
@@ -376,82 +386,78 @@ class TradingLogger:
             'timestamp': datetime.datetime.now().isoformat()
         }]
         
-        self.gcs_logger.archive_gpt_reflections(reflection_data, self.bot_type)
+        if self.gcs_logger:
+            self.gcs_logger.archive_gpt_reflections(reflection_data, self.bot_type)
     
     def log_daily_summary(self, summary_data: Dict[str, Any]):
         """Log daily performance summary"""
-        self.firestore_logger.log_daily_summary(self.bot_type, summary_data)
+        if self.firestore_logger:
+            self.firestore_logger.log_daily_summary(self.bot_type, summary_data)
         
         # Also archive performance metrics to GCS
-        self.gcs_logger.archive_performance_metrics(summary_data, self.bot_type)
+        if self.gcs_logger:
+            self.gcs_logger.archive_performance_metrics(summary_data, self.bot_type)
     
     # Query methods (delegate to appropriate logger)
     
     def get_live_trades(self, status: str = None) -> List[Dict]:
-        """Get live trades from Firestore"""
-        return self.firestore_logger.get_live_trades(self.bot_type, status)
+        """Get live trade data from Firestore"""
+        return self.firestore_logger.get_live_trades(status) if self.firestore_logger else []
     
     def get_live_alerts(self, severity: str = None) -> List[Dict]:
         """Get live alerts from Firestore"""
-        return self.firestore_logger.get_live_alerts(severity)
+        return self.firestore_logger.get_live_alerts(severity) if self.firestore_logger else []
     
     def get_system_status(self) -> Dict[str, Dict]:
-        """Get current system status"""
-        return self.firestore_logger.get_system_status()
+        """Get system status from Firestore"""
+        return self.firestore_logger.get_system_status() if self.firestore_logger else {}
     
     def get_performance_history(self, days: int = 30) -> List[Dict]:
-        """Get performance history from GCS"""
-        return self.gcs_logger.get_performance_history(self.bot_type, days)
+        """Get historical performance data from GCS"""
+        return self.gcs_logger.get_performance_history(days) if self.gcs_logger else []
     
     def get_cost_report(self) -> Dict[str, Any]:
-        """Get comprehensive cost report"""
-        return self.lifecycle_manager.get_cost_report()
+        """Get GCS cost report for a given period"""
+        return self.gcs_logger.get_cost_report() if self.gcs_logger else {}
     
     # Lifecycle management
     
     def run_cleanup(self):
-        """Run manual cleanup"""
-        self.lifecycle_manager.run_daily_cleanup()
+        """Run data cleanup based on lifecycle rules"""
+        if self.lifecycle_manager:
+            self.lifecycle_manager.run_cleanup()
     
     def optimize_costs(self):
-        """Run cost optimization"""
-        self.lifecycle_manager.optimize_storage_costs()
+        """Optimize GCS storage classes for cost"""
+        if self.lifecycle_manager:
+            self.lifecycle_manager.optimize_costs()
     
     def get_metrics(self) -> Dict[str, Any]:
-        """Get logger performance metrics"""
+        """Get current performance metrics"""
         uptime = datetime.datetime.now() - self.metrics['start_time']
         
         return {
             **self.metrics,
             'uptime_seconds': uptime.total_seconds(),
             'gcs_buffer_size': len(self.gcs_buffer),
-            'firestore_batch_size': len(self.firestore_logger.pending_writes),
-            'gcs_pending_uploads': sum(len(uploads) for uploads in self.gcs_logger.pending_uploads.values())
+            'firestore_batch_size': len(self.firestore_logger.pending_writes) if self.firestore_logger else 0,
+            'gcs_pending_uploads': sum(len(uploads) for uploads in self.gcs_logger.pending_uploads.values()) if self.gcs_logger else 0
         }
     
     def flush_all(self):
-        """Flush all pending data to storage"""
-        try:
-            self._flush_gcs_buffer()
+        """Manually flush all buffers"""
+        if self.firestore_logger:
             self.firestore_logger.flush_batch()
-        except Exception as e:
-            print(f"Error flushing all logs: {e}")
-            self.metrics['errors'] += 1
+        if self.gcs_logger:
+            self._flush_gcs_buffer()
 
     def force_upload_to_gcs(self):
-        """Force immediate upload of all buffered data to GCS"""
-        try:
-            if self.gcs_buffer:
-                self._flush_gcs_buffer()
-                print(f"Force uploaded {len(self.gcs_buffer)} entries to GCS")
-            else:
-                print("No buffered entries to upload to GCS")
-        except Exception as e:
-            print(f"Error in force upload to GCS: {e}")
-            self.metrics['errors'] += 1
+        """Forces an immediate upload of the current GCS buffer."""
+        if self.gcs_logger:
+            self._flush_gcs_buffer()
 
     def shutdown(self):
-        """Clean shutdown - flush all data and stop background tasks"""
+        """Gracefully shutdown the logger, flushing all buffers"""
         try:
             # Flush all pending data
             self.flush_all()
@@ -478,9 +484,15 @@ class TradingLogger:
 
 # Backward compatibility functions for existing code
 
-def create_trading_logger(session_id: str = None, bot_type: str = None) -> TradingLogger:
-    """Create a trading logger instance"""
-    return TradingLogger(session_id=session_id, bot_type=bot_type)
+def create_trading_logger(session_id: str = None, bot_type: str = None, project_id: str = None, enable_firestore: bool = True, enable_gcs: bool = True) -> TradingLogger:
+    """Factory function to create a TradingLogger instance"""
+    return TradingLogger(
+        session_id=session_id,
+        bot_type=bot_type,
+        project_id=project_id,
+        enable_firestore=enable_firestore,
+        enable_gcs=enable_gcs
+    )
 
 
 # Legacy compatibility wrapper

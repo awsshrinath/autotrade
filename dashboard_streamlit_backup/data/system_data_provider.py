@@ -5,6 +5,7 @@ Provides system health and monitoring data for the dashboard by fetching it from
 import requests
 from datetime import datetime
 from typing import Dict, Any, List
+import os
 
 class SystemDataProvider:
     """
@@ -71,7 +72,6 @@ class SystemDataProvider:
     
     def _get_local_fallback_data(self, endpoint: str, error_msg: str) -> Dict[str, Any]:
         """Fallback to local data sources when API is unavailable"""
-        import os
         import json
         from datetime import datetime
         

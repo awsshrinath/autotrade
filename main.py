@@ -9,7 +9,7 @@ import logging
 
 from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
 from runner.strategy_selector import StrategySelector
-from runner.trade_manager import TradeManager
+from runner.enhanced_trade_manager import EnhancedTradeManager
 from runner.logger import Logger
 from runner.gpt_codefix_suggestor import GPTCodeFixSuggestor
 from runner.daily_report_generator import DailyReportGenerator
@@ -86,7 +86,7 @@ def safe_import_modules():
     try:
         from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
         from runner.strategy_selector import StrategySelector
-        from runner.trade_manager import TradeManager
+        from runner.enhanced_trade_manager import EnhancedTradeManager
         from runner.logger import Logger
         from runner.gpt_codefix_suggestor import GPTCodeFixSuggestor
         from runner.daily_report_generator import DailyReportGenerator
@@ -313,7 +313,7 @@ def main():
         # FIXED: Initialize TradeManager with comprehensive error handling
         trade_manager = None
         try:
-            trade_manager = TradeManager(kite, logger, firestore_client=firestore_client)
+            trade_manager = EnhancedTradeManager(logger, kite_manager, firestore_client)
             logger.log_event("Trade manager initialized successfully")
         except Exception as e:
             logging.error(f"Failed to initialize trade manager: {e}")

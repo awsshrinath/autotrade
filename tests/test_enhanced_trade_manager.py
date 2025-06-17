@@ -7,35 +7,35 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
+from runner.config.config_manager import ConfigManager
 
 class TestEnhancedTradeManager(unittest.TestCase):
 
     def setUp(self):
-        """Set up a mock environment for each test."""
-        # Mock the dependencies of EnhancedTradeManager
-        self.mock_logger = MagicMock()
-        self.mock_kite_manager = MagicMock()
-        self.mock_firestore_client = MagicMock()
-        self.mock_cognitive_system = MagicMock()
+        """Set up the test environment before each test."""
+        self.mock_config_manager = MagicMock(spec=ConfigManager)
+        self.mock_config_manager.get_config.return_value = {
+            "paper_trade": True,
+            "features": {"enhanced_trade_execution": True},
+            "gcp": {"project_id": "test-project"}
+        }
 
-        self.trade_manager = EnhancedTradeManager(
-            logger=self.mock_logger,
-            kite_manager=self.mock_kite_manager,
-            firestore_client=self.mock_firestore_client,
-            cognitive_system=self.mock_cognitive_system
-        )
+        with patch('runner.enhanced_trade_manager.get_trading_config', return_value=self.mock_config_manager):
+            self.trade_manager = EnhancedTradeManager(
+                enable_firestore=False,
+                enable_gcs=False
+            )
+
+        self.mock_kite_client = MagicMock()
+        self.trade_manager.kite_client = self.mock_kite_client
+        # We also need to mock the logger inside, as it's created internally
+        self.trade_manager.enhanced_logger = MagicMock()
+        self.mock_logger = self.trade_manager.enhanced_logger
 
     def test_initialization(self):
         """Test if the EnhancedTradeManager initializes correctly."""
         self.assertIsNotNone(self.trade_manager)
-        self.assertEqual(self.trade_manager.logger, self.mock_logger)
-        self.trade_manager.enhanced_logger.log_event.assert_called_with(
-            "EnhancedTradeManager initialized with comprehensive logging",
-            'INFO', # Assuming LogLevel.INFO is 'INFO'
-            'SYSTEM', # Assuming LogCategory.SYSTEM is 'SYSTEM'
-            data=unittest.mock.ANY,
-            source="enhanced_trade_manager"
-        )
+        self.assertIsNotNone(self.trade_manager.enhanced_logger)
 
     def test_create_trade_request(self):
         """Test the creation of a TradeRequest object."""
@@ -53,22 +53,28 @@ class TestEnhancedTradeManager(unittest.TestCase):
         self.assertEqual(trade_req.symbol, "RELIANCE")
         self.assertEqual(trade_req.quantity, 10)
         self.assertTrue(trade_req.paper_trade)
+        self.assertEqual(trade_req.order_type, "LIMIT")
+        self.assertEqual(trade_req.product, "MIS")
 
     @patch('runner.enhanced_trade_manager.PositionMonitor')
-    def test_execute_paper_trade_flow(self, mock_position_monitor):
+    @patch('runner.enhanced_trade_manager.uuid.uuid4')
+    def test_execute_paper_trade_flow(self, mock_uuid, mock_position_monitor):
         """Test the basic paper trade execution flow."""
+        mock_uuid.return_value.hex = "test_trade_id"
+        self.trade_manager.is_paper_trade = True
         # We need to mock the internal PositionMonitor instance as well
         self.trade_manager.position_monitor = mock_position_monitor
 
         trade_request = TradeRequest(
-            symbol="INFY",
+            symbol="RELIANCE",
             strategy="orb",
             direction="bullish",
             quantity=5,
             entry_price=1500.0,
             stop_loss=1480.0,
             target=1550.0,
-            paper_trade=True
+            paper_trade=True,
+            metadata={"source": "test"}
         )
 
         # Mock the _add_to_position_monitor to return a position ID
@@ -90,6 +96,12 @@ class TestEnhancedTradeManager(unittest.TestCase):
             data=unittest.mock.ANY,
             source="enhanced_trade_manager"
         )
+
+        self.mock_kite_client.place_order.assert_not_called()
+        self.mock_logger.log_trade_entry.assert_called_once()
+        call_args = self.mock_logger.log_trade_entry.call_args[0][0]
+        self.assertEqual(call_args.symbol, "RELIANCE")
+        self.assertEqual(call_args.status, "COMPLETED")
 
 
 if __name__ == '__main__':

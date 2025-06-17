@@ -3,27 +3,45 @@ from unittest.mock import MagicMock, patch
 import os
 import sys
 import asyncio
+import time
+import threading
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from runner.position_monitor import PositionMonitor, ExitStrategy, TradeStatus, ExitReason
+from runner.config.config_manager import ConfigManager
+from runner.trade_manager import TradeRequest
+from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
 
 class TestPositionMonitor(unittest.TestCase):
 
-    def setUp(self):
-        """Set up mock environment for each test."""
-        self.mock_logger = MagicMock()
-        self.mock_firestore = MagicMock()
-        self.mock_kite_manager = MagicMock()
-        self.mock_portfolio_manager = MagicMock()
+    @patch('runner.position_monitor.create_enhanced_logger')
+    def setUp(self, mock_create_logger):
+        """Set up a mock environment for each test."""
+        self.mock_config_manager = MagicMock(spec=ConfigManager)
+        self.mock_config_manager.get_config.return_value = {
+            "gcp": {"project_id": "test-project"},
+            "paper_trade": True
+        }
+
+        # Mock the logger created within PositionMonitor
+        self.mock_logger = MagicMock(spec=EnhancedLogger)
+        mock_create_logger.return_value = self.mock_logger
 
         self.position_monitor = PositionMonitor(
-            logger=self.mock_logger,
-            firestore=self.mock_firestore,
-            kite_manager=self.mock_kite_manager,
-            portfolio_manager=self.mock_portfolio_manager
+            config_manager=self.mock_config_manager
         )
+
+        self.mock_trade_manager = MagicMock()
+        self.position_monitor.trade_manager = self.mock_trade_manager
+        self.position_monitor.market_data_fetcher = MagicMock()
+
+    def test_initialization(self):
+        """Test if the PositionMonitor initializes correctly."""
+        self.assertIsNotNone(self.position_monitor)
+        self.assertEqual(self.position_monitor.config_manager, self.mock_config_manager)
+        self.assertIsInstance(self.position_monitor.positions, dict)
 
     def test_add_position(self):
         """Test adding a new position to the monitor."""
@@ -81,6 +99,29 @@ class TestPositionMonitor(unittest.TestCase):
 
         loop.close()
 
+    def test_get_open_positions(self):
+        """Test retrieving all open positions."""
+        self.position_monitor.add_position(
+            symbol="AAPL",
+            quantity=10,
+            entry_price=150.0,
+            trade_type="BUY",
+            exit_strategy=ExitStrategy(stop_loss=145.0, target=160.0)
+        )
+        open_positions = self.position_monitor.get_open_positions()
+        self.assertEqual(len(open_positions), 1)
+        self.assertEqual(open_positions[0]['symbol'], "AAPL")
+
+    def test_calculate_pnl(self):
+        """Test P&L calculation for a position."""
+        self.position_monitor.market_data_fetcher.get_ltp.return_value = 155.0
+
+        pnl = self.position_monitor.calculate_pnl("AAPL")
+        self.assertAlmostEqual(pnl, 50.0)
+
+        self.position_monitor.market_data_fetcher.get_ltp.return_value = 148.0
+        pnl = self.position_monitor.calculate_pnl("AAPL")
+        self.assertAlmostEqual(pnl, -20.0)
 
 if __name__ == '__main__':
     unittest.main() 

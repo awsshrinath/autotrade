@@ -56,7 +56,8 @@ class EnhancedTradeManager:
     """Enhanced trade management system with comprehensive position monitoring"""
     
     def __init__(self, logger: Logger = None, kite_manager: KiteConnectManager = None, 
-                 firestore_client: FirestoreClient = None, cognitive_system: CognitiveSystem = None):
+                 firestore_client: FirestoreClient = None, cognitive_system: CognitiveSystem = None,
+                 enable_firestore: bool = True, enable_gcs: bool = True):
         self.logger = logger
         self.kite_manager = kite_manager
         self.firestore_client = firestore_client
@@ -64,7 +65,9 @@ class EnhancedTradeManager:
         # Initialize enhanced logger
         self.enhanced_logger = create_enhanced_logger(
             session_id=f"trade_manager_{int(time.time())}",
-            bot_type="trade-manager"
+            bot_type="trade-manager",
+            enable_firestore=enable_firestore,
+            enable_gcs=enable_gcs
         )
         
         # Configuration
