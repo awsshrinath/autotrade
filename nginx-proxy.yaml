@@ -10,7 +10,7 @@ data:
     }
     http {
         upstream backend {
-            server temp-backend-service:8000;
+            server tron-backend-service:8000;
         }
         
         upstream log-aggregator {
@@ -18,7 +18,7 @@ data:
         }
         
         upstream frontend {
-            server tron-frontend-simple-service:80;
+            server tron-frontend:3000;
         }
         
         server {

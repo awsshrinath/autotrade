@@ -17,6 +17,8 @@ spec:
       containers:
         - name: {{ .Values.mainRunner.name }}
           image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.mainRunner.image.tag }}"
+          command: ["/bin/bash"]
+          args: ["/entrypoint.sh"]
           resources:
             {{- toYaml .Values.mainRunner.resources | nindent 12 }}
           env:
@@ -56,4 +58,15 @@ spec:
             {{- range $key, $val := .Values.mainRunner.env }}
             - name: {{ $key }}
               value: "{{ $val }}"
-            {{- end }} 
+            {{- end }}
+            - name: PYTHONPATH
+              value: "/app:/app/runner"
+          volumeMounts:
+            - name: entrypoint
+              mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
+      volumes:
+        - name: entrypoint
+          configMap:
+            name: entrypoint-config
+            defaultMode: 0755 

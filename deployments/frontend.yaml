@@ -4,7 +4,7 @@ metadata:
   name: tron-frontend-deployment
   namespace: gpt
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: tron-frontend
@@ -38,7 +38,8 @@ spec:
   selector:
     app: tron-frontend
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 3000
   type: LoadBalancer 

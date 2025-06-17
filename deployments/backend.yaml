@@ -20,7 +20,7 @@ metadata:
   name: tron-backend-deployment
   namespace: gpt
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: tron-backend

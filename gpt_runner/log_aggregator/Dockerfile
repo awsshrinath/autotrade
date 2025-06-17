@@ -2,19 +2,19 @@
 FROM python:3.10-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /
 
-# Copy the requirements file into the container at /app
-COPY gpt_runner/log_aggregator/requirements.txt .
+# Copy the requirements file
+COPY gpt_runner/log_aggregator/requirements.txt /app/requirements.txt
+
+# Set the working directory to /app
+WORKDIR /app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire application code into the container at /app
-COPY gpt_runner/log_aggregator/ .
-
-# Set the python path to include the app directory
-ENV PYTHONPATH="${PYTHONPATH}:/app"
+# Copy the gpt_runner directory into the container's root
+COPY gpt_runner /gpt_runner
 
 # Make port 8001 available to the world outside this container
 EXPOSE 8001
@@ -23,5 +23,6 @@ EXPOSE 8001
 ENV FASTAPI_HOST=0.0.0.0
 ENV FASTAPI_PORT=8001
 
-# Run uvicorn server
-CMD ["sh", "-c", "uvicorn main:app --host $FASTAPI_HOST --port $FASTAPI_PORT"] 
+# Run uvicorn server as a module from the root directory
+WORKDIR /
+CMD ["sh", "-c", "uvicorn gpt_runner.log_aggregator.main:app --host $FASTAPI_HOST --port $FASTAPI_PORT"] 
