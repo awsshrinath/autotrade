@@ -135,18 +135,9 @@ def run_options_trading_bot():
     logger = Logger(today_date)
     
     # Log startup with enhanced logger
-    enhanced_logger.log_event(
-        f"Options Trading Bot Started - Paper Trade Mode: {paper_trade_mode}",
-        LogLevel.INFO,
-        LogCategory.SYSTEM,
-        data={
-            'session_id': session_id,
-            'date': today_date,
-            'bot_type': 'options-trader',
-            'startup_time': datetime.now().isoformat(),
-            'paper_trade_mode': paper_trade_mode
-        },
-        source="options_bot_startup"
+    enhanced_logger.log_system_event(
+        "Options Trading Bot Started",
+        {"version": "1.0", "paper_trade": paper_trade_mode}
     )
     
     logger.log_event("[BOOT] Starting Options Trading Bot...")
@@ -234,15 +225,13 @@ def run_options_trading_bot():
                             logger.log_event(f"[ERROR] Options trade execution exception: {trade_error}")
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
-                        enhanced_logger.log_event(
-                            "No valid trade signal from strategy",
-                            LogLevel.DEBUG,
-                            LogCategory.STRATEGY,
-                            data={'strategy': strategy_name},
-                            source="options_trader"
+                        enhanced_logger.log_strategy_signal(
+                            strategy=strategy_name,
+                            symbol="N/A",
+                            signal_data={'signal': 'none'}
                         )
                 else:
-                    logger.log_event("[ERROR] Strategy not loaded.")
+                    logger.log_event("[ERROR] Strategy object not loaded.")
                     enhanced_logger.log_error(
                         Exception("Strategy not loaded"),
                         context={'strategy': strategy_name},

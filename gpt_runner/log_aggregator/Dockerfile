@@ -13,8 +13,8 @@ WORKDIR /app
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the gpt_runner directory into the container's root
-COPY gpt_runner /gpt_runner
+# Copy the entire application's code into the container at /app
+COPY . /app
 
 # Make port 8001 available to the world outside this container
 EXPOSE 8001
@@ -22,8 +22,7 @@ EXPOSE 8001
 # Define environment variables (can be overridden)
 ENV FASTAPI_HOST=0.0.0.0
 ENV FASTAPI_PORT=8001
-ENV PYTHONPATH=/
+ENV PYTHONPATH=/app
 
-# Run uvicorn server as a module from the root directory
-WORKDIR /
-CMD ["sh", "-c", "uvicorn gpt_runner.log_aggregator.main:app --host $FASTAPI_HOST --port $FASTAPI_PORT"] 
+# Run uvicorn server as a module
+CMD ["python", "-m", "uvicorn", "gpt_runner.log_aggregator.main:app", "--host", "0.0.0.0", "--port", "8001"] 

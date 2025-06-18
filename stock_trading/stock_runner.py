@@ -15,7 +15,6 @@ from runner.trade_manager import execute_trade
 from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
 from runner.enhanced_logging import LogLevel, LogCategory
 from config.config_manager import get_trading_config
-from runner.trade_manager import TradeManager
 from runner.market_data.market_data_fetcher import MarketDataFetcher
 from runner.strategy_factory import get_strategy
 # from kite.kite_manager import KiteManager  # Not available

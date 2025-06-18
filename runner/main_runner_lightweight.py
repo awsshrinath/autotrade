@@ -109,17 +109,14 @@ def lightweight_market_monitor(logger, enhanced_logger):
                 logger.log_event(f"📊 Lightweight monitoring heartbeat - IST: {now.strftime('%H:%M:%S')}")
                 
                 if enhanced_logger:
-                    enhanced_logger.log_event(
+                    enhanced_logger.log_system_event(
                         "Lightweight monitoring heartbeat",
-                        LogLevel.INFO,
-                        LogCategory.MONITORING,
                         data={
                             'ist_time': now.strftime('%H:%M:%S'),
                             'market_open': is_market_open(),
                             'error_count': error_count,
                             'mode': 'lightweight'
-                        },
-                        source="lightweight_monitor"
+                        }
                     )
                 
                 last_log_time = now

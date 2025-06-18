@@ -150,18 +150,9 @@ def run_futures_trading_bot():
     logger = Logger(today_date)
     
     # Log startup with enhanced logger
-    enhanced_logger.log_event(
-        f"Futures Trading Bot Started - Paper Trade Mode: {paper_trade_mode}",
-        LogLevel.INFO,
-        LogCategory.SYSTEM,
-        data={
-            'session_id': session_id,
-            'date': today_date,
-            'bot_type': 'futures-trader',
-            'startup_time': datetime.now().isoformat(),
-            'paper_trade_mode': paper_trade_mode
-        },
-        source="futures_bot_startup"
+    enhanced_logger.log_system_event(
+        "Futures Trading Bot Started",
+        {"version": "1.0", "paper_trade": paper_trade_mode}
     )
     
     logger.log_event("[BOOT] Starting Futures Trading Bot...")
@@ -249,15 +240,13 @@ def run_futures_trading_bot():
                             logger.log_event(f"[ERROR] Futures trade execution exception: {trade_error}")
                     else:
                         logger.log_event("[WAIT] No valid trade signal.")
-                        enhanced_logger.log_event(
-                            "No valid trade signal from strategy",
-                            LogLevel.DEBUG,
-                            LogCategory.STRATEGY,
-                            data={'strategy': strategy_name},
-                            source="futures_trader"
+                        enhanced_logger.log_strategy_signal(
+                            strategy=strategy_name,
+                            symbol="N/A",
+                            signal_data={'signal': 'none'}
                         )
                 else:
-                    logger.log_event("[ERROR] Strategy not loaded.")
+                    logger.log_event("[ERROR] Strategy object not loaded.")
                     enhanced_logger.log_error(
                         Exception("Strategy not loaded"),
                         context={'strategy': strategy_name},
