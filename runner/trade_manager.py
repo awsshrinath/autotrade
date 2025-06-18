@@ -260,7 +260,7 @@ class EnhancedTradeManager:
                 self.execution_stats['successful_trades'] += 1
                 if trade_request.paper_trade:
                     self.execution_stats['paper_trades'] += 1
-        else:
+                else:
                     self.execution_stats['real_trades'] += 1
                 return position_id
             

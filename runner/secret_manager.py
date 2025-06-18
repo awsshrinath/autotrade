@@ -293,6 +293,19 @@ def access_secret_enhanced(secret_id: str, project_id="autotrade-453303", logger
     manager = EnhancedSecretManager(logger=logger, project_id=project_id)
     return manager.access_secret(secret_id)
 
+def access_secret(secret_id: str, project_id="autotrade-453303") -> Optional[str]:
+    """Simple access_secret function for backward compatibility"""
+    return access_secret_enhanced(secret_id, project_id)
+
+def validate_secret_access() -> bool:
+    """Validate that secret access is working"""
+    try:
+        manager = EnhancedSecretManager()
+        # Try to access a test secret or just validate the client
+        return manager.client is not None
+    except Exception:
+        return False
+
 def get_openai_key_enhanced(logger=None) -> Optional[str]:
     """Get OpenAI API key with enhanced error handling"""
     manager = EnhancedSecretManager(logger=logger)
