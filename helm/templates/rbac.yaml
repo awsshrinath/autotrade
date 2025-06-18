@@ -1,13 +1,4 @@
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: {{ .Values.serviceAccountName }}
-  namespace: {{ .Values.namespace }}
-  annotations:
-    iam.gke.io/gcp-service-account: {{ .Values.serviceAccountName }}@{{ .Values.gcpProjectId | default "autotrade-453303" }}.iam.gserviceaccount.com
-
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

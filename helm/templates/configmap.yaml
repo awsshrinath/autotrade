@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  namespace: {{ .Values.namespace }}
+data:
+  GCP_PROJECT_ID: {{ .Values.gcpProjectId | quote }}
+  ENVIRONMENT: {{ .Values.environment | quote }}
+  PAPER_TRADE: {{ .Values.paperTrade | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  NAMESPACE: {{ .Values.namespace | quote }}
+  REAL_TIME_UPDATES: {{ .Values.realTimeUpdates | quote }}
+  AUTO_REFRESH_INTERVAL: {{ .Values.autoRefreshInterval | quote }} 
