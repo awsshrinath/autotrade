@@ -1,7 +1,11 @@
+{{- $configMapName := printf "%s-config" .Chart.Name -}}
+{{- $existingConfigMap := lookup "v1" "ConfigMap" .Values.namespace $configMapName -}}
+
+{{- if not $existingConfigMap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Chart.Name }}-config
+  name: {{ $configMapName }}
   namespace: {{ .Values.namespace }}
 data:
   GCP_PROJECT_ID: {{ .Values.gcpProjectId | quote }}
@@ -10,4 +14,5 @@ data:
   LOG_LEVEL: {{ .Values.logLevel | quote }}
   NAMESPACE: {{ .Values.namespace | quote }}
   REAL_TIME_UPDATES: {{ .Values.realTimeUpdates | quote }}
-  AUTO_REFRESH_INTERVAL: {{ .Values.autoRefreshInterval | quote }} 
+  AUTO_REFRESH_INTERVAL: {{ .Values.autoRefreshInterval | quote }}
+{{- end }} 
