@@ -1,0 +1,43 @@
+{{- define "tron.hpa" }}
+{{- $service := .service }}
+{{- $values := .values }}
+{{- if $values.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $values.name | default $service }}-hpa
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app: {{ $values.name | default $service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $values.deploymentName | default $values.name }}
+  minReplicas: {{ $values.minReplicas }}
+  maxReplicas: {{ $values.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ $values.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- end }}
+
+{{- $hpaServices := dict
+    "backend" (dict "enabled" .Values.backend.autoscaling.enabled "name" .Values.backend.name "deploymentName" (printf "%s-deployment" .Values.backend.name) "minReplicas" .Values.backend.autoscaling.minReplicas "maxReplicas" .Values.backend.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.backend.autoscaling.targetCPUUtilizationPercentage)
+    "frontend" (dict "enabled" .Values.frontend.autoscaling.enabled "name" .Values.frontend.name "deploymentName" .Values.frontend.name "minReplicas" .Values.frontend.autoscaling.minReplicas "maxReplicas" .Values.frontend.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.frontend.autoscaling.targetCPUUtilizationPercentage)
+    "log-aggregator" (dict "enabled" .Values.logAggregator.autoscaling.enabled "name" .Values.logAggregator.name "deploymentName" .Values.logAggregator.name "minReplicas" .Values.logAggregator.autoscaling.minReplicas "maxReplicas" .Values.logAggregator.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.logAggregator.autoscaling.targetCPUUtilizationPercentage)
+    "dashboard" (dict "enabled" .Values.dashboard.autoscaling.enabled "name" .Values.dashboard.name "deploymentName" .Values.dashboard.name "minReplicas" .Values.dashboard.autoscaling.minReplicas "maxReplicas" .Values.dashboard.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.dashboard.autoscaling.targetCPUUtilizationPercentage)
+    "main-runner" (dict "enabled" .Values.mainRunner.autoscaling.enabled "name" .Values.mainRunner.name "deploymentName" (printf "%s-deployment" .Values.mainRunner.name) "minReplicas" .Values.mainRunner.autoscaling.minReplicas "maxReplicas" .Values.mainRunner.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.mainRunner.autoscaling.targetCPUUtilizationPercentage)
+    "stock-trader" (dict "enabled" .Values.stockTrader.autoscaling.enabled "name" .Values.stockTrader.name "deploymentName" (printf "%s-deployment" .Values.stockTrader.name) "minReplicas" .Values.stockTrader.autoscaling.minReplicas "maxReplicas" .Values.stockTrader.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.stockTrader.autoscaling.targetCPUUtilizationPercentage)
+    "options-trader" (dict "enabled" .Values.optionsTrader.autoscaling.enabled "name" .Values.optionsTrader.name "deploymentName" (printf "%s-deployment" .Values.optionsTrader.name) "minReplicas" .Values.optionsTrader.autoscaling.minReplicas "maxReplicas" .Values.optionsTrader.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.optionsTrader.autoscaling.targetCPUUtilizationPercentage)
+    "futures-trader" (dict "enabled" .Values.futuresTrader.autoscaling.enabled "name" .Values.futuresTrader.name "deploymentName" (printf "%s-deployment" .Values.futuresTrader.name) "minReplicas" .Values.futuresTrader.autoscaling.minReplicas "maxReplicas" .Values.futuresTrader.autoscaling.maxReplicas "targetCPUUtilizationPercentage" .Values.futuresTrader.autoscaling.targetCPUUtilizationPercentage)
+}}
+
+{{- range $service, $values := $hpaServices }}
+{{- template "tron.hpa" (dict "service" $service "values" $values "Values" $.Values) }}
+{{- end }} 

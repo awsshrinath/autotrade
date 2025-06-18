@@ -8,13 +8,15 @@ import time
 from datetime import datetime
 from datetime import time as dtime
 import pytz
-from runner.config import PAPER_TRADE
+from runner.config import PAPER_TRADE, initialize_config, get_config
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
+from runner.logger import TradingLogger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
-from runner.trade_manager import simulate_exit, execute_trade
-from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+from runner.trade_manager import simulate_exit, execute_trade, create_trade_manager
+from runner.enhanced_logging import create_trading_logger
+from runner.risk_governor import RiskGovernor
+from runner.position_monitor import PositionMonitor
 
 def create_enhanced_logger(*args, **kwargs):
     """Wrapper for backward compatibility"""
@@ -120,7 +122,59 @@ def wait_for_daily_plan(firestore_client, today_date, logger, max_wait_minutes=1
     return None
 
 
-def run_options_trading_bot():
+class OptionsTrader:
+    def __init__(self, strategy_name: str, paper_trade: bool = False):
+        self.strategy_name = strategy_name
+        self.paper_trade = paper_trade
+        
+        # Initialize configuration
+        initialize_config('config/base.yaml', 'config/development.yaml')
+        self.config = get_config()
+        
+        # Initialize logger
+        self.logger = TradingLogger()
+        
+        self.kite_manager = KiteConnectManager(logger=self.logger, config=self.config)
+        self.risk_governor = RiskGovernor(self.logger)
+        self.trade_manager = create_trade_manager(
+            logger=self.logger, 
+            kite_manager=self.kite_manager,
+            config=self.config
+        )
+        self.position_monitor = PositionMonitor(
+            logger=self.logger,
+            kite_manager=self.kite_manager,
+            config=self.config
+        )
+        
+        self.logger.log_info(f"OptionsTrader for '{self.strategy_name}' initialized.")
+
+    def _get_market_data_fetcher(self):
+        # This can be customized based on needs
+        return MarketDataFetcher(self.logger, self.kite_manager)
+
+    def _get_strategy(self, strategy_name: str):
+        # Implement strategy loading logic here
+        return None
+
+    def run(self):
+        """Main loop for the options trader."""
+        self.logger.log_info(f"Starting OptionsTrader with strategy: {self.strategy_name}")
+        
+        while True:
+            try:
+                # Add a small delay to avoid rapid looping
+                time.sleep(10)
+            except KeyboardInterrupt:
+                self.logger.log_info("OptionsTrader stopped by user.")
+                break
+            except Exception as e:
+                self.logger.log_error(f"An unexpected error occurred in OptionsTrader: {e}", exc_info=True)
+                # Wait longer after an error
+                time.sleep(60)
+
+
+def run_options_trader(strategy_name: str, paper_trade: bool = False):
     today_date = datetime.now().strftime("%Y-%m-%d")
     paper_trade_mode = PAPER_TRADE
     
@@ -132,7 +186,7 @@ def run_options_trading_bot():
     )
     
     # Initialize basic logger for backward compatibility
-    logger = Logger(today_date)
+    logger = TradingLogger()
     
     # Log startup with enhanced logger
     enhanced_logger.log_system_event(
@@ -207,44 +261,8 @@ def run_options_trading_bot():
             )
             strategy = load_strategy("scalp", kite, logger)
 
-        while is_market_open():
-            logger.log_event("[ACTIVE] Market open, scanning for trades...")
-            try:
-                if strategy:
-                    trade_signal = strategy.analyze()
-                    if trade_signal:
-                        logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
-                        # Execute trade in both paper and live mode
-                        try:
-                            result = execute_trade(trade_signal, paper_mode=PAPER_TRADE)
-                            if result:
-                                logger.log_event(f"[SUCCESS] Options trade executed successfully: {result}")
-                            else:
-                                logger.log_event(f"[FAILED] Options trade execution failed")
-                        except Exception as trade_error:
-                            logger.log_event(f"[ERROR] Options trade execution exception: {trade_error}")
-                    else:
-                        logger.log_event("[WAIT] No valid trade signal.")
-                        enhanced_logger.log_strategy_signal(
-                            strategy=strategy_name,
-                            symbol="N/A",
-                            signal_data={'signal': 'none'}
-                        )
-                else:
-                    logger.log_event("[ERROR] Strategy object not loaded.")
-                    enhanced_logger.log_error(
-                        Exception("Strategy not loaded"),
-                        context={'strategy': strategy_name},
-                        source="options_trader"
-                    )
-            except Exception as e:
-                logger.log_event(f"[ERROR] Strategy loop exception: {e}")
-                enhanced_logger.log_error(
-                    e,
-                    context={'component': 'trading_loop', 'strategy': strategy_name},
-                    source="options_trader"
-                )
-            time.sleep(60)
+        trader = OptionsTrader(strategy_name=strategy_name, paper_trade=paper_trade_mode)
+        trader.run()
 
         logger.log_event("[CLOSE] Market closed. Sleeping to prevent CrashLoop.")
         sys.exit(0)
@@ -255,4 +273,4 @@ def run_options_trading_bot():
 
 
 if __name__ == "__main__":
-    run_options_trading_bot()
+    run_options_trader(strategy_name="Scalp", paper_trade=True)

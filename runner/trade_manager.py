@@ -266,7 +266,7 @@ class EnhancedTradeManager:
             
             return None
             
-    except Exception as e:
+        except Exception as e:
             self.enhanced_logger.log_error(
                 f"Critical error in trade execution for {trade_request.symbol}",
                 error=str(e),
@@ -274,7 +274,7 @@ class EnhancedTradeManager:
             )
             if self.logger:
                 self.logger.log_event(f"Critical trade execution error: {e}")
-        return None
+            return None
 
     def _execute_paper_trade(self, trade_request: TradeRequest) -> bool:
         """Simulate a paper trade"""
@@ -334,7 +334,7 @@ class EnhancedTradeManager:
             )
             return True
         
-    except Exception as e:
+        except Exception as e:
             if self.logger:
                 self.logger.log_event(f"Real trade execution failed for {trade_request.symbol}: {e}")
             
@@ -369,7 +369,7 @@ class EnhancedTradeManager:
             
             return position_id
         
-    except Exception as e:
+        except Exception as e:
             if self.logger:
                 self.logger.log_event(f"Failed to add position to monitor: {e}")
             return None
@@ -400,10 +400,10 @@ class EnhancedTradeManager:
 
     def emergency_exit_all_positions(self, reason: str = "Emergency exit"):
         """Emergency exit all positions"""
-        self.position_monitor.emergency_exit_all(reason)
+        return self.position_monitor.emergency_exit_all(reason)
 
     def get_trading_stats(self) -> Dict[str, Any]:
-    """Get trading statistics"""
+        """Get trading statistics"""
         portfolio_stats = self._get_portfolio_stats()
         
         return {

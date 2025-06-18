@@ -23,6 +23,11 @@ backend:
     limits:
       cpu: "250m"
       memory: "512Mi"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
 
 frontend:
   name: tron-frontend
@@ -40,6 +45,11 @@ frontend:
     limits:
       memory: "512Mi"
       cpu: "100m"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
 
 namespace: gpt
 serviceAccountName: gpt-runner-sa
@@ -66,6 +76,11 @@ mainRunner:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "runner/main_runner_lightweight.py"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
 
 stockTrader:
   name: stock-trader
@@ -83,6 +98,11 @@ stockTrader:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "stock_trading/stock_runner.py"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
 
 optionsTrader:
   name: options-trader
@@ -100,6 +120,11 @@ optionsTrader:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "options_trading/options_runner.py"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
 
 futuresTrader:
   name: futures-trader
@@ -117,6 +142,11 @@ futuresTrader:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "futures_trading/futures_runner.py"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
 
 # Log Aggregator configuration
 logAggregator:
@@ -142,6 +172,11 @@ logAggregator:
     KUBERNETES_NAMESPACE: "gpt"
     AUTH_ENABLED: "false"
     LOG_LEVEL: "INFO"
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
 
 # Dashboard configuration
 dashboard:
@@ -187,6 +222,11 @@ dashboard:
       - hosts:
           - dashboard.tron-trading.com
         secretName: dashboard-tls
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
 
 # Ingress configuration for main services
 ingress:
@@ -201,6 +241,13 @@ ingress:
     - hosts:
         - api.tron-trading.com
       secretName: api-tls
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 80
 
 # Secrets configuration
 secrets:

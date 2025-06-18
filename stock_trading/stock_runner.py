@@ -9,7 +9,7 @@ import kiteconnect
 from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
+from runner.logger import TradingLogger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import execute_trade
 from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
@@ -344,13 +344,20 @@ class StockTrader:
     def __init__(self, strategy_name: str, paper_trade: bool = False):
         self.strategy_name = strategy_name
         self.paper_trade = paper_trade
-        self.logger = create_enhanced_logger(log_category=LogCategory.SYSTEM, log_level=LogLevel.INFO)
-        self.kite_manager = KiteConnectManager(self.logger, get_trading_config())
+        
+        # Initialize configuration
+        initialize_config('config/base.yaml', 'config/development.yaml')
+        self.config = get_config()
+        
+        # Initialize logger
+        self.logger = TradingLogger()
+        
+        self.kite_manager = KiteConnectManager(logger=self.logger, config=self.config)
         self.risk_governor = RiskGovernor(self.logger)
         self.trade_manager = create_trade_manager(
             logger=self.logger, 
             kite_manager=self.kite_manager,
-            config=get_trading_config()
+            config=self.config
         )
         self.position_monitor = PositionMonitor(
             self.logger, self.kite_manager, self.trade_manager, paper_trade=self.paper_trade
@@ -365,20 +372,37 @@ class StockTrader:
         self.position_monitor = PositionMonitor(
             self.logger, self.kite_manager, self.trade_manager, paper_trade=self.paper_trade
         )
-        self.logger.log_info(f"Using strategy: {self.strategy_name}")
+        self.logger.log_info(f"StockTrader for '{self.strategy_name}' initialized.")
+
+    def _get_market_data_fetcher(self):
+        # This can be customized based on needs
+        return MarketDataFetcher(self.logger, self.kite_manager)
+
+    def _get_strategy(self, strategy_name: str):
+        # ... existing code ...
+        return None
 
     def run(self):
+        """Main loop for the stock trader."""
+        self.logger.log_info(f"Starting StockTrader with strategy: {self.strategy.name}")
+        
         while True:
-            if is_market_open():
-                self.strategy.run()
-            else:
-                self.logger.log_event("Market is closed. Pausing.")
-            time.sleep(get_trading_config().get('update_interval', 60))
+            # ... existing code ...
+            try:
+                # ... existing code ...
+                # Add a small delay to avoid rapid looping
+                time.sleep(10)
+            except KeyboardInterrupt:
+                self.logger.log_info("StockTrader stopped by user.")
+                break
+            except Exception as e:
+                self.logger.log_error(f"An unexpected error occurred in StockTrader: {e}", exc_info=True)
+                # Wait longer after an error
+                time.sleep(60)
 
 def run_stock_trader(strategy_name: str, paper_trade: bool = False):
     trader = StockTrader(strategy_name=strategy_name, paper_trade=paper_trade)
     trader.run()
 
 if __name__ == "__main__":
-    # Example: run the ORB strategy
     run_stock_trader(strategy_name="ORB", paper_trade=True)
