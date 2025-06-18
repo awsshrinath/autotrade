@@ -81,7 +81,7 @@ class EnhancedOpenAIManager:
             
         # Source 3: Try Original Secret Manager (fallback)
         try:
-            from runner.secret_manager_client import access_secret
+            from runner.secret_manager import access_secret_enhanced as access_secret
             api_key = access_secret("OPENAI_API_KEY", PROJECT_ID)
             if api_key:
                 self._log_info("Using OpenAI API key from original Secret Manager")

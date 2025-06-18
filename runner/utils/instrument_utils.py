@@ -1,13 +1,21 @@
 import datetime
+import pandas as pd
+import io
+import time
+from runner.logger import TradingLogger
+from runner.secret_manager import access_secret
 
 from kiteconnect import KiteConnect
 
 _cached_instruments = None
 
+# Initialize logger
+logger = TradingLogger()
+
 
 def get_kite_client():
     from runner.kiteconnect_manager import PROJECT_ID
-    from runner.secret_manager_client import access_secret
+    from runner.secret_manager import access_secret
 
     kite = KiteConnect(api_key=access_secret("ZERODHA_API_KEY", PROJECT_ID))
     kite.set_access_token(access_secret("ZERODHA_ACCESS_TOKEN", PROJECT_ID))
@@ -83,3 +91,42 @@ def get_instrument_tokens(symbols):
             print(f"[WARN] Token not found for: {symbol}")
 
     return token_map
+
+
+def get_instrument_token(instrument: str, exchange: str = 'NFO') -> int:
+    """
+    Returns the instrument token for a given instrument and exchange.
+
+    Parameters:
+    - instrument (str): The trading symbol of the instrument.
+    - exchange (str): The exchange of the instrument. Default is 'NFO'.
+
+    Returns:
+    - int: The instrument token for the given instrument and exchange.
+    """
+    df = get_instruments()
+    try:
+        token = df[(df['tradingsymbol'] == instrument) & (df['exchange'] == exchange)]['instrument_token'].iloc[0]
+        return int(token)
+    except (IndexError, KeyError):
+        logger.log_warning(f"Instrument token for {instrument} not found in the instrument list.")
+        return 0
+
+
+def get_instrument_details(instrument_token: int) -> dict:
+    """
+    Returns the details for a given instrument token.
+
+    Parameters:
+    - instrument_token (int): The token of the instrument.
+
+    Returns:
+    - dict: The details for the given instrument token.
+    """
+    df = get_instruments()
+    try:
+        details = df[df['instrument_token'] == instrument_token].to_dict('records')[0]
+        return details
+    except (IndexError, KeyError):
+        logger.log_warning(f"Details for instrument token {instrument_token} not found.")
+        return {}

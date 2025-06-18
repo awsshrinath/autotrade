@@ -22,7 +22,15 @@ from runner.market_data.market_data_fetcher import MarketDataFetcher
 
 # Enhanced logging imports (already imported above)
 # from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
-from runner.enhanced_trade_manager import create_enhanced_trade_manager
+from runner.trade_manager import create_enhanced_trade_manager
+from runner.position_monitor import PositionMonitor
+from runner.risk_governor import RiskGovernor
+from runner.trade_manager import create_trade_manager
+from runner.utils.instrument_utils import get_instrument_token
+from strategies.base_strategy import BaseStrategy
+from runner.market_data.market_data_fetcher import MarketData
+from runner.strategy_selector import StrategySelector
+from runner.config import initialize_config, get_config
 
 import logging
 import asyncio
@@ -331,3 +339,46 @@ def load_strategy(strategy_name: str, trade_manager, logger_instance, stock_conf
         config=stock_config
     )
     return strategy_factory.get_strategy(strategy_name)
+
+class StockTrader:
+    def __init__(self, strategy_name: str, paper_trade: bool = False):
+        self.strategy_name = strategy_name
+        self.paper_trade = paper_trade
+        self.logger = create_enhanced_logger(log_category=LogCategory.SYSTEM, log_level=LogLevel.INFO)
+        self.kite_manager = KiteConnectManager(self.logger, get_trading_config())
+        self.risk_governor = RiskGovernor(self.logger)
+        self.trade_manager = create_trade_manager(
+            logger=self.logger, 
+            kite_manager=self.kite_manager,
+            config=get_trading_config()
+        )
+        self.position_monitor = PositionMonitor(
+            self.logger, self.kite_manager, self.trade_manager, paper_trade=self.paper_trade
+        )
+        self.technical_indicators = TechnicalIndicators(self.market_data_fetcher)
+        self.strategy_selector = StrategySelector(self.logger)
+        self.kite_manager = KiteConnectManager(self.logger, get_trading_config())
+        self.risk_governor = RiskGovernor(self.logger)
+        self.trade_manager = create_enhanced_trade_manager(
+            self.logger, self.kite_manager, paper_trade=self.paper_trade
+        )
+        self.position_monitor = PositionMonitor(
+            self.logger, self.kite_manager, self.trade_manager, paper_trade=self.paper_trade
+        )
+        self.logger.log_info(f"Using strategy: {self.strategy_name}")
+
+    def run(self):
+        while True:
+            if is_market_open():
+                self.strategy.run()
+            else:
+                self.logger.log_event("Market is closed. Pausing.")
+            time.sleep(get_trading_config().get('update_interval', 60))
+
+def run_stock_trader(strategy_name: str, paper_trade: bool = False):
+    trader = StockTrader(strategy_name=strategy_name, paper_trade=paper_trade)
+    trader.run()
+
+if __name__ == "__main__":
+    # Example: run the ORB strategy
+    run_stock_trader(strategy_name="ORB", paper_trade=True)

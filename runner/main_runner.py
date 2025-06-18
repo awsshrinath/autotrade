@@ -63,7 +63,7 @@ def safe_initialize_loggers():
     global LogLevel, LogCategory
     
     try:
-from runner.common_utils import create_daily_folders
+        from runner.common_utils import create_daily_folders
         from runner.logger import create_enhanced_logger, LogLevel as LL, LogCategory as LC
         
         # Set global variables
@@ -72,8 +72,6 @@ from runner.common_utils import create_daily_folders
         
         # Get today's date
         today_date = get_ist_time().strftime("%Y-%m-%d")
-        
-        # Basic logger - now handled by create_enhanced_logger
         
         # Enhanced logger
         session_id = f"lightweight_runner_{int(time.time())}"

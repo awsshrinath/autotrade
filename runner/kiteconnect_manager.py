@@ -3,23 +3,25 @@
 import logging
 import time
 from typing import Optional
-from kiteconnect import KiteConnect
+from kiteconnect import KiteConnect, KiteTicker
 from kiteconnect.exceptions import (
     KiteException, 
     TokenException, 
     PermissionException, 
     OrderException,
     DataException,
-    NetworkException
+    NetworkException,
+    APIException
 )
 
-from runner.secret_manager_client import access_secret, validate_secret_access
+from runner.secret_manager import access_secret, validate_secret_access
+from runner.logger import TradingLogger
 
 PROJECT_ID = "autotrade-453303"  # Your GCP Project ID
 
 
 class KiteConnectManager:
-    def __init__(self, logger, project_id: str = PROJECT_ID):
+    def __init__(self, logger: TradingLogger, project_id: str = PROJECT_ID):
         self.logger = logger
         self.project_id = project_id
         self.kite = None
@@ -366,3 +368,76 @@ class KiteConnectManager:
         
         self.logger.log_event(f"❌ {method_name} failed after {max_retries} attempts")
         return None
+
+    def connect(self):
+        """
+        Connect to Kite API and validate secret access
+        
+        Returns:
+            True if connection is successful, False otherwise
+        """
+        try:
+            self.logger.log_info("Connecting to Kite API...")
+            
+            if not self.kite:
+                self.logger.log_event("❌ KiteConnect client not initialized")
+                return False
+            
+            if not self.access_token:
+                self.logger.log_event("❌ Access token not set")
+                return False
+            
+            self.logger.log_info("Successfully connected to Kite API.")
+            
+            # Validate secret access after connecting
+            if not validate_secret_access(self.logger):
+                self.logger.log_critical("Secret access validation failed. Check GCP permissions.")
+                # Depending on the desired behavior, you might want to raise an exception here
+                # raise Exception("Secret access validation failed.")
+
+            return True
+            
+        except TokenException:
+            self.logger.log_warning("Kite access token expired or invalid. Attempting to refresh.")
+            return False
+        except APIException as e:
+            self.logger.log_error(f"Kite API error during connection: {e}")
+            raise  # Re-raise the exception after logging
+        except Exception as e:
+            self.logger.log_critical(f"An unexpected error occurred during Kite connection: {e}")
+            raise
+
+    def get_user_profile(self):
+        """
+        Get user profile from Kite API
+        
+        Returns:
+            User profile dictionary or None if failed
+        """
+        try:
+            return self.kite.profile()
+        except APIException as e:
+            self.logger.log_error(f"API error while fetching user profile: {e}")
+            return None
+        except Exception as e:
+            self.logger.log_error(f"An unexpected error occurred while fetching user profile: {e}")
+            return None
+
+    def close_session(self):
+        """
+        Close KiteConnect session and invalidate access token
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        self.logger.log_info("Closing KiteConnect session (logging out).")
+        try:
+            # Invalidate the access token to log out
+            self.kite.invalidate_access_token()
+            return True
+        except APIException as e:
+            self.logger.log_warning(f"API error during logout: {e}. This can sometimes happen if the session is already invalid.")
+            return False
+        except Exception as e:
+            self.logger.log_error(f"An unexpected error occurred during logout: {e}")
+            return False
