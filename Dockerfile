@@ -13,6 +13,6 @@ COPY . .
 
 # Set default runner (can be overridden in Kubernetes via ENV)
 ENV PYTHONPATH=/app
-ENV RUNNER_SCRIPT=runner/main_runner_combined.py
+ENV RUNNER_SCRIPT=runner/main_runner.py
 
 ENTRYPOINT ["/app/entrypoint.sh"]

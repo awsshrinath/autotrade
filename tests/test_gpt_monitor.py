@@ -18,7 +18,7 @@ def mock_firestore(mock_get_client):
 
 
 # Mock OpenAIManager
-@patch("runner.secret_manager_client.access_secret")
+@patch("runner.secret_manager.access_secret")
 def mock_openai(mock_access_secret):
     mock_access_secret.return_value = "mock_api_key"
     openai_manager = MagicMock()

@@ -9,16 +9,22 @@ import signal
 import sys
 import os
 from typing import Optional
+import traceback
 
-from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest, create_enhanced_trade_manager
+from runner.trade_manager import EnhancedTradeManager, TradeRequest, create_enhanced_trade_manager
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
-from runner.enhanced_logger import EnhancedLogger, LogLevel, LogCategory, create_enhanced_logger
+from runner.logger import Logger, LogLevel, LogCategory, create_enhanced_logger
 from runner.market_data_fetcher import MarketDataFetcher
 from runner.gpt_self_improvement_monitor import GPTSelfImprovementMonitor
 from runner.openai_manager import OpenAIManager
 from config.config_manager import get_trading_config
+from runner.position_monitor import TradeStatus, ExitReason
+from runner.risk_governor import RiskGovernor
+from runner.cognitive_system import (
+    CognitiveSystem,
+    DecisionType,
+)
 
 
 class EnhancedTradingSystem:
@@ -27,7 +33,6 @@ class EnhancedTradingSystem:
     def __init__(self):
         self.config = get_trading_config()
         self.logger = None
-        self.enhanced_logger = None
         self.trade_manager = None
         self.firestore_client = None
         self.kite_manager = None
@@ -46,48 +51,37 @@ class EnhancedTradingSystem:
             today_date = datetime.datetime.now().strftime("%Y-%m-%d")
             session_id = f"enhanced_trading_system_{int(time.time())}"
             
-            self.enhanced_logger = create_enhanced_logger(
+            self.logger = create_enhanced_logger(
                 session_id=session_id,
                 enable_gcs=True,
                 enable_firestore=True
             )
             
-            # Initialize legacy logger for backward compatibility
-            self.logger = Logger(today_date)
-            
-            self.enhanced_logger.log_event(
-                "Enhanced Trading System initialization started",
-                LogLevel.INFO,
-                LogCategory.SYSTEM,
-                data={
-                    'session_id': session_id,
-                    'date': today_date,
-                    'config': {
-                        'paper_trade': self.config.paper_trade if self.config else True,
-                        'max_daily_loss': self.config.max_daily_loss if self.config else 0,
-                        'default_capital': self.config.default_capital if self.config else 0
-                    }
-                },
-                source="main_system"
-            )
+            self.logger.log_event("Enhanced Trading System initialization started",
+                                 LogLevel.INFO,
+                                 LogCategory.SYSTEM,
+                                 data={
+                                     'session_id': session_id,
+                                     'date': today_date,
+                                     'config': {
+                                         'paper_trade': self.config.paper_trade if self.config else True,
+                                         'max_daily_loss': self.config.max_daily_loss if self.config else 0,
+                                         'default_capital': self.config.default_capital if self.config else 0
+                                     }
+                                 },
+                                 source="main_system")
             
             self.logger.log_event("Enhanced Trading System starting...")
             
             # Initialize Firestore
             self.firestore_client = FirestoreClient()
-            self.enhanced_logger.log_event(
-                "Firestore client initialized",
-                LogLevel.INFO,
-                LogCategory.SYSTEM,
-                source="main_system"
-            )
             self.logger.log_event("Firestore client initialized")
             
             # Initialize Kite Connect
             self.kite_manager = KiteConnectManager(self.logger)
             if not self.config.paper_trade:
                 if not self.kite_manager.initialize():
-                    self.enhanced_logger.log_event(
+                    self.logger.log_event(
                         "Failed to initialize Kite Connect - switching to paper trade mode",
                         LogLevel.WARNING,
                         LogCategory.SYSTEM,
@@ -101,7 +95,7 @@ class EnhancedTradingSystem:
                     self.logger.log_event("Failed to initialize Kite Connect - switching to paper trade mode")
                     self.config.paper_trade = True
                 else:
-                    self.enhanced_logger.log_event(
+                    self.logger.log_event(
                         "Kite Connect initialized successfully for live trading",
                         LogLevel.INFO,
                         LogCategory.SYSTEM,
@@ -110,7 +104,7 @@ class EnhancedTradingSystem:
                     )
                     self.logger.log_event("Kite Connect initialized successfully")
             else:
-                self.enhanced_logger.log_event(
+                self.logger.log_event(
                     "Running in paper trade mode",
                     LogLevel.INFO,
                     LogCategory.SYSTEM,
@@ -140,7 +134,7 @@ class EnhancedTradingSystem:
                 openai_manager
             )
             
-            self.enhanced_logger.log_event(
+            self.logger.log_event(
                 "All system components initialized successfully",
                 LogLevel.INFO,
                 LogCategory.SYSTEM,
@@ -161,8 +155,8 @@ class EnhancedTradingSystem:
             return True
             
         except Exception as e:
-            if self.enhanced_logger:
-                self.enhanced_logger.log_error(
+            if self.logger:
+                self.logger.log_error(
                     error=e,
                     context={'operation': 'system_initialization'},
                     source="main_system"
@@ -197,7 +191,7 @@ class EnhancedTradingSystem:
             # Load existing positions from recovery
             positions = self.trade_manager.get_active_positions()
             if positions:
-                self.enhanced_logger.log_event(
+                self.logger.log_event(
                     f"Recovered {len(positions)} active positions from previous session",
                     LogLevel.INFO,
                     LogCategory.RECOVERY,
@@ -225,7 +219,7 @@ class EnhancedTradingSystem:
                         f"Current P&L: ₹{pos['unrealized_pnl']:.2f}"
                     )
             
-            self.enhanced_logger.log_event(
+            self.logger.log_event(
                 "Trading session started successfully",
                 LogLevel.INFO,
                 LogCategory.SYSTEM,
@@ -239,7 +233,7 @@ class EnhancedTradingSystem:
             self.logger.log_event("Trading session started successfully")
             
         except Exception as e:
-            self.enhanced_logger.log_error(
+            self.logger.log_error(
                 error=e,
                 context={'operation': 'start_trading_session'},
                 source="main_system"
@@ -332,7 +326,7 @@ class EnhancedTradingSystem:
             stats = self.trade_manager.get_trading_stats()
             
             # Enhanced logging for statistics
-            self.enhanced_logger.log_performance_metrics(
+            self.logger.log_performance_metrics(
                 metrics=stats,
                 metric_type="periodic_trading_stats"
             )
@@ -381,7 +375,7 @@ class EnhancedTradingSystem:
             self.logger.log_event("========================")
             
         except Exception as e:
-            self.enhanced_logger.log_error(
+            self.logger.log_error(
                 error=e,
                 context={'operation': 'print_trading_stats'},
                 source="main_system"
@@ -397,7 +391,7 @@ class EnhancedTradingSystem:
     def _cleanup(self):
         """Cleanup and shutdown"""
         try:
-            self.enhanced_logger.log_event(
+            self.logger.log_event(
                 "System cleanup initiated",
                 LogLevel.INFO,
                 LogCategory.SYSTEM,
@@ -410,7 +404,7 @@ class EnhancedTradingSystem:
                 # Emergency exit all positions if needed
                 open_positions = self.trade_manager.get_active_positions()
                 if open_positions:
-                    self.enhanced_logger.log_risk_event(
+                    self.logger.log_risk_event(
                         risk_data={
                             'event': 'system_shutdown_emergency_exit',
                             'open_positions_count': len(open_positions),
@@ -444,7 +438,7 @@ class EnhancedTradingSystem:
                 try:
                     self.monitor.analyze(bot_name="enhanced-trading-system")
                 except Exception as e:
-                    self.enhanced_logger.log_error(
+                    self.logger.log_error(
                         error=e,
                         context={'operation': 'final_analysis'},
                         source="main_system"
@@ -452,8 +446,8 @@ class EnhancedTradingSystem:
                     self.logger.log_event(f"Error in final analysis: {e}")
             
             # Shutdown enhanced logger
-            if self.enhanced_logger:
-                self.enhanced_logger.log_event(
+            if self.logger:
+                self.logger.log_event(
                     "System cleanup completed successfully",
                     LogLevel.INFO,
                     LogCategory.SYSTEM,
@@ -465,16 +459,16 @@ class EnhancedTradingSystem:
                 )
                 
                 # Create and upload final summary
-                summary = self.enhanced_logger.create_daily_summary()
+                summary = self.logger.create_daily_summary()
                 
                 # Graceful shutdown of enhanced logger
-                self.enhanced_logger.shutdown()
+                self.logger.shutdown()
             
             self.logger.log_event("System cleanup completed")
             
         except Exception as e:
-            if self.enhanced_logger:
-                self.enhanced_logger.log_error(
+            if self.logger:
+                self.logger.log_error(
                     error=e,
                     context={'operation': 'system_cleanup'},
                     source="main_system"

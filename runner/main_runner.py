@@ -1,187 +1,248 @@
+#!/usr/bin/env python3
+"""
+Lightweight Main Runner with Basic Functionality
+===============================================
+
+This is a simplified version of the main runner designed for low-memory environments.
+It focuses on core functionality without memory-intensive features like:
+- Cognitive system
+- RAG/FAISS operations
+- Sentence transformers
+
+Key features:
+- IST timezone handling
+- Basic market monitoring
+- Enhanced logging
+- Crashloop prevention
+"""
+
 import datetime
 import os
-import subprocess
-import sys
 import time
+import sys
+import traceback
+import signal
+import pytz
 
-# Add project root to path BEFORE any other imports
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Add project paths
+sys.path.insert(0, '/app')
+sys.path.insert(0, '/app/runner')
 
-from gpt_runner.gpt_runner import run_gpt_runner
-from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss
-from gpt_runner.rag.rag_worker import embed_logs_for_today
-from runner.common_utils import create_daily_folders
-from runner.firestore_client import FirestoreClient
-from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
-from runner.market_data import MarketDataFetcher, TechnicalIndicators
-from runner.market_monitor import MarketMonitor, CorrelationMonitor, MarketRegimeClassifier
-from runner.openai_manager import OpenAIManager
-from runner.strategy_selector import StrategySelector
-from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+# Global variables for imports
+LogLevel = None
+LogCategory = None
 
-def create_enhanced_logger(*args, **kwargs):
-    """Wrapper for backward compatibility"""
-    return create_trading_logger(*args, **kwargs)
+def setup_signal_handlers():
+    """Setup signal handlers for graceful shutdown"""
+    def signal_handler(signum, frame):
+        print(f"🛑 Received signal {signum}. Initiating graceful shutdown...")
+        global SHUTDOWN_REQUESTED
+        SHUTDOWN_REQUESTED = True
+    
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
 
-# Load trading mode (PAPER or LIVE)
-PAPER_TRADE = os.getenv("PAPER_TRADE", "true").lower() == "true"
+# Global shutdown flag
+SHUTDOWN_REQUESTED = False
 
-# Note: PROCESS_MAP is deprecated in Kubernetes mode
-PROCESS_MAP = {}
+def get_ist_time():
+    """Get current time in IST timezone"""
+    ist = pytz.timezone('Asia/Kolkata')
+    return datetime.datetime.now(ist)
 
+def is_market_open():
+    """Check if market is currently open"""
+    now = get_ist_time()
+    current_time = now.time()
+    market_open_time = datetime.time(9, 15)
+    market_close_time = datetime.time(15, 30)
+    return market_open_time <= current_time <= market_close_time
 
-def initialize_memory(logger):
-    logger.log_event("[RAG] Syncing FAISS with Firestore...")
-    sync_firestore_to_faiss()
-    logger.log_event("[RAG] Embedding today's logs...")
-    embed_logs_for_today()
-
-
-def start_bot(bot_type, logger):
-    # Validate bot_type to prevent command injection
-    allowed_bot_types = ["stocks", "options", "futures"]
-    if bot_type not in allowed_bot_types:
-        logger.log_event(
-            f"❌ Invalid bot type: {bot_type}. Must be one of {allowed_bot_types}"
-        )
-        return
-    logger.log_event(f"🚀 Triggering Kubernetes rollout restart for bot: {bot_type}")
+def safe_initialize_loggers():
+    """Initialize loggers with fallback"""
+    global LogLevel, LogCategory
+    
     try:
-        # Use subprocess.run with shell=False for better security
-        cmd = [
-            "kubectl",
-            "rollout",
-            "restart",
-            f"deployment/{bot_type}-trader",
-            "-n",
-            "gpt",
-        ]
-        result = subprocess.run(
-            cmd, shell=False, check=False, capture_output=True, text=True
+from runner.common_utils import create_daily_folders
+        from runner.logger import create_enhanced_logger, LogLevel as LL, LogCategory as LC
+        
+        # Set global variables
+        LogLevel = LL
+        LogCategory = LC
+        
+        # Get today's date
+        today_date = get_ist_time().strftime("%Y-%m-%d")
+        
+        # Basic logger - now handled by create_enhanced_logger
+        
+        # Enhanced logger
+        session_id = f"lightweight_runner_{int(time.time())}"
+        enhanced_logger = create_enhanced_logger(
+            session_id=session_id,
+            enable_gcs=True,
+            enable_firestore=True
         )
-        if result.returncode == 0:
-            logger.log_event(f"✅ Restart triggered for {bot_type}-trader deployment")
-        else:
-            logger.log_event(
-                f"❌ Failed to restart {bot_type}-trader: exit code {result.returncode}"
-            )
-            if result.stderr:
-                logger.log_event(f"Error details: {result.stderr}")
+        
+        create_daily_folders(today_date)
+        
+        print("✅ Loggers initialized successfully")
+        return enhanced_logger, enhanced_logger, session_id, today_date
+        
     except Exception as e:
-        logger.log_event(f"❌ Failed to restart {bot_type}-trader: {e}")
+        print(f"❌ Logger initialization failed: {e}")
+        return None, None, None, None
 
-
-def stop_bot(bot_type, logger):
-    logger.log_event(
-        f"⚠️ Note: stop_bot() not supported for Kubernetes-managed pods. Skipping stop for {bot_type}."
-    )
-
+def lightweight_market_monitor(logger, enhanced_logger):
+    """Lightweight market monitoring without heavy dependencies"""
+    print("📊 Starting lightweight market monitoring...")
+    
+    last_log_time = None
+    error_count = 0
+    max_errors = 5
+    
+    while not SHUTDOWN_REQUESTED and is_market_open():
+        try:
+            now = get_ist_time()
+            
+            # Log status every 10 minutes
+            if last_log_time is None or (now - last_log_time).total_seconds() >= 600:
+                print(f"⏰ Lightweight monitoring active - IST time: {now.strftime('%H:%M:%S')}")
+                logger.log_event(f"📊 Lightweight monitoring heartbeat - IST: {now.strftime('%H:%M:%S')}")
+                
+                enhanced_logger.log_event(
+                    "Lightweight monitoring heartbeat",
+                    LogLevel.INFO,
+                    LogCategory.MONITORING,
+                    data={
+                        'ist_time': now.strftime('%H:%M:%S'),
+                        'market_open': is_market_open(),
+                        'error_count': error_count,
+                        'mode': 'lightweight'
+                    },
+                    source="lightweight_monitor"
+                )
+                
+                last_log_time = now
+                error_count = 0
+            
+            # Sleep for 30 seconds
+            time.sleep(30)
+            
+        except KeyboardInterrupt:
+            print("🛑 Received keyboard interrupt during monitoring")
+            break
+            
+        except Exception as e:
+            error_count += 1
+            print(f"❌ Error in monitoring (#{error_count}): {e}")
+            
+            if error_count >= max_errors:
+                print(f"❌ Too many consecutive errors ({max_errors}), stopping monitoring")
+                break
+            
+            # Wait before retrying
+            wait_time = min(30, 5 * error_count)
+            print(f"⏳ Waiting {wait_time} seconds before retry...")
+            time.sleep(wait_time)
+    
+    print("🔔 Market closed or monitoring stopped.")
 
 def main():
-    today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    """Lightweight main function"""
+    print("🚀 Lightweight GPT Runner Starting")
+    print("=" * 50)
     
-    # Initialize enhanced logger
-    session_id = f"main_runner_{int(time.time())}"
-    enhanced_logger = create_enhanced_logger(
-        session_id=session_id,
-        bot_type="main-runner"
-    )
+    # Setup signal handlers
+    setup_signal_handlers()
     
-    # Initialize basic logger for backward compatibility
-    logger = Logger(today_date)
-    create_daily_folders(today_date)
+    # Initialize loggers
+    logger, enhanced_logger, session_id, today_date = safe_initialize_loggers()
     
-    # Log startup with enhanced logger
+    if logger is None:
+        print("❌ Cannot proceed without basic logger")
+        sys.exit(1)
+    
+    print(f"📅 Today's date: {today_date}")
+    print(f"🆔 Session ID: {session_id}")
+    
+    # Get current time and market status
+    now = get_ist_time()
+    
+    print(f"⏰ Current IST time: {now.strftime('%H:%M:%S')}")
+    print(f"📈 Market open: 09:15")
+    print(f"📉 Market close: 15:30")
+    print(f"📊 Market currently: {'OPEN' if is_market_open() else 'CLOSED'}")
+    
+    # Log startup
     enhanced_logger.log_event(
-        f"GPT Runner+ Orchestrator Started - Paper Trade Mode: {PAPER_TRADE}",
+        "Lightweight GPT Runner Started",
         LogLevel.INFO,
         LogCategory.SYSTEM,
         data={
             'session_id': session_id,
             'date': today_date,
-            'bot_type': 'main-runner',
-            'startup_time': datetime.datetime.now().isoformat(),
-            'paper_trade_mode': PAPER_TRADE
+            'startup_time': now.isoformat(),
+            'market_open': is_market_open(),
+            'lightweight_mode': True
         },
-        source="main_runner_startup"
+        source="lightweight_startup"
     )
     
-    logger.log_event("✅ GPT Runner+ Orchestrator Started")
-
-    # Init memory + RAG sync
-    initialize_memory(logger)
-
-    # GPT + Firestore + Kite
-    firestore_client = FirestoreClient(logger)
-    OpenAIManager(logger)
-    kite_manager = KiteConnectManager(logger)
-    kite_manager.set_access_token()
-    kite = kite_manager.get_kite_client()
-
-    # Market Context
-    market_monitor = MarketMonitor(logger)
-    sentiment_data = market_monitor.get_market_sentiment(kite)
-    logger.log_event(f"📈 Market Sentiment Data: {sentiment_data}")
-
-    # Strategy Plan
-    plan = {
-        "stocks": StrategySelector(logger).choose_strategy(
-            "stock", market_sentiment=sentiment_data
-        ),
-        "options": StrategySelector(logger).choose_strategy(
-            "options", market_sentiment=sentiment_data
-        ),
-        "futures": StrategySelector(logger).choose_strategy(
-            "futures", market_sentiment=sentiment_data
-        ),
-        "mode": "paper" if PAPER_TRADE else "live",
-        "timestamp": datetime.datetime.now().isoformat(),
-    }
-    firestore_client.db.collection("gpt_runner_daily_plan").document(today_date).set(
-        plan
-    )
-    logger.log_event(f"✅ Strategy Plan Saved: {plan}")
-
-    # Wait until market opens at 9:15 AM IST
-    now = datetime.datetime.now()
-    market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
-    if now < market_open:
-        wait_minutes = int((market_open - now).total_seconds() / 60)
-        logger.log_event(
-            f"⏳ Waiting {wait_minutes} minutes until market opens at 9:15 AM IST..."
-        )
-        time.sleep((market_open - now).total_seconds())
-
-    # Launch all bots
-    for bot in ["stocks", "options", "futures"]:
-        start_bot(bot, logger)
-
+    logger.log_event("✅ Lightweight GPT Runner Started")
+    
     try:
-        while True:
-            time.sleep(60)
-            now = time.strftime("%H:%M")
-            if now >= "15:30":
-                logger.log_event("🔔 Market closed. Stopping bots...")
-                for bot in list(PROCESS_MAP.keys()):
-                    stop_bot(bot, logger)
-
-                logger.log_event("🧠 Starting GPT Self-Improvement Analysis...")
-                run_gpt_runner()
-                break
-
-            logger.log_event(
-                "⚠️ Skipping bot crash detection in Kubernetes mode. Pods are self-healing via K8s."
-            )
+        if is_market_open():
+            print("🚀 Market is open - starting lightweight monitoring...")
+            logger.log_event("🚀 Market is open - starting lightweight monitoring")
+            
+            # Start lightweight monitoring
+            lightweight_market_monitor(logger, enhanced_logger)
+            
+        else:
+            print("⏸️ Market is closed - waiting for next open")
+            logger.log_event("⏸️ Market is closed - waiting for next open")
+            
+            # Calculate wait time until next market open
+            if now.time() >= datetime.time(15, 30):
+                # Market closed today, wait until tomorrow 9:15
+                tomorrow = now + datetime.timedelta(days=1)
+                next_open = tomorrow.replace(hour=9, minute=15, second=0, microsecond=0)
+            else:
+                # Market hasn't opened today
+                next_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
+            
+            wait_time = (next_open - now).total_seconds()
+            wait_hours = wait_time / 3600
+            
+            print(f"⏰ Next market open: {next_open.strftime('%Y-%m-%d %H:%M')}")
+            print(f"⏳ Wait time: {wait_hours:.1f} hours")
+            
+            # Sleep until market opens
+            time.sleep(wait_time)
+        
+        print("✅ Lightweight execution completed successfully")
 
     except KeyboardInterrupt:
-        logger.log_event("🛑 Interrupted manually. Stopping all bots...")
-        for bot in list(PROCESS_MAP.keys()):
-            stop_bot(bot, logger)
-
-        logger.log_event("🧠 Running GPT Reflection after manual stop...")
-        run_gpt_runner()
-
+        print("🛑 Received interrupt signal - shutting down gracefully")
+        logger.log_event("🛑 Interrupted manually. Shutting down gracefully.")
+        
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        print("📋 Full traceback:")
+        traceback.print_exc()
+        logger.log_event(f"❌ Unexpected error: {e}")
+    
+    finally:
+        print("🔄 Starting graceful shutdown...")
+        if enhanced_logger:
+            try:
+                if hasattr(enhanced_logger, 'trading_logger') and hasattr(enhanced_logger.trading_logger, 'lifecycle_manager'):
+                    enhanced_logger.trading_logger.lifecycle_manager.run_daily_cleanup()
+                enhanced_logger.shutdown()
+                print("✅ Enhanced logger shutdown completed")
+            except Exception as e:
+                print(f"Error during logger shutdown: {e}")
+        print("👋 Lightweight Runner shutdown complete")
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,6 @@ from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
 from runner.enhanced_logging import LogLevel, LogCategory
 from config.config_manager import get_trading_config
 from runner.market_data.market_data_fetcher import MarketDataFetcher
-from runner.strategy_factory import get_strategy
 # from kite.kite_manager import KiteManager  # Not available
 # from utils.gcp_utils import get_firestore_client  # Not available
 # from utils.notifications import send_slack_notification  # Not available
@@ -27,6 +26,8 @@ from runner.enhanced_trade_manager import create_enhanced_trade_manager
 
 import logging
 import asyncio
+import traceback
+from typing import Dict, Any, Optional
 
 from runner.config import get_trading_config
 from runner.trade_manager import simulate_exit
@@ -34,6 +35,16 @@ from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
 from strategies.opening_range_strategy import OpeningRangeStrategy
 from strategies.vwap_strategy import VwapStrategy
 from strategies.range_reversal import RangeReversalStrategy
+from runner.logger import create_enhanced_logger
+from runner.trade_manager import create_enhanced_trade_manager
+from runner.firestore_client import FirestoreClient
+from runner.strategy_factory import StrategyFactory
+from runner.utils.trade_utils import is_market_open, get_today_date
+from runner.config import get_trading_config
+from strategies.orb_strategy import OrbStrategy
+
+# Global logger instance
+logger = logging.getLogger(__name__)
 
 def create_enhanced_logger(*args, **kwargs):
     """Wrapper for backward compatibility"""
@@ -272,7 +283,7 @@ def run_stock_trading_bot():
             data_provider = DataProvider(kite_manager, main_logger, config)
 
             strategy_name = config.get('strategy', 'default_strategy')
-            strategy = get_strategy(strategy_name, kite_manager, main_logger, config, trade_manager, data_provider)
+            strategy = load_strategy(strategy_name, trade_manager, main_logger, config)
 
             main_logger.log_event(f"Using strategy: {strategy_name}")
 
@@ -311,3 +322,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def load_strategy(strategy_name: str, trade_manager, logger_instance, stock_config: dict):
+    """Load a strategy instance by name."""
+    strategy_factory = StrategyFactory(
+        trade_manager=trade_manager,
+        logger=logger_instance,
+        config=stock_config
+    )
+    return strategy_factory.get_strategy(strategy_name)

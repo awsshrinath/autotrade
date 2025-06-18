@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tests.test_mocks import setup_all_mocks
 setup_all_mocks()
 
-from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
+from runner.trade_manager import EnhancedTradeManager, TradeRequest
 from config.config_manager import ConfigManager
 
 class TestEnhancedTradeManager(unittest.TestCase):
@@ -30,10 +30,10 @@ class TestEnhancedTradeManager(unittest.TestCase):
         mock_logger.log_event = MagicMock()
         mock_logger.log_trade = MagicMock()
         
-        with patch('runner.enhanced_trade_manager.get_trading_config', return_value=self.mock_config):
-            with patch('runner.enhanced_trade_manager.create_portfolio_manager', return_value=MagicMock()):
-                with patch('runner.enhanced_trade_manager.CognitiveSystem', return_value=MagicMock()):
-                    with patch('runner.enhanced_trade_manager.create_trading_logger', return_value=mock_logger):
+        with patch('runner.trade_manager.get_trading_config', return_value=self.mock_config):
+            with patch('runner.trade_manager.create_portfolio_manager', return_value=MagicMock()):
+                with patch('runner.trade_manager.CognitiveSystem', return_value=MagicMock()):
+                    with patch('runner.trade_manager.create_trading_logger', return_value=mock_logger):
                         self.trade_manager = EnhancedTradeManager(
                             enable_firestore=False,
                             enable_gcs=False

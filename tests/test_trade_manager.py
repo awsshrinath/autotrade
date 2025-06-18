@@ -1,5 +1,7 @@
-from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
-from unittest.mock import Mock, patch
+from runner.trade_manager import EnhancedTradeManager, TradeRequest
+import unittest
+from unittest.mock import MagicMock, patch
+from runner.strategies.vwap_strategy import VWAPStrategy
 
 
 class MockLogger:
@@ -55,7 +57,7 @@ def test_run_strategy_once():
     trade_manager.start_trading_session()
     
     # Mock the strategy import at the module level where it's used
-    with patch('runner.enhanced_trade_manager.VWAPStrategy', MockStrategy):
+    with patch('runner.trade_manager.VWAPStrategy', MockStrategy):
         # Simulate a trade run with a known strategy
         position_id = trade_manager.run_strategy_once(
             strategy_name="vwap", direction="bullish", bot_type="stock"
@@ -66,3 +68,51 @@ def test_run_strategy_once():
         active_positions = trade_manager.get_active_positions()
         assert len(active_positions) == 1, "Position should be tracked"
         assert active_positions[0]['symbol'] == 'TEST'
+
+
+class TestEnhancedTradeManager(unittest.TestCase):
+    def setUp(self):
+        self.mock_logger = MagicMock()
+        with patch('runner.trade_manager.create_trading_logger', return_value=self.mock_logger):
+            self.trade_manager = EnhancedTradeManager(logger=self.mock_logger)
+
+    def test_singleton_instance(self):
+        with patch('runner.trade_manager.create_trading_logger', return_value=self.mock_logger):
+            instance1 = EnhancedTradeManager(logger=self.mock_logger)
+            instance2 = EnhancedTradeManager(logger=self.mock_logger)
+            self.assertIs(instance1, instance2)
+
+    def test_load_strategy(self):
+        self.trade_manager.load_strategy('vwap', VWAPStrategy)
+        self.assertIn('vwap', self.trade_manager.strategy_map)
+        self.assertEqual(self.trade_manager.strategy_map['vwap'], VWAPStrategy)
+
+    @patch('runner.trade_manager.VWAPStrategy', MagicMock())
+    def test_start_trading(self):
+        self.trade_manager.load_strategy('vwap', VWAPStrategy)
+        with self.assertRaises(ValueError):
+            self.trade_manager.start_trading('invalid_strategy', MagicMock())
+
+    def test_execute_trade_paper(self):
+        trade_request = TradeRequest(symbol='RELIANCE', strategy='vwap', direction='bullish', quantity=10,
+                                     entry_price=2500.0, stop_loss=2490.0, target=2520.0, paper_trade=True)
+
+        with patch('runner.trade_manager.PositionMonitor.add_position') as mock_add_position:
+            self.trade_manager.execute_trade(trade_request)
+            mock_add_position.assert_called_once()
+
+    def test_execute_trade_live(self):
+        trade_request = TradeRequest(symbol='RELIANCE', strategy='vwap', direction='bullish', quantity=10,
+                                     entry_price=2500.0, stop_loss=2490.0, target=2520.0, paper_trade=False)
+
+        with patch('runner.trade_manager.KiteConnectManager') as mock_kite_manager:
+            mock_kite_manager.place_order.return_value = '12345'
+            self.trade_manager.kite_manager = mock_kite_manager
+            with patch('runner.trade_manager.PositionMonitor.add_position') as mock_add_position:
+                self.trade_manager.execute_trade(trade_request)
+                mock_add_position.assert_called_once()
+                self.assertIn('12345', self.trade_manager.live_orders)
+
+
+if __name__ == '__main__':
+    unittest.main()

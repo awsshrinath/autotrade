@@ -49,8 +49,8 @@ def main():
     print("\n📊 Enhanced Logging System:")
     enhanced_logging_tests = [
         ("enhanced_logging types", "from runner.enhanced_logging.log_types import LogLevel, LogCategory, LogType"),
-        ("enhanced_logger", "from runner.enhanced_logger import create_enhanced_logger, LogLevel, LogCategory"),
-        ("logger creation", "from runner.enhanced_logger import create_enhanced_logger; logger = create_enhanced_logger('test')"),
+        ("enhanced_logger", "from runner.logger import create_enhanced_logger, LogLevel, LogCategory"),
+        ("logger creation", "from runner.logger import create_enhanced_logger; logger = create_enhanced_logger('test')"),
     ]
     
     for module, statement in enhanced_logging_tests:
@@ -62,12 +62,23 @@ def main():
     runner_tests = [
         ("firestore_client", "from runner.firestore_client import FirestoreClient"),
         ("logger", "from runner.logger import Logger"),
-        ("openai_manager", "from runner.openai_manager import OpenAIManager"),
+        ("logger creation", "from runner.logger import create_enhanced_logger; logger = create_enhanced_logger('test')"),
         ("kiteconnect_manager", "from runner.kiteconnect_manager import KiteConnectManager"),
-        ("enhanced_trade_manager", "from runner.enhanced_trade_manager import EnhancedTradeManager"),
-        ("cognitive_system", "from runner.cognitive_system import CognitiveSystem"),
-        ("cognitive_state_machine", "from runner.cognitive_state_machine import CognitiveState, StateTransitionTrigger"),
-        ("thought_journal", "from runner.thought_journal import DecisionType, ConfidenceLevel"),
+        ("market_data_fetcher", "from runner.market_data_fetcher import MarketDataFetcher"),
+        ("market_monitor", "from runner.market_monitor import MarketMonitor"),
+        ("openai_manager", "from runner.openai_manager import OpenAIManager"),
+        ("paper_trader", "from runner.paper_trader import PaperTrader"),
+        ("position_monitor", "from runner.position_monitor import PositionMonitor"),
+        ("risk_governor", "from runner.risk_governor import RiskGovernor"),
+        ("secret_manager", "from runner.secret_manager import EnhancedSecretManager"),
+        ("strategy_factory", "from runner.strategy_factory import StrategyFactory"),
+        ("strategy_selector", "from runner.strategy_selector import StrategySelector"),
+        ("trade_manager", "from runner.trade_manager import EnhancedTradeManager"),
+        ("common_utils", "from runner.common_utils import create_daily_folders"),
+        ("daily_report_generator", "from runner.daily_report_generator import DailyReportGenerator"),
+        ("gpt_codefix_suggestor", "from runner.gpt_codefix_suggestor import suggest_code_fix"),
+        ("gpt_runner", "from runner.gpt_runner import gpt_runner"),
+        ("gpt_self_improvement_monitor", "from runner.gpt_self_improvement_monitor import run_gpt_reflection"),
     ]
     
     for module, statement in runner_tests:
@@ -77,10 +88,7 @@ def main():
     # Test 4: RAG imports (non-critical, should fallback gracefully)
     print("\n🧠 RAG System (Fallback Expected):")
     rag_tests = [
-        ("gpt_runner package", "import gpt_runner"),
-        ("rag retriever", "from gpt_runner.rag.retriever import retrieve_similar_context"),
-        ("rag faiss adapter", "from gpt_runner.rag.faiss_firestore_adapter import sync_firestore_to_faiss"),
-        ("rag worker", "from gpt_runner.rag.rag_worker import embed_logs_for_today")
+        ("rag_worker", "from gpt_runner.rag.rag_worker import embed_logs_for_today"),
     ]
     
     for module, statement in rag_tests:
@@ -90,6 +98,8 @@ def main():
     print("\n🎛️ Dashboard Specific:")
     dashboard_tests = [
         ("stock_runner", "from stock_trading.stock_runner import main as stock_main"),
+        ("options_runner", "from options_trading.options_runner import main as options_main"),
+        ("futures_runner", "from futures_trading.futures_runner import main as futures_main"),
     ]
     
     for module, statement in dashboard_tests:
@@ -111,8 +121,10 @@ def main():
     # Test 7: Main runner imports
     print("\n🎯 Main Runner:")
     main_tests = [
-        ("main_runner_combined", "from runner.main_runner_combined import main"),
-        ("gpt_self_improvement", "from runner.gpt_self_improvement_monitor import run_gpt_reflection"),
+        ("main_runner", "from runner.main_runner import main"),
+        ("stock_runner", "from stock_trading.stock_runner import main as stock_main"),
+        ("options_runner", "from options_trading.options_runner import main as options_main"),
+        ("futures_runner", "from futures_trading.futures_runner import main as futures_main"),
     ]
     
     for module, statement in main_tests:

@@ -8,7 +8,7 @@ import time
 import datetime
 from typing import List, Dict, Any
 
-from runner.enhanced_trade_manager import EnhancedTradeManager, TradeRequest
+from runner.trade_manager import EnhancedTradeManager, TradeRequest
 from runner.position_monitor import PositionMonitor, ExitStrategy, ExitReason, TradeStatus
 from runner.firestore_client import FirestoreClient
 from runner.logger import Logger

@@ -109,14 +109,17 @@ def lightweight_market_monitor(logger, enhanced_logger):
                 logger.log_event(f"📊 Lightweight monitoring heartbeat - IST: {now.strftime('%H:%M:%S')}")
                 
                 if enhanced_logger:
-                    enhanced_logger.log_system_event(
+                    enhanced_logger.log_event(
                         "Lightweight monitoring heartbeat",
+                        LogLevel.INFO,
+                        LogCategory.MONITORING,
                         data={
                             'ist_time': now.strftime('%H:%M:%S'),
                             'market_open': is_market_open(),
                             'error_count': error_count,
                             'mode': 'lightweight'
-                        }
+                        },
+                        source="lightweight_monitor"
                     )
                 
                 last_log_time = now
@@ -231,17 +234,15 @@ def main():
         logger.log_event(f"❌ Unexpected error: {e}")
     
     finally:
-        # Graceful shutdown
         print("🔄 Starting graceful shutdown...")
-        
         if enhanced_logger:
             try:
-                enhanced_logger.flush_all()
+                if hasattr(enhanced_logger, 'trading_logger') and hasattr(enhanced_logger.trading_logger, 'lifecycle_manager'):
+                    enhanced_logger.trading_logger.lifecycle_manager.run_daily_cleanup()
                 enhanced_logger.shutdown()
                 print("✅ Enhanced logger shutdown completed")
             except Exception as e:
-                print(f"❌ Enhanced logger shutdown error: {e}")
-        
+                print(f"Error during logger shutdown: {e}")
         print("👋 Lightweight Runner shutdown complete")
 
 if __name__ == "__main__":

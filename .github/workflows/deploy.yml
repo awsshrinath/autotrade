@@ -30,8 +30,8 @@ jobs:
 
     - name: Build and Push All Images
       run: |
+        TAG=$(date +%Y%m%d%H%M%S)
         IMAGE_PREFIX="asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tron-system"
-        TAG=${{ github.sha }}
 
         docker build -f dashboard_api/Dockerfile -t $IMAGE_PREFIX/tron-backend:$TAG -t $IMAGE_PREFIX/tron-backend:latest .
         docker push --all-tags $IMAGE_PREFIX/tron-backend
@@ -42,8 +42,9 @@ jobs:
         docker build -f gpt_runner/log_aggregator/Dockerfile -t $IMAGE_PREFIX/log-aggregator:$TAG -t $IMAGE_PREFIX/log-aggregator:latest .
         docker push --all-tags $IMAGE_PREFIX/log-aggregator
         
-        docker build -t $IMAGE_PREFIX/gpt-runner:$TAG -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner_combined.py .
-        docker push --all-tags $IMAGE_PREFIX/gpt-runner
+        docker build -t $IMAGE_PREFIX/gpt-runner:$TAG -t $IMAGE_PREFIX/gpt-runner:latest --build-arg RUNNER_SCRIPT=runner/main_runner.py .
+        docker push $IMAGE_PREFIX/gpt-runner:$TAG
+        docker push $IMAGE_PREFIX/gpt-runner:latest
         
         docker build -t $IMAGE_PREFIX/stock-trader:$TAG -t $IMAGE_PREFIX/stock-trader:latest --build-arg RUNNER_SCRIPT=stock_trading/stock_runner.py .
         docker push --all-tags $IMAGE_PREFIX/stock-trader

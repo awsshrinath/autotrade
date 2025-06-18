@@ -24,7 +24,7 @@ class TronFunctionalityTester:
         """Test critical module imports"""
         tests = [
             ('config.config_manager', 'ConfigManager'),
-            ('runner.main_runner_lightweight', None),
+            ('runner.main_runner', None),
             ('dashboard_api.main', 'app'),
             ('strategies.base_strategy', 'BaseStrategy'),
             ('stock_trading.stock_runner', None),

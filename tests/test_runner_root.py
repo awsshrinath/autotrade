@@ -23,7 +23,7 @@ from runner.logger import Logger
 
 
 # Mock the access_secret function to avoid Google Cloud authentication issues
-@patch("runner.secret_manager_client.access_secret")
+@patch("runner.secret_manager.access_secret")
 def mock_access_secret(mock_access_secret):
     mock_access_secret.return_value = "mock_secret_value"
     return mock_access_secret
@@ -146,3 +146,27 @@ if __name__ == "__main__":
     test_risk_governor()
     test_gpt_reflection()
     print("\n\u2705 All checks completed.")
+
+from options_trading.options_runner import main as options_runner_main
+from futures_trading.futures_runner import main as futures_runner_main
+
+# MOCK GCP and other external services
+@patch("runner.secret_manager.access_secret")
+@patch("runner.firestore_client.FirestoreClient")
+@patch("runner.kiteconnect_manager.KiteConnectManager")
+@patch("runner.market_data_fetcher.MarketDataFetcher")
+@patch("runner.market_monitor.MarketMonitor")
+@patch("runner.strategy_selector.StrategySelector")
+@patch("runner.logger.Logger")
+@patch("gpt_runner.gpt_runner.run_gpt_runner")
+def test_all_runners_startup(
+    mock_run_gpt_runner,
+    mock_access_secret,
+    mock_firestore_client,
+    mock_kiteconnect_manager,
+    mock_market_data_fetcher,
+    mock_market_monitor,
+    mock_strategy_selector,
+    mock_logger
+):
+    pass

@@ -50,7 +50,7 @@ def test_enhanced_logger():
     print("\n📝 Test 2: Enhanced Logger with GCS Integration")
     
     try:
-        from runner.enhanced_logger import create_enhanced_logger
+        from runner.logger import create_enhanced_logger
         
         session_id = f"test_{int(time.time())}"
         enhanced_logger = create_enhanced_logger(
@@ -77,7 +77,7 @@ def test_enhanced_trade_manager():
     print("\n🎯 Test 3: EnhancedTradeManager Paper Trading")
     
     try:
-        from runner.enhanced_trade_manager import create_enhanced_trade_manager, TradeRequest
+        from runner.trade_manager import create_enhanced_trade_manager, TradeRequest
         from runner.logger import Logger
         
         test_logger = Logger('test')
