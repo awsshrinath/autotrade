@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ printf "%s-config" .Chart.Name }}
+  name: tron-system-config
   namespace: {{ .Values.namespace }}
 data:
   GCP_PROJECT_ID: {{ .Values.gcpProjectId | quote }}
