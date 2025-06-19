@@ -100,7 +100,11 @@ jobs:
     - name: Deploy with Helm
       run: |
         helm dependency update ./helm
+        
+        # Clean up orphaned resources and any failed releases before deploying
+        kubectl delete configmap tron-system-config -n gpt --ignore-not-found=true
         helm uninstall tron-system --namespace gpt || true
+        
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
           --create-namespace \
