@@ -6,6 +6,12 @@ on:
       - main
   repository_dispatch:
     types: [cluster_ready]
+  workflow_dispatch:
+    inputs:
+      cluster_ready:
+        description: 'Deploy after cluster is ready'
+        required: false
+        default: 'true'
 
 jobs:
   build-and-push-images:
@@ -86,6 +92,21 @@ jobs:
         GKE_ZONE: ${{ secrets.GKE_ZONE }}
       run: |
         gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
+    
+    - name: Validate cluster readiness
+      run: |
+        echo "Validating cluster readiness..."
+        # Wait for cluster to be ready
+        timeout 300 bash -c 'until kubectl get nodes | grep -q Ready; do echo "Waiting for cluster nodes to be ready..."; sleep 10; done'
+        
+        # Check cluster status
+        kubectl cluster-info
+        kubectl get nodes -o wide
+        
+        # Ensure namespace exists
+        kubectl create namespace gpt --dry-run=client -o yaml | kubectl apply -f -
+        
+        echo "Cluster validation completed successfully"
 
     - name: Create Kubernetes secrets
       run: |
@@ -102,11 +123,36 @@ jobs:
         helm dependency update ./helm
         
         # Clean up orphaned resources and any failed releases before deploying
+        echo "Cleaning up orphaned resources..."
         kubectl delete configmap tron-system-config -n gpt --ignore-not-found=true
         helm uninstall tron-system --namespace gpt || true
         
+        # Wait a moment for cleanup to complete
+        sleep 10
+        
+        # Deploy with Helm
+        echo "Deploying with Helm..."
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
           --create-namespace \
           --set-string global.imageTag=${{ github.sha }} \
-          --timeout 10m 
+          --timeout 10m \
+          --wait \
+          --wait-for-jobs
+    
+    - name: Verify deployment
+      run: |
+        echo "Verifying deployment status..."
+        
+        # Check Helm release status
+        helm status tron-system -n gpt
+        
+        # Wait for pods to be ready
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=tron-system -n gpt --timeout=300s
+        
+        # Show deployment status
+        kubectl get pods -n gpt -o wide
+        kubectl get services -n gpt
+        kubectl get configmaps -n gpt
+        
+        echo "Deployment verification completed successfully" 
