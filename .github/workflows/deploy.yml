@@ -100,6 +100,7 @@ jobs:
     - name: Deploy with Helm
       run: |
         helm dependency update ./helm
+        helm uninstall tron-system --namespace gpt || true
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
           --create-namespace \
