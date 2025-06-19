@@ -40,22 +40,22 @@ spec:
             - name: GCP_PROJECT_ID
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
+                  name: tron-system-config
                   key: GCP_PROJECT_ID
             - name: ENVIRONMENT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
+                  name: tron-system-config
                   key: ENVIRONMENT
             - name: PAPER_TRADE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
+                  name: tron-system-config
                   key: PAPER_TRADE
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
+                  name: tron-system-config
                   key: LOG_LEVEL
             - name: OPENAI_API_KEY
               valueFrom:
