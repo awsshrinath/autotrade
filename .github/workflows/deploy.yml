@@ -121,16 +121,11 @@ jobs:
       run: |
         helm dependency update ./helm
         
-        # Clean up orphaned resources and any failed releases before deploying
-        echo "Cleaning up orphaned resources..."
-        kubectl delete configmap tron-system-config -n gpt --ignore-not-found=true
-        helm uninstall tron-system --namespace gpt || true
+        # Ensure a truly clean slate by deleting the entire namespace before deploying.
+        # This removes all orphaned resources from any previous failed runs.
+        kubectl delete namespace gpt --ignore-not-found=true
         
-        # Wait a moment for cleanup to complete
-        sleep 10
-        
-        # Deploy with Helm
-        echo "Deploying with Helm..."
+        # The --create-namespace flag will recreate the namespace for a fresh install.
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
           --create-namespace \
