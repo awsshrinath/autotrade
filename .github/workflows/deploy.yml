@@ -92,30 +92,54 @@ jobs:
       run: |
         gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
 
-    - name: Create Kubernetes secrets
-      run: |
-        kubectl create namespace gpt --dry-run=client -o yaml | kubectl apply -f -
-        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' --dry-run=client -o yaml | kubectl apply -f - -n gpt
-        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' --dry-run=client -o yaml | kubectl apply -f - -n gpt
-
     - name: Set up Helm
       uses: azure/setup-helm@v3
       with:
         version: 'v3.12.0'
+
+    - name: Prepare Namespace and Secrets
+      id: prepare-namespace
+      run: |
+        # 1. Delete the namespace if it exists and wait for it to be gone.
+        if kubectl get namespace gpt > /dev/null 2>&1; then
+          echo "Namespace 'gpt' found. Deleting..."
+          kubectl delete namespace gpt --ignore-not-found=true
+          echo "Waiting for namespace 'gpt' to be fully terminated..."
+          
+          # Wait up to 2 minutes for the namespace to be terminated.
+          timeout=120
+          while kubectl get namespace gpt > /dev/null 2>&1 && [ $timeout -gt 0 ]; do
+            sleep 5
+            timeout=$((timeout-5))
+          done
+          
+          if [ $timeout -le 0 ]; then
+            echo "Error: Namespace 'gpt' was not terminated within 2 minutes."
+            exit 1
+          fi
+          echo "Namespace 'gpt' terminated."
+        else
+          echo "Namespace 'gpt' not found. Skipping deletion."
+        fi
+
+        # 2. Create the namespace.
+        echo "Creating namespace 'gpt'..."
+        kubectl create namespace gpt
+
+        # 3. Create secrets within the new namespace.
+        echo "Creating secrets..."
+        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' -n gpt
+        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' -n gpt
+        echo "Namespace and secrets are ready."
 
     - name: Deploy with Helm
       id: deploy
       run: |
         helm dependency update ./helm
         
-        # Ensure a truly clean slate by deleting the entire namespace before deploying.
-        # This removes all orphaned resources from any previous failed runs.
-        kubectl delete namespace gpt --ignore-not-found=true
-        
-        # The --create-namespace flag will recreate the namespace for a fresh install.
+        # Deploy to the pre-created namespace.
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
-          --create-namespace \
           --set-string global.imageTag=${{ github.sha }}
     
     - name: Verify deployment
