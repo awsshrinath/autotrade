@@ -92,32 +92,9 @@ jobs:
       run: |
         gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
 
-    - name: Debug kubectl connection
-      run: |
-        echo "--- kubectl cluster-info ---"
-        kubectl cluster-info
-        echo "--- kubectl config view ---"
-        kubectl config view
-        echo "--- kubectl get nodes (verbose) ---"
-        kubectl get nodes -v=9 || true
-
-    - name: Validate cluster readiness
-      run: |
-        echo "Validating cluster readiness..."
-        # Wait for cluster to be ready
-        timeout 300 bash -c 'until kubectl get nodes | grep -q Ready; do echo "Waiting for cluster nodes to be ready..."; sleep 10; done'
-        
-        # Check cluster status
-        kubectl cluster-info
-        kubectl get nodes -o wide
-        
-        # Ensure namespace exists
-        kubectl create namespace gpt --dry-run=client -o yaml | kubectl apply -f -
-        
-        echo "Cluster validation completed successfully"
-
     - name: Create Kubernetes secrets
       run: |
+        kubectl create namespace gpt --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' --dry-run=client -o yaml | kubectl apply -f - -n gpt
         kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' --dry-run=client -o yaml | kubectl apply -f - -n gpt
 
@@ -127,6 +104,7 @@ jobs:
         version: 'v3.12.0'
 
     - name: Deploy with Helm
+      id: deploy
       run: |
         helm dependency update ./helm
         
