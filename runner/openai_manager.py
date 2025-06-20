@@ -6,7 +6,7 @@ import logging
 from typing import Optional, Dict, Any
 
 try:
-import openai
+    import openai
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -47,7 +47,7 @@ class EnhancedOpenAIManager:
             self.api_key = self._get_api_key()
             
             if self.api_key:
-        openai.api_key = self.api_key
+                openai.api_key = self.api_key
                 self.client_initialized = True
                 self._log_success("OpenAI API client initialized successfully")
             else:
@@ -241,7 +241,7 @@ def ask_gpt_enhanced(input_data: Dict[str, Any]) -> Dict[str, str]:
         
         if gpt.is_available():
             # Use OpenAI if available
-        prompt = f"""
+            prompt = f"""
 You are a trading strategy selector bot.
 
 Based on the following sentiment:
@@ -256,10 +256,10 @@ Reply strictly in the following JSON format:
     "direction": "<bullish|bearish|neutral>"
 }}
 """
-        response_text = gpt.get_suggestion(prompt)
+            response_text = gpt.get_suggestion(prompt)
 
             if response_text:
-        import json
+                import json
                 return json.loads(response_text)
                 
         # Fallback strategy selection

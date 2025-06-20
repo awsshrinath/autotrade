@@ -104,7 +104,7 @@ def get_instrument_token(instrument: str, exchange: str = 'NFO') -> int:
     Returns:
     - int: The instrument token for the given instrument and exchange.
     """
-    df = get_instruments()
+    df = pd.DataFrame(load_instruments())
     try:
         token = df[(df['tradingsymbol'] == instrument) & (df['exchange'] == exchange)]['instrument_token'].iloc[0]
         return int(token)
@@ -123,7 +123,7 @@ def get_instrument_details(instrument_token: int) -> dict:
     Returns:
     - dict: The details for the given instrument token.
     """
-    df = get_instruments()
+    df = pd.DataFrame(load_instruments())
     try:
         details = df[df['instrument_token'] == instrument_token].to_dict('records')[0]
         return details

@@ -54,9 +54,9 @@ def test_stock_runner_strategy_import():
     try:
         # Test EnhancedTradeManager paper trading
         from runner.trade_manager import create_enhanced_trade_manager
-        from runner.logger import Logger
+        from runner.logger import create_enhanced_logger
         
-        test_logger = Logger('test')
+        test_logger = create_enhanced_logger(session_id="test_paper_trading")
         trade_manager = create_enhanced_trade_manager(logger=test_logger)
         
         print(f"✅ EnhancedTradeManager paper mode from config: {trade_manager.config.paper_trade}")

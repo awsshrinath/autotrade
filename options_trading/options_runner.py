@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from datetime import time as dtime
 import pytz
-from runner.config import PAPER_TRADE, initialize_config, get_config
+from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import TradingLogger, LogLevel, LogCategory
@@ -127,24 +127,18 @@ class OptionsTrader:
         self.strategy_name = strategy_name
         self.paper_trade = paper_trade
         
-        # Initialize configuration
-        initialize_config('config/base.yaml', 'config/development.yaml')
-        self.config = get_config()
-        
         # Initialize logger
         self.logger = TradingLogger()
         
-        self.kite_manager = KiteConnectManager(logger=self.logger, config=self.config)
+        self.kite_manager = KiteConnectManager(logger=self.logger)
         self.risk_governor = RiskGovernor(self.logger)
         self.trade_manager = create_trade_manager(
             logger=self.logger, 
-            kite_manager=self.kite_manager,
-            config=self.config
+            kite_manager=self.kite_manager
         )
         self.position_monitor = PositionMonitor(
             logger=self.logger,
-            kite_manager=self.kite_manager,
-            config=self.config
+            kite_manager=self.kite_manager
         )
         
         self.logger.log_info(f"OptionsTrader for '{self.strategy_name}' initialized.")

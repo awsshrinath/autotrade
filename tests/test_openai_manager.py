@@ -2,12 +2,12 @@
 
 import datetime
 
-from runner.logger import Logger
+from runner.logger import create_enhanced_logger
 from runner.openai_manager import OpenAIManager
 
 if __name__ == "__main__":
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    logger = Logger(today_date)
+    logger = create_enhanced_logger(session_id=f"test_openai_{today_date}")
 
     openai_manager = OpenAIManager(logger)
 

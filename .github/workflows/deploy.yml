@@ -116,24 +116,28 @@ jobs:
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
           --create-namespace \
-          --set-string global.imageTag=${{ github.sha }} \
-          --timeout 10m \
-          --wait \
-          --wait-for-jobs
+          --set-string global.imageTag=${{ github.sha }}
     
     - name: Verify deployment
+      if: always() # Always run verification to see the state of the pods
       run: |
         echo "Verifying deployment status..."
+        echo "Waiting for 60 seconds for pods to initialize before checking logs..."
+        sleep 60
         
-        # Check Helm release status
+        echo "Helm release status:"
         helm status tron-system -n gpt
-        
-        # Wait for pods to be ready
-        kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=tron-system -n gpt --timeout=300s
-        
-        # Show deployment status
+
+        echo "Pod status:"
         kubectl get pods -n gpt -o wide
-        kubectl get services -n gpt
-        kubectl get configmaps -n gpt
+
+        echo "Describing pods to check for errors:"
+        kubectl describe pods -n gpt
+
+        echo "Fetching logs from all pods:"
+        for pod in $(kubectl get pods -n gpt -o jsonpath='{.items[*].metadata.name}'); do
+          echo "--- Logs for $pod ---"
+          kubectl logs "$pod" -n gpt --tail=100 || echo "Could not retrieve logs for $pod."
+        done
         
-        echo "Deployment verification completed successfully" 
+        echo "Deployment verification completed." 

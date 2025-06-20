@@ -1,11 +1,11 @@
 import datetime
 
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
+from runner.logger import create_enhanced_logger
 
 if __name__ == "__main__":
     today_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    logger = Logger(today_date)  # <--- FIXED
+    logger = create_enhanced_logger(session_id=f"test_kite_{today_date}")
 
     kite_manager = KiteConnectManager(logger)
 

@@ -17,7 +17,6 @@ from threading import Lock
 
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import Logger
 from runner.enhanced_logger import EnhancedLogger, LogLevel, LogCategory, create_enhanced_logger
 from runner.capital.portfolio_manager import PortfolioManager
 from runner.risk_governor import RiskGovernor
@@ -102,7 +101,7 @@ class Position:
 class PositionMonitor:
     """Real-time position monitoring and exit management system"""
     
-    def __init__(self, logger: Logger = None, firestore: FirestoreClient = None, 
+    def __init__(self, logger: EnhancedLogger = None, firestore: FirestoreClient = None, 
                  kite_manager: KiteConnectManager = None, portfolio_manager: PortfolioManager = None):
         self.logger = logger
         self.firestore = firestore

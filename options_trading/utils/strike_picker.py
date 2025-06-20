@@ -1,5 +1,8 @@
 from datetime import datetime
-from runner.logger import Logger
+from runner.logger import create_enhanced_logger
+
+# Initialize a logger for this module
+logger = create_enhanced_logger(session_id="strike_picker")
 
 # Pick strike and expiry for option trading based on premium and direction
 
@@ -48,7 +51,7 @@ def pick_strike(kite, symbol, direction, target_premium=100):
                 }
         except Exception as e:
             # Log the specific error with the symbol for better debugging
-            Logger().warning(f"Skipping '{tradingsymbol}' due to error: {e}")
+            logger.log_event(f"Skipping '{tradingsymbol}' due to error: {e}", level="WARNING")
             # Continue to the next strike price
 
     return None

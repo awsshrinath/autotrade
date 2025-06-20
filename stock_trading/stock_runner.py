@@ -4,52 +4,33 @@ import time
 from datetime import datetime
 from datetime import time as dtime
 import pytz
-import requests
-import kiteconnect
-from runner.config import PAPER_TRADE
-from runner.firestore_client import FirestoreClient
-from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import TradingLogger, LogLevel, LogCategory
-from runner.strategy_factory import load_strategy
-from runner.trade_manager import execute_trade
-from runner.enhanced_logger import EnhancedLogger, create_enhanced_logger
-from runner.enhanced_logging import LogLevel, LogCategory
-from config.config_manager import get_trading_config
-from runner.market_data.market_data_fetcher import MarketDataFetcher
-# from kite.kite_manager import KiteManager  # Not available
-# from utils.gcp_utils import get_firestore_client  # Not available
-# from utils.notifications import send_slack_notification  # Not available
-
-# Enhanced logging imports (already imported above)
-# from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
-from runner.trade_manager import create_enhanced_trade_manager
-from runner.position_monitor import PositionMonitor
-from runner.risk_governor import RiskGovernor
-from runner.trade_manager import create_trade_manager
-from runner.utils.instrument_utils import get_instrument_token
-from strategies.base_strategy import BaseStrategy
-from runner.market_data.market_data_fetcher import MarketData
-from runner.strategy_selector import StrategySelector
-from runner.config import initialize_config, get_config
-
 import logging
 import asyncio
 import traceback
 from typing import Dict, Any, Optional
 
-from runner.config import get_trading_config
-from runner.trade_manager import simulate_exit
-from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
+import requests
+import kiteconnect
+
+from runner.config import get_trading_config, load_config, PAPER_TRADE
+from runner.firestore_client import FirestoreClient, get_firestore_client
+from runner.kiteconnect_manager import KiteConnectManager
+from runner.logger import create_enhanced_logger
+from runner.strategy_factory import StrategyFactory, load_strategy
+from runner.trade_manager import create_enhanced_trade_manager, EnhancedTradeManager, execute_trade, simulate_exit
+from runner.market_data.market_data_fetcher import MarketDataFetcher
+from runner.utils.notifications import send_slack_notification
+from runner.position_monitor import PositionMonitor
+from runner.risk_governor import RiskGovernor
+from runner.utils.instrument_utils import get_instrument_token
+from runner.utils.trade_utils import is_market_open, get_today_date
+
+from strategies.base_strategy import BaseStrategy
 from strategies.opening_range_strategy import OpeningRangeStrategy
 from strategies.vwap_strategy import VwapStrategy
 from strategies.range_reversal import RangeReversalStrategy
-from runner.logger import create_enhanced_logger
-from runner.trade_manager import create_enhanced_trade_manager
-from runner.firestore_client import FirestoreClient
-from runner.strategy_factory import StrategyFactory
-from runner.utils.trade_utils import is_market_open, get_today_date
-from runner.config import get_trading_config
 from strategies.orb_strategy import OrbStrategy
+
 
 # Global logger instance
 logger = logging.getLogger(__name__)
@@ -268,61 +249,58 @@ def run_stock_trading_bot():
     Includes retry logic and enhanced error handling.
     """
     retries = 0
+    main_logger = None
     while retries < MAX_RETRIES:
         try:
-            config = load_config('config/stock_config.json')
-            firestore_client = get_firestore_client()
-            main_logger = EnhancedLogger(
-                log_category=LogCategory.SYSTEM,
-                log_level=LogLevel.INFO,
-                config=config,
-                firestore_client=firestore_client
-            )
+            main_logger = create_enhanced_logger(session_id="stock_trader_session")
+            config = get_trading_config()
+
             main_logger.log_event("Stock Trading Bot started.")
 
-            # ... (rest of the existing setup code inside the loop)
-            kite_manager = KiteManager(
-                api_key=os.getenv('KITE_API_KEY'),
-                access_token=os.getenv('KITE_ACCESS_TOKEN'),
+            firestore_client = get_firestore_client()
+            kite_manager = KiteConnectManager(logger=main_logger)
+            trade_manager = create_enhanced_trade_manager(
+                logger=main_logger,
+                kite_manager=kite_manager,
                 firestore_client=firestore_client
             )
-            # ... (rest of the setup)
-            trade_manager = TradeManager(kite_manager, main_logger, config)
-            data_provider = DataProvider(kite_manager, main_logger, config)
+            data_provider = MarketDataFetcher(kite_manager=kite_manager, logger=main_logger)
 
-            strategy_name = config.get('strategy', 'default_strategy')
-            strategy = load_strategy(strategy_name, trade_manager, main_logger, config)
-
-            main_logger.log_event(f"Using strategy: {strategy_name}")
-
-            while True:
-                if is_market_open():
-                    strategy.run()
-                else:
-                    main_logger.log_event("Market is closed. Pausing.")
-                time.sleep(config.get('update_interval', 60))
+            stocks_to_trade = config.get('stocks_to_trade', [])
+            strategy_name = config.get('strategy', 'vwap')
             
-            # If the loop breaks for some reason, we exit the retry loop
-            break
+            wait_until_market_opens(main_logger)
+
+            while is_market_open():
+                market_data = data_provider.fetch_latest_data(stocks_to_trade)
+                
+                strategy = StrategyFactory.get_strategy(strategy_name)
+                
+                for stock_data in market_data:
+                    trade_signal = strategy.generate_signal(stock_data)
+                    if trade_signal:
+                        trade_manager.execute_trade(trade_signal)
+                
+                time.sleep(60) # Main loop delay
+
+            main_logger.log_event("Market is closed. Shutting down.")
+            return
 
         except (requests.exceptions.ConnectionError, kiteconnect.exceptions.NetworkException) as e:
+            if main_logger:
+                main_logger.log_event(f"Network error: {e}. Retrying...", level="ERROR")
             retries += 1
-            main_logger.log_event(
-                f"Connection error: {e}. Retrying ({retries}/{MAX_RETRIES}) in {RETRY_DELAY_SECONDS * retries}s...",
-                level=LogLevel.WARNING
-            )
-            time.sleep(RETRY_DELAY_SECONDS * retries) # Exponential backoff
-        
+            time.sleep(RETRY_DELAY_SECONDS)
         except Exception as e:
-            main_logger.log_event(f"An unexpected error occurred in stock_runner: {e}", level=LogLevel.ERROR)
-            send_slack_notification(f"🚨 CRITICAL ERROR in Stock Trading Bot: {e}")
-            # For critical errors, we might want to break immediately
-            break 
-    
+            if main_logger:
+                main_logger.log_event(f"Critical error: {e}", level="CRITICAL")
+                send_slack_notification(f"🚨 CRITICAL ERROR in Stock Trading Bot: {e}\n```{traceback.format_exc()}```")
+            break # Exit on critical unknown error
+            
     if retries >= MAX_RETRIES:
-        final_message = "Stock Trading Bot failed after multiple retries."
-        main_logger.log_event(final_message, level=LogLevel.CRITICAL)
-        send_slack_notification(f"🚨 BOT OFFLINE: {final_message}")
+        if main_logger:
+            main_logger.log_event("Bot failed after multiple retries.", level="CRITICAL")
+            send_slack_notification("🚨 BOT OFFLINE: Stock trading bot failed after multiple retries.")
 
 def main():
     """Main entry point for stock trading bot"""

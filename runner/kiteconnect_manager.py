@@ -10,8 +10,7 @@ from kiteconnect.exceptions import (
     PermissionException, 
     OrderException,
     DataException,
-    NetworkException,
-    APIException
+    NetworkException
 )
 
 from runner.secret_manager import access_secret, validate_secret_access
@@ -400,9 +399,6 @@ class KiteConnectManager:
         except TokenException:
             self.logger.log_warning("Kite access token expired or invalid. Attempting to refresh.")
             return False
-        except APIException as e:
-            self.logger.log_error(f"Kite API error during connection: {e}")
-            raise  # Re-raise the exception after logging
         except Exception as e:
             self.logger.log_critical(f"An unexpected error occurred during Kite connection: {e}")
             raise
@@ -416,9 +412,6 @@ class KiteConnectManager:
         """
         try:
             return self.kite.profile()
-        except APIException as e:
-            self.logger.log_error(f"API error while fetching user profile: {e}")
-            return None
         except Exception as e:
             self.logger.log_error(f"An unexpected error occurred while fetching user profile: {e}")
             return None
@@ -435,9 +428,6 @@ class KiteConnectManager:
             # Invalidate the access token to log out
             self.kite.invalidate_access_token()
             return True
-        except APIException as e:
-            self.logger.log_warning(f"API error during logout: {e}. This can sometimes happen if the session is already invalid.")
-            return False
         except Exception as e:
             self.logger.log_error(f"An unexpected error occurred during logout: {e}")
             return False

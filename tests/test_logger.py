@@ -18,32 +18,26 @@ from runner.logger import (
 
 class TestLogger(unittest.TestCase):
     def setUp(self):
-        self.mock_gcs_client = MagicMock()
+        # We need to patch the actual client used by the logger's dependencies
         self.mock_firestore_client = MagicMock()
-        
-        self.patches = [
-            patch('runner.logger.storage.Client', return_value=self.mock_gcs_client),
-            patch('runner.logger.FirestoreClient', return_value=self.mock_firestore_client)
-        ]
-        
-        for p in self.patches:
-            p.start()
+        self.patcher = patch('google.cloud.firestore.Client', return_value=self.mock_firestore_client)
+        self.patcher.start()
             
         self.logger = None
 
     def tearDown(self):
         if self.logger:
             self.logger.shutdown()
-        patch.stopall()
+        self.patcher.stop()
 
     def test_initialization(self):
-        self.logger = create_enhanced_logger(session_id="test_init")
+        self.logger = create_enhanced_logger(session_id="test_init", enable_gcs=False, enable_firestore=False)
         self.assertIsNotNone(self.logger)
         self.assertEqual(self.logger.session_id, "test_init")
         self.assertTrue(self.logger.performance_metrics['logs_written'] > 0)
 
     def test_log_event_levels(self):
-        self.logger = create_enhanced_logger(session_id="test_levels")
+        self.logger = create_enhanced_logger(session_id="test_levels", enable_gcs=False, enable_firestore=False)
         
         with patch.object(self.logger, '_write_to_local_file') as mock_write:
             self.logger.log_event("Debug message", LogLevel.DEBUG, LogCategory.SYSTEM)
@@ -63,7 +57,7 @@ class TestLogger(unittest.TestCase):
             self.assertEqual(mock_write.call_args[0][0].level, LogLevel.CRITICAL)
 
     def test_log_trade_execution(self):
-        self.logger = create_enhanced_logger(session_id="test_trade")
+        self.logger = create_enhanced_logger(session_id="test_trade", enable_gcs=False, enable_firestore=False)
         trade_data = {
             "trade_id": "trade123", "symbol": "RELIANCE", "order_type": "MARKET", 
             "quantity": 10, "price": 2500.0, "direction": "buy"
@@ -89,7 +83,7 @@ class TestLogger(unittest.TestCase):
             self.assertIn('error', entry.data)
 
     def test_log_position_update(self):
-        self.logger = create_enhanced_logger(session_id="test_position")
+        self.logger = create_enhanced_logger(session_id="test_position", enable_gcs=False, enable_firestore=False)
         position_data = {
             "position_id": "pos123", "symbol": "RELIANCE", "quantity": 10,
             "pnl": 150.0, "status": "open"
@@ -106,7 +100,7 @@ class TestLogger(unittest.TestCase):
             self.assertEqual(entry.data['update_type'], "price_update")
             
     def test_log_error_method(self):
-        self.logger = create_enhanced_logger(session_id="test_error_method")
+        self.logger = create_enhanced_logger(session_id="test_error_method", enable_gcs=False, enable_firestore=False)
         try:
             1 / 0
         except Exception as e:
@@ -120,13 +114,13 @@ class TestLogger(unittest.TestCase):
                 self.assertIn("traceback", entry.data)
 
     def test_shutdown(self):
-        self.logger = create_enhanced_logger(session_id="test_shutdown")
+        self.logger = create_enhanced_logger(session_id="test_shutdown", enable_gcs=False, enable_firestore=False)
         with patch.object(self.logger, '_flush_buffers') as mock_flush:
             self.logger.shutdown()
             mock_flush.assert_called_once()
     
     def test_daily_summary_creation(self):
-        self.logger = create_enhanced_logger(session_id="test_summary")
+        self.logger = create_enhanced_logger(session_id="test_summary", enable_gcs=False, enable_firestore=False)
         # Log some events to create a summary from
         self.logger.log_trade_execution({"pnl": 100}, success=True)
         self.logger.log_trade_execution({"pnl": -50}, success=True)

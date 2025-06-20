@@ -19,7 +19,7 @@ print("✅ vwap_strategy output:", trade)
 from unittest.mock import patch
 
 from options_trading.utils.strike_picker import pick_strike
-from runner.logger import Logger
+from runner.logger import create_enhanced_logger
 
 
 # Mock the access_secret function to avoid Google Cloud authentication issues
@@ -53,7 +53,7 @@ class MockKiteConnect:
 
 
 # Create a logger and mock KiteConnect client for the pick_strike function
-logger = Logger(datetime.now().strftime("%Y-%m-%d"))
+logger = create_enhanced_logger(session_id="test_runner_root")
 kite = MockKiteConnect()
 
 pick_strike(kite=kite, symbol="NIFTY", direction="bullish")
@@ -157,7 +157,7 @@ from futures_trading.futures_runner import main as futures_runner_main
 @patch("runner.market_data_fetcher.MarketDataFetcher")
 @patch("runner.market_monitor.MarketMonitor")
 @patch("runner.strategy_selector.StrategySelector")
-@patch("runner.logger.Logger")
+@patch("runner.logger.create_enhanced_logger")
 @patch("gpt_runner.gpt_runner.run_gpt_runner")
 def test_all_runners_startup(
     mock_run_gpt_runner,
@@ -167,6 +167,6 @@ def test_all_runners_startup(
     mock_market_data_fetcher,
     mock_market_monitor,
     mock_strategy_selector,
-    mock_logger
+    mock_create_logger
 ):
     pass
