@@ -1,0 +1,227 @@
+# TRON Trading System - Cognitive Services
+# Cognitive Engine, Thought Journal, and Memory Manager deployments
+
+---
+# Cognitive Engine Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.cognitiveEngine.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.cognitiveEngine.name }}
+    app.kubernetes.io/component: cognitive-system
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.cognitiveEngine.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.cognitiveEngine.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ .Values.cognitiveEngine.name }}
+          image: "{{ .Values.cognitiveEngine.image.repository }}:{{ .Values.global.imageTag | default .Values.cognitiveEngine.image.tag }}"
+          imagePullPolicy: {{ .Values.cognitiveEngine.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.cognitiveEngine.service.targetPort }}
+              name: http
+          env:
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: ENVIRONMENT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: LOG_LEVEL
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: openai-api-key
+                  optional: true
+            {{- range $key, $val := .Values.cognitiveEngine.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }}
+            - name: PYTHONPATH
+              value: "/app:/app/runner"
+          resources:
+            {{- toYaml .Values.cognitiveEngine.resources | nindent 12 }}
+          {{- if .Values.cognitiveEngine.healthCheck.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.cognitiveEngine.healthCheck.path }}
+              port: {{ .Values.cognitiveEngine.healthCheck.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.cognitiveEngine.healthCheck.path }}
+              port: {{ .Values.cognitiveEngine.healthCheck.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+      restartPolicy: Always
+
+---
+# Thought Journal Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.thoughtJournal.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.thoughtJournal.name }}
+    app.kubernetes.io/component: cognitive-system
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.thoughtJournal.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.thoughtJournal.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ .Values.thoughtJournal.name }}
+          image: "{{ .Values.thoughtJournal.image.repository }}:{{ .Values.global.imageTag | default .Values.thoughtJournal.image.tag }}"
+          imagePullPolicy: {{ .Values.thoughtJournal.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.thoughtJournal.service.targetPort }}
+              name: http
+          env:
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: ENVIRONMENT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: LOG_LEVEL
+            {{- range $key, $val := .Values.thoughtJournal.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }}
+            - name: PYTHONPATH
+              value: "/app:/app/runner"
+          resources:
+            {{- toYaml .Values.thoughtJournal.resources | nindent 12 }}
+          {{- if .Values.thoughtJournal.healthCheck.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.thoughtJournal.healthCheck.path }}
+              port: {{ .Values.thoughtJournal.healthCheck.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.thoughtJournal.healthCheck.path }}
+              port: {{ .Values.thoughtJournal.healthCheck.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+      restartPolicy: Always
+
+---
+# Memory Manager Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.memoryManager.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.memoryManager.name }}
+    app.kubernetes.io/component: cognitive-system
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.memoryManager.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.memoryManager.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ .Values.memoryManager.name }}
+          image: "{{ .Values.memoryManager.image.repository }}:{{ .Values.global.imageTag | default .Values.memoryManager.image.tag }}"
+          imagePullPolicy: {{ .Values.memoryManager.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.memoryManager.service.targetPort }}
+              name: http
+          env:
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: ENVIRONMENT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: LOG_LEVEL
+            {{- range $key, $val := .Values.memoryManager.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }}
+            - name: PYTHONPATH
+              value: "/app:/app/runner"
+          resources:
+            {{- toYaml .Values.memoryManager.resources | nindent 12 }}
+          {{- if .Values.memoryManager.healthCheck.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.memoryManager.healthCheck.path }}
+              port: {{ .Values.memoryManager.healthCheck.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.memoryManager.healthCheck.path }}
+              port: {{ .Values.memoryManager.healthCheck.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+      restartPolicy: Always

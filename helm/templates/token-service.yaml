@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.tokenService.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.tokenService.name }}
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.tokenService.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.tokenService.name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: {{ .Values.tokenService.name }}
+          image: "{{ .Values.tokenService.image.repository }}:{{ .Values.global.imageTag | default .Values.tokenService.image.tag }}"
+          imagePullPolicy: {{ .Values.tokenService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.tokenService.service.targetPort }}
+              name: http
+          env:
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: ENVIRONMENT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: LOG_LEVEL
+            - name: MAIN_RUNNER_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: MAIN_RUNNER_SERVICE
+            {{- range $key, $val := .Values.tokenService.env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }}
+            - name: PYTHONPATH
+              value: "/app:/app/zerodha_token_service"
+          resources:
+            {{- toYaml .Values.tokenService.resources | nindent 12 }}
+          {{- if .Values.tokenService.healthCheck.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.tokenService.healthCheck.path }}
+              port: {{ .Values.tokenService.healthCheck.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.tokenService.healthCheck.path }}
+              port: {{ .Values.tokenService.healthCheck.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+      restartPolicy: Always

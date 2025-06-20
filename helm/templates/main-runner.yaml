@@ -65,6 +65,27 @@ spec:
             - name: entrypoint
               mountPath: /entrypoint.sh
               subPath: entrypoint.sh
+          ports:
+            - containerPort: {{ .Values.mainRunner.service.targetPort }}
+              name: http
+          {{- if .Values.mainRunner.healthCheck.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.mainRunner.healthCheck.path }}
+              port: {{ .Values.mainRunner.healthCheck.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.mainRunner.healthCheck.path }}
+              port: {{ .Values.mainRunner.healthCheck.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- else }}
           readinessProbe:
             exec:
               command:
@@ -85,6 +106,7 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
+          {{- end }}
       volumes:
         - name: entrypoint
           configMap:

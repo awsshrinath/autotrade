@@ -3,6 +3,10 @@ kind: Deployment
 metadata:
   name: {{ .Values.stockTrader.name }}
   namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.stockTrader.name }}
+    app.kubernetes.io/component: trading-engine
+    app.kubernetes.io/part-of: tron-trading-system
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -19,21 +23,60 @@ spec:
           image: "{{ .Values.stockTrader.image.repository }}:{{ .Values.global.imageTag | default .Values.stockTrader.image.tag }}"
           command: ["/bin/bash", "/entrypoint.sh"]
           args: ["{{ .Values.stockTrader.env.RUNNER_SCRIPT }}"]
+          ports:
+            - containerPort: {{ .Values.stockTrader.service.targetPort }}
+              name: http
           resources:
             {{- toYaml .Values.stockTrader.resources | nindent 12 }}
           env:
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: ENVIRONMENT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: LOG_LEVEL
+            - name: MAIN_RUNNER_SERVICE
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: MAIN_RUNNER_SERVICE
             {{- range $key, $val := .Values.stockTrader.env }}
             - name: {{ $key }}
               value: "{{ $val }}"
             {{- end }}
-            - name: GCP_PROJECT_ID
-              value: "{{ .Values.gcpProjectId }}"
             - name: PYTHONPATH
               value: "/app:/app/runner:/app/stock_trading"
           volumeMounts:
             - name: entrypoint
               mountPath: /entrypoint.sh
               subPath: entrypoint.sh
+          {{- if .Values.stockTrader.healthCheck.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.stockTrader.healthCheck.path }}
+              port: {{ .Values.stockTrader.healthCheck.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.stockTrader.healthCheck.path }}
+              port: {{ .Values.stockTrader.healthCheck.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- else }}
           readinessProbe:
             exec:
               command:
@@ -54,8 +97,9 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
+          {{- end }}
       volumes:
         - name: entrypoint
           configMap:
             name: entrypoint-config
-            defaultMode: 0755 
+            defaultMode: 0755

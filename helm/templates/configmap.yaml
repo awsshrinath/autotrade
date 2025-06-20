@@ -3,11 +3,102 @@ kind: ConfigMap
 metadata:
   name: tron-system-config
   namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: tron-system
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: tron-trading-system
 data:
+  # Core System Configuration
   GCP_PROJECT_ID: {{ .Values.gcpProjectId | quote }}
   ENVIRONMENT: {{ .Values.environment | quote }}
   PAPER_TRADE: {{ .Values.paperTrade | quote }}
   LOG_LEVEL: {{ .Values.logLevel | quote }}
   NAMESPACE: {{ .Values.namespace | quote }}
   REAL_TIME_UPDATES: {{ .Values.realTimeUpdates | quote }}
-  AUTO_REFRESH_INTERVAL: {{ .Values.autoRefreshInterval | quote }} 
+  AUTO_REFRESH_INTERVAL: {{ .Values.autoRefreshInterval | quote }}
+  
+  # Service Discovery Configuration
+  MAIN_RUNNER_SERVICE: "main-runner-service.{{ .Values.namespace }}.svc.cluster.local:8080"
+  STOCK_TRADER_SERVICE: "stock-trader-service.{{ .Values.namespace }}.svc.cluster.local:8081"
+  OPTIONS_TRADER_SERVICE: "options-trader-service.{{ .Values.namespace }}.svc.cluster.local:8082"
+  FUTURES_TRADER_SERVICE: "futures-trader-service.{{ .Values.namespace }}.svc.cluster.local:8083"
+  TOKEN_SERVICE: "token-service-service.{{ .Values.namespace }}.svc.cluster.local:8084"
+  COGNITIVE_ENGINE_SERVICE: "cognitive-engine-service.{{ .Values.namespace }}.svc.cluster.local:8085"
+  THOUGHT_JOURNAL_SERVICE: "thought-journal-service.{{ .Values.namespace }}.svc.cluster.local:8086"
+  MEMORY_MANAGER_SERVICE: "memory-manager-service.{{ .Values.namespace }}.svc.cluster.local:8087"
+  LOG_AGGREGATOR_SERVICE: "log-aggregator-service.{{ .Values.namespace }}.svc.cluster.local:8001"
+  BACKEND_SERVICE: "{{ .Values.backend.name }}-service.{{ .Values.namespace }}.svc.cluster.local:8000"
+  FRONTEND_SERVICE: "{{ .Values.frontend.name }}-service.{{ .Values.namespace }}.svc.cluster.local:3000"
+  DASHBOARD_SERVICE: "{{ .Values.dashboard.name }}-service.{{ .Values.namespace }}.svc.cluster.local:8501"
+  
+  # GCP Configuration
+  FIRESTORE_PROJECT_ID: {{ .Values.gcpProjectId | quote }}
+  GCS_BUCKET_NAME: "tron-trade-logs"
+  
+  # Monitoring Configuration
+  HEALTH_CHECK_INTERVAL: {{ .Values.monitoring.healthCheckInterval | default 30 | quote }}
+  STARTUP_TIMEOUT: {{ .Values.monitoring.startupTimeout | default 300 | quote }}
+  READINESS_TIMEOUT: {{ .Values.monitoring.readinessTimeout | default 60 | quote }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-endpoints
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: tron-system
+    app.kubernetes.io/component: service-discovery
+    app.kubernetes.io/part-of: tron-trading-system
+data:
+  # Service Endpoints for Inter-Service Communication
+  endpoints.yaml: |
+    services:
+      main-runner:
+        host: "main-runner-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8080
+        health: "/health"
+      stock-trader:
+        host: "stock-trader-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8081
+        health: "/health"
+      options-trader:
+        host: "options-trader-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8082
+        health: "/health"
+      futures-trader:
+        host: "futures-trader-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8083
+        health: "/health"
+      log-aggregator:
+        host: "log-aggregator-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8001
+        health: "/health"
+      backend:
+        host: "{{ .Values.backend.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8000
+        health: "/health"
+      dashboard:
+        host: "{{ .Values.dashboard.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8501
+        health: "/"
+      frontend:
+        host: "{{ .Values.frontend.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 3000
+        health: "/"
+      token-service:
+        host: "token-service-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8084
+        health: "/health"
+      cognitive-engine:
+        host: "cognitive-engine-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8085
+        health: "/health"
+      thought-journal:
+        host: "thought-journal-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8086
+        health: "/health"
+      memory-manager:
+        host: "memory-manager-service.{{ .Values.namespace }}.svc.cluster.local"
+        port: 8087
+        health: "/health" 

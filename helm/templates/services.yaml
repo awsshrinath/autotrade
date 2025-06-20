@@ -1,0 +1,233 @@
+# TRON Trading System - Service Templates
+# Creates ClusterIP services for all trading components to enable service discovery
+
+---
+# Main Runner Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.mainRunner.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.mainRunner.name }}
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.mainRunner.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.mainRunner.service.port }}
+      targetPort: {{ .Values.mainRunner.service.targetPort }}
+      name: http
+  type: {{ .Values.mainRunner.service.type }}
+
+---
+# Stock Trader Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.stockTrader.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.stockTrader.name }}
+    app.kubernetes.io/component: trading-engine
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.stockTrader.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.stockTrader.service.port }}
+      targetPort: {{ .Values.stockTrader.service.targetPort }}
+      name: http
+  type: {{ .Values.stockTrader.service.type }}
+
+---
+# Options Trader Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.optionsTrader.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.optionsTrader.name }}
+    app.kubernetes.io/component: trading-engine
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.optionsTrader.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.optionsTrader.service.port }}
+      targetPort: {{ .Values.optionsTrader.service.targetPort }}
+      name: http
+  type: {{ .Values.optionsTrader.service.type }}
+
+---
+# Futures Trader Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.futuresTrader.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.futuresTrader.name }}
+    app.kubernetes.io/component: trading-engine
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.futuresTrader.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.futuresTrader.service.port }}
+      targetPort: {{ .Values.futuresTrader.service.targetPort }}
+      name: http
+  type: {{ .Values.futuresTrader.service.type }}
+
+---
+# Token Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.tokenService.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.tokenService.name }}
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.tokenService.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.tokenService.service.port }}
+      targetPort: {{ .Values.tokenService.service.targetPort }}
+      name: http
+  type: {{ .Values.tokenService.service.type }}
+
+---
+# Cognitive Engine Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.cognitiveEngine.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.cognitiveEngine.name }}
+    app.kubernetes.io/component: cognitive-system
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.cognitiveEngine.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.cognitiveEngine.service.port }}
+      targetPort: {{ .Values.cognitiveEngine.service.targetPort }}
+      name: http
+  type: {{ .Values.cognitiveEngine.service.type }}
+
+---
+# Thought Journal Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.thoughtJournal.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.thoughtJournal.name }}
+    app.kubernetes.io/component: cognitive-system
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.thoughtJournal.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.thoughtJournal.service.port }}
+      targetPort: {{ .Values.thoughtJournal.service.targetPort }}
+      name: http
+  type: {{ .Values.thoughtJournal.service.type }}
+
+---
+# Memory Manager Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.memoryManager.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.memoryManager.name }}
+    app.kubernetes.io/component: cognitive-system
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.memoryManager.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.memoryManager.service.port }}
+      targetPort: {{ .Values.memoryManager.service.targetPort }}
+      name: http
+  type: {{ .Values.memoryManager.service.type }}
+
+---
+# Backend API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backend.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+    app.kubernetes.io/component: api-backend
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.backend.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.backend.service.port }}
+      targetPort: {{ .Values.backend.service.targetPort }}
+      name: http
+  type: {{ .Values.backend.service.type }}
+
+---
+# Dashboard Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.dashboard.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.dashboard.name }}
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.dashboard.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.dashboard.service.port }}
+      targetPort: {{ .Values.dashboard.service.targetPort }}
+      name: http
+  type: {{ .Values.dashboard.service.type }}
+
+---
+# Frontend Service (LoadBalancer for external access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.name }}-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.frontend.name }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  selector:
+    app: {{ .Values.frontend.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+      name: http
+  type: {{ .Values.frontend.service.type }}

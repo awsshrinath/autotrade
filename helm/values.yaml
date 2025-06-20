@@ -1,56 +1,23 @@
-# Default values for tron-system.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# TRON Trading System - Complete Helm Configuration
+# Comprehensive values for all services and components
 
+# Global configuration
 global:
   imageTag: latest
+  imagePullPolicy: Always
+  namespace: gpt
+  serviceAccountName: gpt-runner-sa
+  gcpProjectId: autotrade-453303
+  environment: production
+  paperTrade: true
+  logLevel: INFO
+  realTimeUpdates: true
+  autoRefreshInterval: 30
 
+# Default replica count for all services
 replicaCount: 1
 
-backend:
-  name: tron-backend
-  image:
-    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
-    port: 8000
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "256Mi"
-    limits:
-      cpu: "250m"
-      memory: "512Mi"
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 5
-    targetCPUUtilizationPercentage: 80
-
-frontend:
-  name: tron-frontend
-  image:
-    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-frontend
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: LoadBalancer
-    port: 3000
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "50m"
-    limits:
-      memory: "512Mi"
-      cpu: "100m"
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPUUtilizationPercentage: 80
-
+# Namespace configuration
 namespace: gpt
 serviceAccountName: gpt-runner-sa
 gcpProjectId: autotrade-453303
@@ -60,12 +27,17 @@ logLevel: INFO
 realTimeUpdates: true
 autoRefreshInterval: 30
 
+# Core Trading Services
 mainRunner:
   name: main-runner
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner
     tag: latest
     pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
   resources:
     requests:
       memory: "512Mi"
@@ -76,6 +48,11 @@ mainRunner:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "runner/main_runner_lightweight.py"
+    SERVICE_PORT: "8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8080
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -88,6 +65,10 @@ stockTrader:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/stock-trader
     tag: latest
     pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8081
+    targetPort: 8081
   resources:
     requests:
       memory: "128Mi"
@@ -98,6 +79,12 @@ stockTrader:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "stock_trading/stock_runner.py"
+    SERVICE_PORT: "8081"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8081
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -110,6 +97,10 @@ optionsTrader:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader
     tag: latest
     pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8082
+    targetPort: 8082
   resources:
     requests:
       memory: "128Mi"
@@ -120,6 +111,12 @@ optionsTrader:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "options_trading/options_runner.py"
+    SERVICE_PORT: "8082"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8082
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -132,6 +129,10 @@ futuresTrader:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/futures-trader
     tag: latest
     pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8083
+    targetPort: 8083
   resources:
     requests:
       memory: "128Mi"
@@ -142,13 +143,19 @@ futuresTrader:
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "futures_trading/futures_runner.py"
+    SERVICE_PORT: "8083"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8083
   autoscaling:
     enabled: false
     minReplicas: 1
     maxReplicas: 2
     targetCPUUtilizationPercentage: 80
 
-# Log Aggregator configuration
+# Support Services
 logAggregator:
   name: log-aggregator
   image:
@@ -157,7 +164,8 @@ logAggregator:
     pullPolicy: Always
   service:
     type: ClusterIP
-    port: 8001  # Match the actual port from config.py
+    port: 8001
+    targetPort: 8001
   resources:
     requests:
       memory: "128Mi"
@@ -172,13 +180,17 @@ logAggregator:
     KUBERNETES_NAMESPACE: "gpt"
     AUTH_ENABLED: "false"
     LOG_LEVEL: "INFO"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8001
   autoscaling:
     enabled: false
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
 
-# Dashboard configuration
 dashboard:
   enabled: true
   name: trading-dashboard
@@ -189,7 +201,7 @@ dashboard:
     pullPolicy: Always
   service:
     type: ClusterIP
-    port: 80
+    port: 8501
     targetPort: 8501
   resources:
     requests:
@@ -198,6 +210,10 @@ dashboard:
     limits:
       cpu: "1000m"
       memory: "1Gi"
+  env:
+    LOG_AGGREGATOR_SERVICE: "log-aggregator-service.gpt.svc.cluster.local:8001"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+    BACKEND_SERVICE: "tron-backend-service.gpt.svc.cluster.local:8000"
   auth:
     enabled: true
     username: admin
@@ -208,6 +224,10 @@ dashboard:
     riskMonitoring: true
     alerts: true
   secretName: dashboard-secrets
+  healthCheck:
+    enabled: true
+    path: "/"
+    port: 8501
   ingress:
     enabled: false
     annotations:
@@ -228,19 +248,222 @@ dashboard:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
 
-# Ingress configuration for main services
+# Backend API Service
+backend:
+  name: tron-backend
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+  env:
+    LOG_AGGREGATOR_SERVICE: "log-aggregator-service.gpt.svc.cluster.local:8001"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8000
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+# Frontend Service
+frontend:
+  name: tron-frontend
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-frontend
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: LoadBalancer
+    port: 3000
+    targetPort: 3000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "50m"
+    limits:
+      memory: "512Mi"
+      cpu: "100m"
+  env:
+    BACKEND_SERVICE: "tron-backend-service.gpt.svc.cluster.local:8000"
+    LOG_AGGREGATOR_SERVICE: "log-aggregator-service.gpt.svc.cluster.local:8001"
+  healthCheck:
+    enabled: true
+    path: "/"
+    port: 3000
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+# Additional Services for Complete Architecture
+tokenService:
+  name: token-service
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/token-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8084
+    targetPort: 8084
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "100m"
+  env:
+    SERVICE_PORT: "8084"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8084
+
+# Cognitive System Services
+cognitiveEngine:
+  name: cognitive-engine
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/cognitive-engine
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8085
+    targetPort: 8085
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    SERVICE_PORT: "8085"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+    LOG_AGGREGATOR_SERVICE: "log-aggregator-service.gpt.svc.cluster.local:8001"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8085
+
+thoughtJournal:
+  name: thought-journal
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/thought-journal
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8086
+    targetPort: 8086
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "100m"
+  env:
+    SERVICE_PORT: "8086"
+    COGNITIVE_ENGINE_SERVICE: "cognitive-engine-service.gpt.svc.cluster.local:8085"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8086
+
+memoryManager:
+  name: memory-manager
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/memory-manager
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8087
+    targetPort: 8087
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  env:
+    SERVICE_PORT: "8087"
+    COGNITIVE_ENGINE_SERVICE: "cognitive-engine-service.gpt.svc.cluster.local:8085"
+  healthCheck:
+    enabled: true
+    path: "/health"
+    port: 8087
+
+# Ingress configuration
 ingress:
-  enabled: false
-  className: ""
+  enabled: true
+  className: "gce"
   annotations:
     kubernetes.io/ingress.class: "gce"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/ingress.global-static-ip-name: "tron-trading-ip"
+    networking.gke.io/managed-certificates: "tron-trading-ssl"
   hosts:
+    - host: logs.tron-trading.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: log-aggregator-service
+              port:
+                number: 8001
     - host: api.tron-trading.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: tron-backend-service
+              port:
+                number: 8000
   tls:
     - hosts:
+        - logs.tron-trading.com
         - api.tron-trading.com
-      secretName: api-tls
+      secretName: tron-trading-tls
+
+# Service Dependencies and Startup Order
+serviceDependencies:
+  enabled: true
+  order:
+    - secrets
+    - configmaps
+    - log-aggregator
+    - main-runner
+    - stock-trader
+    - options-trader
+    - futures-trader
+    - token-service
+    - cognitive-engine
+    - thought-journal
+    - memory-manager
+    - backend
+    - dashboard
+    - frontend
 
 # Horizontal Pod Autoscaler
 autoscaling:
@@ -249,10 +472,53 @@ autoscaling:
   maxReplicas: 2
   targetCPUUtilizationPercentage: 80
 
+# Network Policies
+networkPolicies:
+  enabled: true
+  allowAll: false
+  ingressRules:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: gpt
+      ports:
+        - protocol: TCP
+          port: 8000-8087
+
 # Secrets configuration
 secrets:
   create: true
   openaiApiKey: ""
   kiteApiKey: ""
   kiteApiSecret: ""
-  gcpServiceAccountKey: "" 
+  gcpServiceAccountKey: ""
+  gcpServiceAccountKeyName: "gcp-service-account-key"
+
+# SSL/TLS Configuration for fresh clusters
+ssl:
+  enabled: true
+  managedCertificate:
+    enabled: true
+    name: "tron-trading-ssl"
+    domains:
+      - "logs.tron-trading.com"
+      - "api.tron-trading.com"
+      - "dashboard.tron-trading.com"
+
+# Daily Cluster Lifecycle Configuration
+clusterLifecycle:
+  enabled: true
+  timezone: "Asia/Kolkata"
+  creationTime: "09:00"
+  deletionTime: "18:00"
+  backupBeforeDeletion: true
+  notifications:
+    enabled: true
+    webhook: ""
+
+# Monitoring and Health Checks
+monitoring:
+  enabled: true
+  healthCheckInterval: 30
+  startupTimeout: 300
+  readinessTimeout: 60

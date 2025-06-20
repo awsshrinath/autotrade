@@ -1,13 +1,40 @@
 {{- if .Values.ingress.enabled | default false }}
 ---
+# GKE Managed Certificate for SSL/TLS
+{{- if .Values.ssl.managedCertificate.enabled }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: {{ .Values.ssl.managedCertificate.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: tron-system
+    app.kubernetes.io/component: ssl-certificate
+    app.kubernetes.io/part-of: tron-trading-system
+spec:
+  domains:
+    {{- range .Values.ssl.managedCertificate.domains }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
+
+---
+# Main Ingress for TRON Trading System
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Chart.Name }}-ingress
   namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: tron-system
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: tron-trading-system
   annotations:
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.ssl.managedCertificate.enabled }}
+    networking.gke.io/managed-certificates: {{ .Values.ssl.managedCertificate.name }}
     {{- end }}
 spec:
   {{- if .Values.ingress.className }}
@@ -28,19 +55,62 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          - path: /api
-            pathType: Prefix
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $.Values.backend.name }}-service
+                name: {{ .backend.service.name }}
                 port:
-                  number: {{ $.Values.backend.service.port }}
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Values.frontend.name }}-service
-                port:
-                  number: {{ $.Values.frontend.service.port }}
+                  number: {{ .backend.service.port.number }}
+          {{- end }}
     {{- end }}
+
+---
+# Additional Ingress for Dashboard (if enabled)
+{{- if .Values.dashboard.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.dashboard.name }}-ingress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.dashboard.name }}
+    app.kubernetes.io/component: dashboard-ingress
+    app.kubernetes.io/part-of: tron-trading-system
+  annotations:
+    {{- with .Values.dashboard.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.dashboard.ingress.className }}
+  ingressClassName: {{ .Values.dashboard.ingress.className }}
+  {{- end }}
+  {{- if .Values.dashboard.ingress.tls }}
+  tls:
+    {{- range .Values.dashboard.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.dashboard.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $.Values.dashboard.name }}-service
+                port:
+                  number: {{ $.Values.dashboard.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+
 {{- end }}
