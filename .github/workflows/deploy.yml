@@ -91,7 +91,16 @@ jobs:
         GKE_ZONE: ${{ secrets.GKE_ZONE }}
       run: |
         gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
-    
+
+    - name: Debug kubectl connection
+      run: |
+        echo "--- kubectl cluster-info ---"
+        kubectl cluster-info
+        echo "--- kubectl config view ---"
+        kubectl config view
+        echo "--- kubectl get nodes (verbose) ---"
+        kubectl get nodes -v=9 || true
+
     - name: Validate cluster readiness
       run: |
         echo "Validating cluster readiness..."
