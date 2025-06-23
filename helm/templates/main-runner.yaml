@@ -18,7 +18,7 @@ spec:
         - name: {{ .Values.mainRunner.name }}
           image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.global.imageTag | default .Values.mainRunner.image.tag }}"
           command: ["/bin/bash", "/entrypoint.sh"]
-          args: ["{{ .Values.mainRunner.env.RUNNER_SCRIPT }}"]
+          args: ["runner/main_runner.py"]
           resources:
             {{- toYaml .Values.mainRunner.resources | nindent 12 }}
           env:
@@ -55,8 +55,6 @@ spec:
                   name: api-secrets
                   key: kite-api-secret
                   optional: true
-            - name: RUNNER_SCRIPT
-              value: "runner/main_runner.py"
             {{- range $key, $val := .Values.mainRunner.env }}
             {{- if ne $key "RUNNER_SCRIPT" }}
             - name: {{ $key }}
@@ -77,7 +75,7 @@ spec:
               command:
                 - pgrep
                 - -f
-                - "{{ .Values.mainRunner.env.RUNNER_SCRIPT }}"
+                - "runner/main_runner.py"
             initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 5
@@ -87,7 +85,7 @@ spec:
               command:
                 - pgrep
                 - -f
-                - "{{ .Values.mainRunner.env.RUNNER_SCRIPT }}"
+                - "runner/main_runner.py"
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10
