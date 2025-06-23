@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/component: cognitive-system
     app.kubernetes.io/part-of: tron-trading-system
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.cognitiveEngine.replicaCount | default .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.cognitiveEngine.name }}
@@ -92,7 +92,7 @@ metadata:
     app.kubernetes.io/component: cognitive-system
     app.kubernetes.io/part-of: tron-trading-system
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.thoughtJournal.replicaCount | default .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.thoughtJournal.name }}
@@ -165,7 +165,7 @@ metadata:
     app.kubernetes.io/component: cognitive-system
     app.kubernetes.io/part-of: tron-trading-system
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.memoryManager.replicaCount | default .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.memoryManager.name }}

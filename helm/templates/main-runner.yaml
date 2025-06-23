@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.mainRunner.name }}
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.mainRunner.replicaCount | default .Values.replicaCount }}
   progressDeadlineSeconds: 600
   selector:
     matchLabels:

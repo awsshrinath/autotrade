@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: trading-engine
     app.kubernetes.io/part-of: tron-trading-system
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.stockTrader.replicaCount | default .Values.replicaCount }}
   progressDeadlineSeconds: 600
   selector:
     matchLabels:

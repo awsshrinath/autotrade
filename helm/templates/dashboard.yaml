@@ -8,7 +8,7 @@ metadata:
     app: {{ .Values.dashboard.name | default "trading-dashboard" }}
     component: dashboard
 spec:
-  replicas: {{ .Values.dashboard.replicaCount | default 1 }}
+  replicas: {{ .Values.dashboard.replicaCount | default .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.dashboard.name | default "trading-dashboard" }}

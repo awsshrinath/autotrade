@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.logAggregator.name }}-deployment
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.logAggregator.replicaCount | default .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.logAggregator.name }}

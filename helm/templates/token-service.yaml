@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: authentication
     app.kubernetes.io/part-of: tron-trading-system
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.tokenService.replicaCount | default .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.tokenService.name }}
