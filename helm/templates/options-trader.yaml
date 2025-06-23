@@ -59,24 +59,6 @@ spec:
             - name: entrypoint
               mountPath: /entrypoint.sh
               subPath: entrypoint.sh
-          {{- if .Values.optionsTrader.healthCheck.enabled }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.optionsTrader.healthCheck.path }}
-              port: {{ .Values.optionsTrader.healthCheck.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.optionsTrader.healthCheck.path }}
-              port: {{ .Values.optionsTrader.healthCheck.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
-          {{- else }}
           readinessProbe:
             exec:
               command:
@@ -97,7 +79,6 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
-          {{- end }}
       volumes:
         - name: entrypoint
           configMap:
