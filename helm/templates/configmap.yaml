@@ -29,7 +29,7 @@ data:
   LOG_AGGREGATOR_SERVICE: "log-aggregator-service.{{ .Values.namespace }}.svc.cluster.local:8001"
   BACKEND_SERVICE: "{{ .Values.backend.name }}-service.{{ .Values.namespace }}.svc.cluster.local:8000"
   FRONTEND_SERVICE: "{{ .Values.frontend.name }}-service.{{ .Values.namespace }}.svc.cluster.local:3000"
-  DASHBOARD_SERVICE: "{{ .Values.dashboard.name }}-service.{{ .Values.namespace }}.svc.cluster.local:8501"
+  # DASHBOARD_SERVICE: REMOVED - migrated to React frontend
   
   # GCP Configuration
   FIRESTORE_PROJECT_ID: {{ .Values.gcpProjectId | quote }}
@@ -78,10 +78,7 @@ data:
         host: "{{ .Values.backend.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
         port: 8000
         health: "/health"
-      dashboard:
-        host: "{{ .Values.dashboard.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
-        port: 8501
-        health: "/"
+      # dashboard: REMOVED - migrated to React frontend
       frontend:
         host: "{{ .Values.frontend.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
         port: 3000

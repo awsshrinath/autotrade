@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { BarChart2, Activity, LineChart, Shield, Cpu, Brain, Settings, HelpCircle, Menu, Home } from "lucide-react"
+import { BarChart2, Activity, LineChart, Shield, Cpu, Brain, Settings, HelpCircle, Menu, Home, FileText } from "lucide-react"
 
 import Link from "next/link"
 import { useState } from "react"
@@ -106,6 +106,9 @@ export default function Sidebar() {
                   </NavItem>
                   <NavItem href="/system/health" icon={Cpu}>
                     System Health
+                  </NavItem>
+                  <NavItem href="/system/logs" icon={FileText}>
+                    Log Monitor
                   </NavItem>
                 </div>
               </div>

@@ -289,14 +289,14 @@ show_deployment_info() {
     log_info "Access URLs:"
     log_info "- Logs Dashboard: https://logs.tron-trading.com"
     log_info "- API Backend: https://api.tron-trading.com"
-    log_info "- Dashboard: http://<external-ip>:8501 (if LoadBalancer ready)"
+    # Dashboard URL removed - migrated to React frontend"
     
     echo
     log_info "Useful commands:"
     log_info "- View logs: kubectl logs -f deployment/main-runner -n $NAMESPACE"
     log_info "- Get pods: kubectl get pods -n $NAMESPACE"
     log_info "- Port forward log aggregator: kubectl port-forward -n $NAMESPACE svc/log-aggregator-service 8001:8001"
-    log_info "- Port forward dashboard: kubectl port-forward -n $NAMESPACE svc/trading-dashboard-service 8501:8501"
+    # Dashboard port forward removed - migrated to React frontend"
 }
 
 # Cleanup function

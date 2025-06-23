@@ -190,26 +190,7 @@ spec:
       name: http
   type: {{ .Values.backend.service.type }}
 
----
-# Dashboard Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ .Values.dashboard.name }}-service
-  namespace: {{ .Values.namespace }}
-  labels:
-    app.kubernetes.io/name: {{ .Values.dashboard.name }}
-    app.kubernetes.io/component: dashboard
-    app.kubernetes.io/part-of: tron-trading-system
-spec:
-  selector:
-    app: {{ .Values.dashboard.name }}
-  ports:
-    - protocol: TCP
-      port: {{ .Values.dashboard.service.port }}
-      targetPort: {{ .Values.dashboard.service.targetPort }}
-      name: http
-  type: {{ .Values.dashboard.service.type }}
+# Dashboard Service - REMOVED (migrated to React frontend)
 
 ---
 # Frontend Service (LoadBalancer for external access)

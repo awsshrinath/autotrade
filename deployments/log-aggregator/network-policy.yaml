@@ -14,14 +14,11 @@ spec:
   - Ingress
   - Egress
   ingress:
-  # Allow traffic from dashboard and other services in the same namespace
+  # Allow traffic from other services in the same namespace (dashboard removed)
   - from:
     - namespaceSelector:
         matchLabels:
           name: gpt
-    - podSelector:
-        matchLabels:
-          app: trading-dashboard
     ports:
     - protocol: TCP
       port: 8001

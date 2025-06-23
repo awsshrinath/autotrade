@@ -1,3 +1,4 @@
+{{- if .Values.frontend.enabled | default true }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,4 +38,5 @@ spec:
     - protocol: TCP
       port: {{ .Values.frontend.service.port }}
       targetPort: 3000
-  type: {{ .Values.frontend.service.type }} 
+  type: {{ .Values.frontend.service.type }}
+{{- end }} 
