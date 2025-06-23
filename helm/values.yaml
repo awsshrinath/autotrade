@@ -238,10 +238,6 @@ dashboard:
         paths:
           - path: /
             pathType: Prefix
-    tls:
-      - hosts:
-          - dashboard.tron-trading.com
-        secretName: dashboard-tls
   autoscaling:
     enabled: false
     minReplicas: 1
