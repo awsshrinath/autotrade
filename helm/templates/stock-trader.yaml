@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/part-of: tron-trading-system
 spec:
   replicas: {{ .Values.replicaCount }}
+  progressDeadlineSeconds: 600
   selector:
     matchLabels:
       app: {{ .Values.stockTrader.name }}
@@ -44,11 +45,28 @@ spec:
                 configMapKeyRef:
                   name: tron-system-config
                   key: LOG_LEVEL
+            {{- if not .Values.stockTrader.env.MAIN_RUNNER_SERVICE }}
             - name: MAIN_RUNNER_SERVICE
+              value: "main-runner-service.{{ .Values.namespace }}.svc.cluster.local:8080"
+            {{- end }}
+            - name: OPENAI_API_KEY
               valueFrom:
-                configMapKeyRef:
-                  name: tron-system-config
-                  key: MAIN_RUNNER_SERVICE
+                secretKeyRef:
+                  name: api-secrets
+                  key: openai-api-key
+                  optional: true
+            - name: KITE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: kite-api-key
+                  optional: true
+            - name: KITE_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: kite-api-secret
+                  optional: true
             {{- range $key, $val := .Values.stockTrader.env }}
             - name: {{ $key }}
               value: "{{ $val }}"

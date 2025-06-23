@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/part-of: tron-trading-system
 spec:
   replicas: {{ .Values.replicaCount }}
+  progressDeadlineSeconds: 600
   selector:
     matchLabels:
       app: {{ .Values.futuresTrader.name }}
@@ -44,17 +45,22 @@ spec:
                 configMapKeyRef:
                   name: tron-system-config
                   key: LOG_LEVEL
-            - name: MAIN_RUNNER_SERVICE
+            - name: kite-api-secret
               valueFrom:
                 configMapKeyRef:
                   name: tron-system-config
-                  key: MAIN_RUNNER_SERVICE
+                  key: kite-api-secret
+                  optional: true
+            {{- if not .Values.futuresTrader.env.MAIN_RUNNER_SERVICE }}
+            - name: MAIN_RUNNER_SERVICE
+              value: "main-runner-service.{{ .Values.namespace }}.svc.cluster.local:8080"
+            {{- end }}
             {{- range $key, $val := .Values.futuresTrader.env }}
             - name: {{ $key }}
               value: "{{ $val }}"
             {{- end }}
             - name: PYTHONPATH
-              value: "/app:/app/runner:/app/futures_trading"
+              value: "/app:/app/runner"
           volumeMounts:
             - name: entrypoint
               mountPath: /entrypoint.sh

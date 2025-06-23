@@ -114,7 +114,6 @@ jobs:
           --namespace gpt \
           --create-namespace \
           --cleanup-on-fail \
-          --atomic \
           --timeout 15m \
           --set-string global.imageTag=${{ github.sha }}
     
