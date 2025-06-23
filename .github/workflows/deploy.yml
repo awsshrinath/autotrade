@@ -97,40 +97,12 @@ jobs:
       with:
         version: 'v3.12.0'
 
-    - name: Prepare Namespace and Secrets
-      id: prepare-namespace
+    - name: Create or Update Secrets
       run: |
-        # 1. Delete the namespace if it exists and wait for it to be gone.
-        if kubectl get namespace gpt > /dev/null 2>&1; then
-          echo "Namespace 'gpt' found. Deleting..."
-          kubectl delete namespace gpt --ignore-not-found=true
-          echo "Waiting for namespace 'gpt' to be fully terminated..."
-          
-          # Wait up to 2 minutes for the namespace to be terminated.
-          timeout=120
-          while kubectl get namespace gpt > /dev/null 2>&1 && [ $timeout -gt 0 ]; do
-            sleep 5
-            timeout=$((timeout-5))
-          done
-          
-          if [ $timeout -le 0 ]; then
-            echo "Error: Namespace 'gpt' was not terminated within 2 minutes."
-            exit 1
-          fi
-          echo "Namespace 'gpt' terminated."
-        else
-          echo "Namespace 'gpt' not found. Skipping deletion."
-        fi
-
-        # 2. Create the namespace.
-        echo "Creating namespace 'gpt'..."
-        kubectl create namespace gpt
-
-        # 3. Create secrets within the new namespace.
-        echo "Creating secrets..."
-        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' -n gpt
-        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' -n gpt
-        echo "Namespace and secrets are ready."
+        kubectl create namespace gpt --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' -n gpt --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' -n gpt --dry-run=client -o yaml | kubectl apply -f -
+        echo "Namespace and secrets are configured."
 
     - name: Deploy with Helm
       id: deploy
@@ -140,6 +112,10 @@ jobs:
         # Deploy to the pre-created namespace.
         helm upgrade --install tron-system ./helm \
           --namespace gpt \
+          --create-namespace \
+          --cleanup-on-fail \
+          --atomic \
+          --timeout 15m \
           --set-string global.imageTag=${{ github.sha }}
     
     - name: Verify deployment
