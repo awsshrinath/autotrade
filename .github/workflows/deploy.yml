@@ -62,6 +62,18 @@ jobs:
         docker build -t $IMAGE_PREFIX/futures-trader:$TAG -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
         docker push --all-tags $IMAGE_PREFIX/futures-trader
 
+        docker build -f zerodha_token_service/Dockerfile -t $IMAGE_PREFIX/token-service:$TAG -t $IMAGE_PREFIX/token-service:latest ./zerodha_token_service
+        docker push --all-tags $IMAGE_PREFIX/token-service
+
+        docker build -t $IMAGE_PREFIX/cognitive-engine:$TAG -t $IMAGE_PREFIX/cognitive-engine:latest --build-arg RUNNER_SCRIPT=runner/cognitive_system.py .
+        docker push --all-tags $IMAGE_PREFIX/cognitive-engine
+
+        docker build -t $IMAGE_PREFIX/thought-journal:$TAG -t $IMAGE_PREFIX/thought-journal:latest --build-arg RUNNER_SCRIPT=runner/thought_journal.py .
+        docker push --all-tags $IMAGE_PREFIX/thought-journal
+
+        docker build -t $IMAGE_PREFIX/memory-manager:$TAG -t $IMAGE_PREFIX/memory-manager:latest --build-arg RUNNER_SCRIPT=runner/cognitive_memory.py .
+        docker push --all-tags $IMAGE_PREFIX/memory-manager
+
   deploy-to-gke:
     name: Deploy to GKE with Helm
     runs-on: ubuntu-latest
