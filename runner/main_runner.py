@@ -29,8 +29,8 @@ sys.path.insert(0, '/app')
 sys.path.insert(0, '/app/runner')
 
 # Global variables for imports
-LogLevel = None
-LogCategory = None
+# LogLevel = None
+# LogCategory = None
 
 def setup_signal_handlers():
     """Setup signal handlers for graceful shutdown"""
@@ -60,15 +60,15 @@ def is_market_open():
 
 def safe_initialize_loggers():
     """Initialize loggers with fallback"""
-    global LogLevel, LogCategory
+    # global LogLevel, LogCategory
     
     try:
         from runner.common_utils import create_daily_folders
         from runner.logger import create_enhanced_logger, LogLevel as LL, LogCategory as LC
         
         # Set global variables
-        LogLevel = LL
-        LogCategory = LC
+        # LogLevel = LL
+        # LogCategory = LC
         
         # Get today's date
         today_date = get_ist_time().strftime("%Y-%m-%d")
@@ -84,13 +84,13 @@ def safe_initialize_loggers():
         create_daily_folders(today_date)
         
         print("✅ Loggers initialized successfully")
-        return enhanced_logger, enhanced_logger, session_id, today_date
+        return enhanced_logger, enhanced_logger, session_id, today_date, LL, LC
         
     except Exception as e:
         print(f"❌ Logger initialization failed: {e}")
-        return None, None, None, None
+        return None, None, None, None, None, None
 
-def lightweight_market_monitor(logger, enhanced_logger):
+def lightweight_market_monitor(logger, enhanced_logger, LogLevel, LogCategory):
     """Lightweight market monitoring without heavy dependencies"""
     print("📊 Starting lightweight market monitoring...")
     
@@ -154,7 +154,7 @@ def main():
     setup_signal_handlers()
     
     # Initialize loggers
-    logger, enhanced_logger, session_id, today_date = safe_initialize_loggers()
+    logger, enhanced_logger, session_id, today_date, LogLevel, LogCategory = safe_initialize_loggers()
     
     if logger is None:
         print("❌ Cannot proceed without basic logger")
@@ -194,7 +194,7 @@ def main():
             logger.log_event("🚀 Market is open - starting lightweight monitoring")
             
             # Start lightweight monitoring
-            lightweight_market_monitor(logger, enhanced_logger)
+            lightweight_market_monitor(logger, enhanced_logger, LogLevel, LogCategory)
             
         else:
             print("⏸️ Market is closed - waiting for next open")

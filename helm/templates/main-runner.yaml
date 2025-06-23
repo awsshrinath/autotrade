@@ -55,9 +55,13 @@ spec:
                   name: api-secrets
                   key: kite-api-secret
                   optional: true
+            - name: RUNNER_SCRIPT
+              value: "runner/main_runner.py"
             {{- range $key, $val := .Values.mainRunner.env }}
+            {{- if ne $key "RUNNER_SCRIPT" }}
             - name: {{ $key }}
               value: "{{ $val }}"
+            {{- end }}
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner"
