@@ -73,6 +73,6 @@ data:
     print('✓ Basic import validation completed')
     "
 
-    echo "Starting application..."
-    # Run the specified script
-    exec python3 -u "$RUNNER_SCRIPT" 
+    echo "Starting application with script: $1"
+    # Run the specified script using the first argument
+    exec python3 -u "$1" 
