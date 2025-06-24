@@ -73,6 +73,26 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner:/app/stock_trading"
+          readinessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - "{{ .Values.stockTrader.env.RUNNER_SCRIPT }}"
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - "{{ .Values.stockTrader.env.RUNNER_SCRIPT }}"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
           volumeMounts:
             - name: entrypoint
               mountPath: /entrypoint.sh

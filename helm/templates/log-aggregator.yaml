@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.logAggregator.name }}-deployment
+  name: {{ .Values.logAggregator.name }}
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.logAggregator.replicaCount | default .Values.replicaCount }}
@@ -50,6 +50,22 @@ spec:
                   optional: true
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: "/var/secrets/google/key.json"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.logAggregator.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.logAggregator.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
           volumeMounts:
             - name: gcp-key
               mountPath: /var/secrets/google

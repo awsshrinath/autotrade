@@ -76,7 +76,7 @@ spec:
               command:
                 - pgrep
                 - -f
-                - "runner/main_runner.py"
+                - "runner/main_runner_lightweight.py"
             initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 5
@@ -86,7 +86,7 @@ spec:
               command:
                 - pgrep
                 - -f
-                - "runner/main_runner.py"
+                - "runner/main_runner_lightweight.py"
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10
