@@ -30,6 +30,7 @@ autoRefreshInterval: 30
 # Core Trading Services
 mainRunner:
   name: main-runner
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner
     tag: latest
@@ -56,11 +57,12 @@ mainRunner:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 2
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 stockTrader:
   name: stock-trader
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/stock-trader
     tag: latest
@@ -88,11 +90,12 @@ stockTrader:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 2
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 optionsTrader:
   name: options-trader
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader
     tag: latest
@@ -120,11 +123,12 @@ optionsTrader:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 2
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 futuresTrader:
   name: futures-trader
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/futures-trader
     tag: latest
@@ -152,12 +156,13 @@ futuresTrader:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 2
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 # Support Services
 logAggregator:
   name: log-aggregator
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/log-aggregator
     tag: latest
@@ -188,7 +193,7 @@ logAggregator:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 dashboard:
@@ -241,12 +246,13 @@ dashboard:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 # Backend API Service
 backend:
   name: tron-backend
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend
     tag: latest
@@ -272,13 +278,14 @@ backend:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 5
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 # Frontend Service - MODERN React/Next.js UI (Primary Interface)
 frontend:
   enabled: true
   name: tron-frontend
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-frontend
     tag: latest
@@ -304,12 +311,13 @@ frontend:
   autoscaling:
     enabled: false
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 80
 
 # Cognitive System Services
 cognitiveEngine:
   name: cognitive-engine
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/cognitive-engine
     tag: latest
@@ -336,6 +344,7 @@ cognitiveEngine:
 
 thoughtJournal:
   name: thought-journal
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/thought-journal
     tag: latest
@@ -361,6 +370,7 @@ thoughtJournal:
 
 memoryManager:
   name: memory-manager
+  replicaCount: 1
   image:
     repository: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/memory-manager
     tag: latest
@@ -439,7 +449,7 @@ serviceDependencies:
 autoscaling:
   enabled: false
   minReplicas: 1
-  maxReplicas: 2
+  maxReplicas: 1
   targetCPUUtilizationPercentage: 80
 
 # Network Policies
