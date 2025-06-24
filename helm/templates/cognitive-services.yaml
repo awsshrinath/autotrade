@@ -27,6 +27,8 @@ spec:
         - name: {{ .Values.cognitiveEngine.name }}
           image: "{{ .Values.cognitiveEngine.image.repository }}:{{ .Values.global.imageTag | default .Values.cognitiveEngine.image.tag }}"
           imagePullPolicy: {{ .Values.cognitiveEngine.image.pullPolicy }}
+          command: ["/bin/bash", "/app/entrypoint.sh"]
+          args: ["cognitive/engine.py"]
           ports:
             - containerPort: {{ .Values.cognitiveEngine.service.targetPort }}
               name: http
@@ -78,7 +80,32 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
           {{- end }}
+          volumeMounts:
+            - name: entrypoint
+              mountPath: /app/entrypoint.sh
+              subPath: entrypoint.sh
+      volumes:
+        - name: entrypoint
+          configMap:
+            name: entrypoint-config
+            defaultMode: 0755
       restartPolicy: Always
+
+---
+# Cognitive Engine Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.cognitiveEngine.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.cognitiveEngine.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.cognitiveEngine.service.port }}
+      targetPort: {{ .Values.cognitiveEngine.service.targetPort }}
+  type: {{ .Values.cognitiveEngine.service.type | default "ClusterIP" }}
 
 ---
 # Thought Journal Deployment
@@ -106,6 +133,8 @@ spec:
         - name: {{ .Values.thoughtJournal.name }}
           image: "{{ .Values.thoughtJournal.image.repository }}:{{ .Values.global.imageTag | default .Values.thoughtJournal.image.tag }}"
           imagePullPolicy: {{ .Values.thoughtJournal.image.pullPolicy }}
+          command: ["/bin/bash", "/app/entrypoint.sh"]
+          args: ["cognitive/thought_journal.py"]
           ports:
             - containerPort: {{ .Values.thoughtJournal.service.targetPort }}
               name: http
@@ -151,7 +180,32 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
           {{- end }}
+          volumeMounts:
+            - name: entrypoint
+              mountPath: /app/entrypoint.sh
+              subPath: entrypoint.sh
+      volumes:
+        - name: entrypoint
+          configMap:
+            name: entrypoint-config
+            defaultMode: 0755
       restartPolicy: Always
+
+---
+# Thought Journal Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.thoughtJournal.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.thoughtJournal.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.thoughtJournal.service.port }}
+      targetPort: {{ .Values.thoughtJournal.service.targetPort }}
+  type: {{ .Values.thoughtJournal.service.type | default "ClusterIP" }}
 
 ---
 # Memory Manager Deployment
@@ -179,6 +233,8 @@ spec:
         - name: {{ .Values.memoryManager.name }}
           image: "{{ .Values.memoryManager.image.repository }}:{{ .Values.global.imageTag | default .Values.memoryManager.image.tag }}"
           imagePullPolicy: {{ .Values.memoryManager.image.pullPolicy }}
+          command: ["/bin/bash", "/app/entrypoint.sh"]
+          args: ["cognitive/memory_manager.py"]
           ports:
             - containerPort: {{ .Values.memoryManager.service.targetPort }}
               name: http
@@ -224,4 +280,29 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
           {{- end }}
+          volumeMounts:
+            - name: entrypoint
+              mountPath: /app/entrypoint.sh
+              subPath: entrypoint.sh
+      volumes:
+        - name: entrypoint
+          configMap:
+            name: entrypoint-config
+            defaultMode: 0755
       restartPolicy: Always
+
+---
+# Memory Manager Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.memoryManager.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.memoryManager.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.memoryManager.service.port }}
+      targetPort: {{ .Values.memoryManager.service.targetPort }}
+  type: {{ .Values.memoryManager.service.type | default "ClusterIP" }}
