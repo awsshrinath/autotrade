@@ -8,6 +8,10 @@ metadata:
     app.kubernetes.io/name: tron-system
     app.kubernetes.io/component: service-account
     app.kubernetes.io/part-of: tron-trading-system
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
