@@ -112,7 +112,7 @@ def lightweight_market_monitor(logger, enhanced_logger):
                     enhanced_logger.log_event(
                         "Lightweight monitoring heartbeat",
                         LogLevel.INFO,
-                        LogCategory.MONITORING,
+                        LogCategory.SYSTEM,
                         data={
                             'ist_time': now.strftime('%H:%M:%S'),
                             'market_open': is_market_open(),
@@ -192,57 +192,37 @@ def main():
     logger.log_event("✅ Lightweight GPT Runner Started")
     
     try:
-        if is_market_open():
-            print("🚀 Market is open - starting lightweight monitoring...")
-            logger.log_event("🚀 Market is open - starting lightweight monitoring")
-            
-            # Start lightweight monitoring
-            lightweight_market_monitor(logger, enhanced_logger)
-            
-        else:
-            print("⏸️ Market is closed - waiting for next open")
-            logger.log_event("⏸️ Market is closed - waiting for next open")
-            
-            # Calculate wait time until next market open
-            if now.time() >= datetime.time(15, 30):
-                # Market closed today, wait until tomorrow 9:15
-                tomorrow = now + datetime.timedelta(days=1)
-                next_open = tomorrow.replace(hour=9, minute=15, second=0, microsecond=0)
+        while not SHUTDOWN_REQUESTED:
+            if is_market_open():
+                print("🚀 Market is open - starting lightweight monitoring...")
+                logger.log_event("🚀 Market is open - starting lightweight monitoring")
+                
+                # Start lightweight monitoring
+                lightweight_market_monitor(logger, enhanced_logger)
+                
+                # After monitoring, wait a bit before checking again if market is open
+                print("💤 Market monitoring finished. Waiting before next check...")
+                time.sleep(60)
             else:
-                # Market hasn't opened today
-                next_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
-            
-            wait_time = (next_open - now).total_seconds()
-            wait_hours = wait_time / 3600
-            
-            print(f"⏰ Next market open: {next_open.strftime('%Y-%m-%d %H:%M')}")
-            print(f"⏳ Wait time: {wait_hours:.1f} hours")
-            
-            # Sleep until market opens
-            time.sleep(wait_time)
-        
-        print("✅ Lightweight execution completed successfully")
-        
+                print("Market is closed. Sleeping for 5 minutes...")
+                # Sleep for 5 minutes if market is closed
+                for _ in range(300):
+                    if SHUTDOWN_REQUESTED:
+                        break
+                    time.sleep(1)
+
     except KeyboardInterrupt:
-        print("🛑 Received interrupt signal - shutting down gracefully")
-        logger.log_event("🛑 Interrupted manually. Shutting down gracefully.")
-        
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        print("📋 Full traceback:")
-        traceback.print_exc()
-        logger.log_event(f"❌ Unexpected error: {e}")
+        print("\n🛑 Keyboard interrupt detected. Shutting down...")
     
     finally:
-        print("🔄 Starting graceful shutdown...")
+        print("✅ Lightweight execution completed successfully")
+        
+        # Shutdown loggers
         if enhanced_logger:
-            try:
-                if hasattr(enhanced_logger, 'trading_logger') and hasattr(enhanced_logger.trading_logger, 'lifecycle_manager'):
-                    enhanced_logger.trading_logger.lifecycle_manager.run_daily_cleanup()
-                enhanced_logger.shutdown()
-                print("✅ Enhanced logger shutdown completed")
-            except Exception as e:
-                print(f"Error during logger shutdown: {e}")
+            enhanced_logger.shutdown()
+        
+        print("🔄 Starting graceful shutdown...")
+        # Add any other cleanup logic here
         print("👋 Lightweight Runner shutdown complete")
 
 if __name__ == "__main__":
