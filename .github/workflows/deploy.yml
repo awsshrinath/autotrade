@@ -113,18 +113,81 @@ jobs:
         kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' -n gpt --dry-run=client -o yaml | kubectl apply -f -
         echo "Namespace and secrets are configured."
 
+    - name: Fix Helm Ownership for Existing Resources
+      run: |
+        echo "Fixing ownership of existing Kubernetes resources..."
+        
+        # Function to add Helm ownership to existing resources
+        fix_resource_ownership() {
+          local resource_type=$1
+          local resource_name=$2
+          local namespace=$3
+          
+          if kubectl get $resource_type $resource_name -n $namespace >/dev/null 2>&1; then
+            echo "Adding Helm ownership to $resource_type/$resource_name"
+            kubectl label $resource_type $resource_name -n $namespace app.kubernetes.io/managed-by=Helm --overwrite
+            kubectl annotate $resource_type $resource_name -n $namespace meta.helm.sh/release-name=tron-system --overwrite
+            kubectl annotate $resource_type $resource_name -n $namespace meta.helm.sh/release-namespace=gpt --overwrite
+          fi
+        }
+        
+        # Get all existing resources that might conflict
+        echo "Checking for existing resources..."
+        
+        # Fix ServiceAccounts
+        for sa in $(kubectl get serviceaccount -n gpt -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo ""); do
+          if [[ "$sa" == *"-sa" ]]; then
+            fix_resource_ownership serviceaccount "$sa" gpt
+          fi
+        done
+        
+        # Fix other common resources that might conflict
+        resource_types=("deployment" "service" "configmap" "secret" "ingress" "pvc")
+        for resource_type in "${resource_types[@]}"; do
+          for resource in $(kubectl get $resource_type -n gpt -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo ""); do
+            # Skip secrets we create in this workflow
+            if [[ "$resource_type" == "secret" && ("$resource" == "openai-api-key-secret" || "$resource" == "fastapi-api-key-secret") ]]; then
+              continue
+            fi
+            fix_resource_ownership "$resource_type" "$resource" gpt
+          done
+        done
+        
+        echo "Ownership fix completed."
+
     - name: Deploy with Helm
       id: deploy
       run: |
         helm dependency update ./helm
         
-        # Deploy to the pre-created namespace.
-        helm upgrade --install tron-system ./helm \
-          --namespace gpt \
-          --create-namespace \
-          --cleanup-on-fail \
-          --timeout 15m \
-          --set-string global.imageTag=${{ github.sha }}
+        # Try to deploy, with retry logic for common issues
+        max_attempts=3
+        attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+          echo "Deployment attempt $attempt of $max_attempts"
+          
+          if helm upgrade --install tron-system ./helm \
+            --namespace gpt \
+            --create-namespace \
+            --cleanup-on-fail \
+            --timeout 15m \
+            --set-string global.imageTag=${{ github.sha }}; then
+            echo "Deployment successful!"
+            break
+          else
+            echo "Deployment attempt $attempt failed"
+            
+            if [ $attempt -eq $max_attempts ]; then
+              echo "All deployment attempts failed"
+              exit 1
+            fi
+            
+            echo "Waiting 30 seconds before retry..."
+            sleep 30
+            attempt=$((attempt + 1))
+          fi
+        done
     
     - name: Verify deployment
       if: always() # Always run verification to see the state of the pods
