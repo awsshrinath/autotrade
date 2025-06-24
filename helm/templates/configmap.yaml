@@ -22,7 +22,6 @@ data:
   STOCK_TRADER_SERVICE: "stock-trader-service.{{ .Values.namespace }}.svc.cluster.local:8081"
   OPTIONS_TRADER_SERVICE: "options-trader-service.{{ .Values.namespace }}.svc.cluster.local:8082"
   FUTURES_TRADER_SERVICE: "futures-trader-service.{{ .Values.namespace }}.svc.cluster.local:8083"
-  TOKEN_SERVICE: "token-service-service.{{ .Values.namespace }}.svc.cluster.local:8084"
   COGNITIVE_ENGINE_SERVICE: "cognitive-engine-service.{{ .Values.namespace }}.svc.cluster.local:8085"
   THOUGHT_JOURNAL_SERVICE: "thought-journal-service.{{ .Values.namespace }}.svc.cluster.local:8086"
   MEMORY_MANAGER_SERVICE: "memory-manager-service.{{ .Values.namespace }}.svc.cluster.local:8087"
@@ -83,10 +82,6 @@ data:
         host: "{{ .Values.frontend.name }}-service.{{ .Values.namespace }}.svc.cluster.local"
         port: 3000
         health: "/"
-      token-service:
-        host: "token-service-service.{{ .Values.namespace }}.svc.cluster.local"
-        port: 8084
-        health: "/health"
       cognitive-engine:
         host: "cognitive-engine-service.{{ .Values.namespace }}.svc.cluster.local"
         port: 8085

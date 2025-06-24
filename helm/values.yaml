@@ -191,7 +191,58 @@ logAggregator:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
 
-# dashboard: REMOVED - Migrated to React frontend
+dashboard:
+  enabled: false  # OLD Streamlit tech - migrate features to React frontend
+  name: trading-dashboard
+  replicaCount: 1
+  image:
+    repository: asia-south1-docker.pkg.dev/autotrade-453303/gpt-repo/trading-dashboard
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8501
+    targetPort: 8501
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  env:
+    LOG_AGGREGATOR_SERVICE: "log-aggregator-service.gpt.svc.cluster.local:8001"
+    MAIN_RUNNER_SERVICE: "main-runner-service.gpt.svc.cluster.local:8080"
+    BACKEND_SERVICE: "tron-backend-service.gpt.svc.cluster.local:8000"
+  auth:
+    enabled: true
+    username: admin
+    password: "" # Will be auto-generated if empty
+  features:
+    liveTrading: false
+    cognitiveInsights: true
+    riskMonitoring: true
+    alerts: true
+  secretName: dashboard-secrets
+  healthCheck:
+    enabled: true
+    path: "/"
+    port: 8501
+  ingress:
+    enabled: false
+    annotations:
+      kubernetes.io/ingress.class: "gce"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: dashboard.tron-trading.com
+        paths:
+          - path: /
+            pathType: Prefix
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
 
 # Backend API Service
 backend:
@@ -233,7 +284,7 @@ frontend:
     tag: latest
     pullPolicy: Always
   service:
-    type: ClusterIP  # Use nginx-proxy as main entry point
+    type: LoadBalancer
     port: 3000
     targetPort: 3000
   resources:
@@ -255,6 +306,7 @@ frontend:
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
+\
 
 # Cognitive System Services
 cognitiveEngine:
@@ -377,12 +429,11 @@ serviceDependencies:
     - stock-trader
     - options-trader
     - futures-trader
-    - token-service
     - cognitive-engine
     - thought-journal
     - memory-manager
     - backend
-    # dashboard removed - migrated to React frontend
+    - dashboard
     - frontend
 
 # Horizontal Pod Autoscaler
@@ -423,7 +474,7 @@ ssl:
     domains:
       - "logs.tron-trading.com"
       - "api.tron-trading.com"
-      # dashboard.tron-trading.com removed - using React frontend
+      - "dashboard.tron-trading.com"
 
 # Daily Cluster Lifecycle Configuration
 clusterLifecycle:

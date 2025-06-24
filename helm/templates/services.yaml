@@ -85,26 +85,6 @@ spec:
       name: http
   type: {{ .Values.futuresTrader.service.type }}
 
----
-# Token Service Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ .Values.tokenService.name }}-service
-  namespace: {{ .Values.namespace }}
-  labels:
-    app.kubernetes.io/name: {{ .Values.tokenService.name }}
-    app.kubernetes.io/component: authentication
-    app.kubernetes.io/part-of: tron-trading-system
-spec:
-  selector:
-    app: {{ .Values.tokenService.name }}
-  ports:
-    - protocol: TCP
-      port: {{ .Values.tokenService.service.port }}
-      targetPort: {{ .Values.tokenService.service.targetPort }}
-      name: http
-  type: {{ .Values.tokenService.service.type }}
 
 ---
 # Cognitive Engine Service
