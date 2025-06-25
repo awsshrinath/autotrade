@@ -117,7 +117,9 @@ class EnhancedLogger:
             self.trading_logger = TradingLogger(
                 session_id=self.session_id,
                 bot_type=self.bot_type,
-                project_id=self.project_id
+                project_id=self.project_id,
+                enable_firestore=enable_firestore,
+                enable_gcs=enable_gcs
             )
             # Ensure gcs_buffer exists for safe shutdown
             if not hasattr(self.trading_logger, 'gcs_buffer'):

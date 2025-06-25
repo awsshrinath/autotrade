@@ -30,10 +30,25 @@ class TradingLogger:
         self.enable_firestore = enable_firestore
         self.enable_gcs = enable_gcs
         
-        # Initialize specialized loggers
-        self.firestore_logger = FirestoreLogger(project_id) if self.enable_firestore else None
-        self.gcs_logger = GCSLogger(project_id) if self.enable_gcs else None
-        self.lifecycle_manager = LogLifecycleManager(project_id) if self.enable_gcs else None
+        # Initialize specialized loggers with error handling
+        self.firestore_logger = None
+        self.gcs_logger = None
+        self.lifecycle_manager = None
+        
+        if self.enable_firestore:
+            try:
+                self.firestore_logger = FirestoreLogger(project_id)
+            except Exception as e:
+                print(f"Warning: Failed to initialize Firestore logger: {e}")
+                self.enable_firestore = False
+                
+        if self.enable_gcs:
+            try:
+                self.gcs_logger = GCSLogger(project_id)
+                self.lifecycle_manager = LogLifecycleManager(project_id)
+            except Exception as e:
+                print(f"Warning: Failed to initialize GCS logger: {e}")
+                self.enable_gcs = False
         
         # Buffering for efficient batch operations
         self.gcs_buffer = []
