@@ -10,7 +10,7 @@ import threading
 import time
 import traceback
 
-from .k8s_native_gcp_client import get_k8s_gcp_client
+from runner.gcp_memory_client import get_k8s_gcp_client
 from .cognitive_memory import CognitiveMemory, MemoryType, ImportanceLevel
 from .thought_journal import ThoughtJournal, DecisionType, ConfidenceLevel, EmotionalState
 from .cognitive_state_machine import CognitiveStateMachine, CognitiveState, StateTransitionTrigger
@@ -42,8 +42,7 @@ class CognitiveSystem:
         
         # Initialize Kubernetes-native GCP client (no impersonation)
         self.gcp_client = get_k8s_gcp_client(
-            project_id=self.config.project_id,
-            logger=self.logger
+            project_id=self.config.project_id
         )
         
         # Initialize cognitive components

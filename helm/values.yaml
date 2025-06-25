@@ -291,7 +291,7 @@ frontend:
     tag: latest
     pullPolicy: Always
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 3000
     targetPort: 3000
   resources:

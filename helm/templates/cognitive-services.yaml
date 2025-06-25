@@ -28,7 +28,7 @@ spec:
           image: "{{ .Values.cognitiveEngine.image.repository }}:{{ .Values.global.imageTag | default .Values.cognitiveEngine.image.tag }}"
           imagePullPolicy: {{ .Values.cognitiveEngine.image.pullPolicy }}
           command: ["/bin/bash", "/app/entrypoint.sh"]
-          args: ["cognitive/engine.py"]
+          args: ["runner/cognitive_system.py"]
           ports:
             - containerPort: {{ .Values.cognitiveEngine.service.targetPort }}
               name: http
@@ -134,7 +134,7 @@ spec:
           image: "{{ .Values.thoughtJournal.image.repository }}:{{ .Values.global.imageTag | default .Values.thoughtJournal.image.tag }}"
           imagePullPolicy: {{ .Values.thoughtJournal.image.pullPolicy }}
           command: ["/bin/bash", "/app/entrypoint.sh"]
-          args: ["cognitive/thought_journal.py"]
+          args: ["runner/thought_journal.py"]
           ports:
             - containerPort: {{ .Values.thoughtJournal.service.targetPort }}
               name: http
@@ -234,7 +234,7 @@ spec:
           image: "{{ .Values.memoryManager.image.repository }}:{{ .Values.global.imageTag | default .Values.memoryManager.image.tag }}"
           imagePullPolicy: {{ .Values.memoryManager.image.pullPolicy }}
           command: ["/bin/bash", "/app/entrypoint.sh"]
-          args: ["cognitive/memory_manager.py"]
+          args: ["runner/cognitive_memory.py"]
           ports:
             - containerPort: {{ .Values.memoryManager.service.targetPort }}
               name: http

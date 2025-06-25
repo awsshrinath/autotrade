@@ -17,7 +17,7 @@ from threading import Lock
 
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.enhanced_logger import EnhancedLogger, LogLevel, LogCategory, create_enhanced_logger
+from runner.enhanced_logging.core_logger import EnhancedLogger, LogLevel, LogCategory, create_enhanced_logger
 from runner.capital.portfolio_manager import PortfolioManager
 from runner.risk_governor import RiskGovernor
 from config.config_manager import get_trading_config
