@@ -10,6 +10,7 @@ metadata:
     app.kubernetes.io/part-of: tron-trading-system
     app.kubernetes.io/managed-by: Helm
   annotations:
+    iam.gke.io/gcp-service-account: {{ .Values.serviceAccountName }}@{{ .Values.gcpProjectId }}.iam.gserviceaccount.com
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 

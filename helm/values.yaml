@@ -403,16 +403,16 @@ ingress:
     kubernetes.io/ingress.global-static-ip-name: "tron-trading-ip"
     networking.gke.io/managed-certificates: "tron-trading-ssl"
   hosts:
-    - host: logs.tron-trading.com
+    - host: tron-trading.com
       paths:
         - path: /
           pathType: Prefix
           backend:
             service:
-              name: log-aggregator-service
+              name: tron-frontend-service
               port:
-                number: 8001
-    - host: api.tron-trading.com
+                number: 3000
+    - host: logs.tron-trading.com
       paths:
         - path: /
           pathType: Prefix
@@ -423,6 +423,7 @@ ingress:
                 number: 8000
   tls:
     - hosts:
+        - tron-trading.com
         - logs.tron-trading.com
         - api.tron-trading.com
       secretName: tron-trading-tls
@@ -481,6 +482,7 @@ ssl:
     enabled: true
     name: "tron-trading-ssl"
     domains:
+      - "tron-trading.com"
       - "logs.tron-trading.com"
       - "api.tron-trading.com"
       - "dashboard.tron-trading.com"

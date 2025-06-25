@@ -544,4 +544,8 @@ class LogLifecycleManager:
             if bucket_stats['size_gb'] > 20:
                 recommendations.append(f"Large bucket {bucket_name} - consider data archival")
         
-        return recommendations 
+        return recommendations
+    
+    def run_cleanup(self):
+        """Run standard cleanup tasks (alias for run_daily_cleanup for compatibility)"""
+        self.run_daily_cleanup() 
