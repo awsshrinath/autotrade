@@ -11,10 +11,10 @@ import time
 import traceback
 
 from runner.gcp_memory_client import get_k8s_gcp_client
-from .cognitive_memory import CognitiveMemory, MemoryType, ImportanceLevel
-from .thought_journal import ThoughtJournal, DecisionType, ConfidenceLevel, EmotionalState
-from .cognitive_state_machine import CognitiveStateMachine, CognitiveState, StateTransitionTrigger
-from .metacognition import MetaCognition, DecisionOutcome
+from runner.cognitive_memory import CognitiveMemory, MemoryType, ImportanceLevel
+from runner.thought_journal import ThoughtJournal, DecisionType, ConfidenceLevel, EmotionalState
+from runner.cognitive_state_machine import CognitiveStateMachine, CognitiveState, StateTransitionTrigger
+from runner.metacognition import MetaCognition, DecisionOutcome
 
 
 @dataclass
