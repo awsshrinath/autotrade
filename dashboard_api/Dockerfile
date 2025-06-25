@@ -16,10 +16,12 @@ COPY . .
 # Set Python path to include runner module
 ENV PYTHONPATH="/app:/app/runner:$PYTHONPATH"
 
-# Create __init__.py files for Python packages if they don't exist
-RUN touch runner/__init__.py && \
-    touch runner/capital/__init__.py && \
-    touch runner/enhanced_logging/__init__.py
+# Create __init__.py files for all necessary directories to ensure they are importable
+RUN for dir in runner gpt_runner runner/capital runner/enhanced_logging runner/indicators runner/market_data runner/options runner/production runner/utils gpt_runner/rag gpt_runner/log_aggregator; do \
+        if [ -d "$dir" ] && [ ! -f "$dir/__init__.py" ]; then \
+            touch "$dir/__init__.py"; \
+        fi; \
+    done
 
 # Expose port 8000 to the outside world
 EXPOSE 8000

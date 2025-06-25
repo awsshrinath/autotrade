@@ -482,59 +482,57 @@ class TradingLogger:
             pass  # Ignore errors during shutdown
 
 
-# Enhanced Logger class (alias for TradingLogger with additional methods)
 class EnhancedLogger(TradingLogger):
-    """Enhanced logger with additional convenience methods"""
-    
+    """
+    User-friendly logger with simplified methods (debug, info, warning, error).
+    Inherits intelligent routing from TradingLogger.
+    """
     def __init__(self, session_id: str = None, bot_type: str = None, project_id: str = None, enable_firestore: bool = True, enable_gcs: bool = True):
         super().__init__(session_id, bot_type, project_id, enable_firestore, enable_gcs)
-    
+
     def log(self, level: LogLevel, message: str, category: LogCategory = LogCategory.SYSTEM, data: Dict[str, Any] = None):
-        """Generic log method with level and category"""
+        """Generic log method"""
         entry = LogEntry(
             timestamp=datetime.datetime.now(),
             level=level,
             category=category,
-            log_type=LogType.DASHBOARD,
+            log_type=LogType.REAL_TIME,  # Default to real-time for general logs
             message=message,
             data=data or {},
-            source="enhanced_logger",
+            source=self.bot_type,
             session_id=self.session_id,
             bot_type=self.bot_type
         )
         self._route_log(entry)
-    
+
     def debug(self, message: str, data: Dict[str, Any] = None):
-        """Debug level logging"""
-        self.log(LogLevel.DEBUG, message, LogCategory.SYSTEM, data)
-    
+        self.log(LogLevel.DEBUG, message, data=data)
+
     def info(self, message: str, data: Dict[str, Any] = None):
-        """Info level logging"""
-        self.log(LogLevel.INFO, message, LogCategory.SYSTEM, data)
-    
+        self.log(LogLevel.INFO, message, data=data)
+
     def warning(self, message: str, data: Dict[str, Any] = None):
-        """Warning level logging"""
-        self.log(LogLevel.WARNING, message, LogCategory.SYSTEM, data)
-    
+        self.log(LogLevel.WARNING, message, data=data)
+
     def error(self, message: str, data: Dict[str, Any] = None):
-        """Error level logging"""
-        self.log(LogLevel.ERROR, message, LogCategory.ERROR, data)
-    
+        self.log(LogLevel.ERROR, message, data=data)
+
     def critical(self, message: str, data: Dict[str, Any] = None):
-        """Critical level logging"""
-        self.log(LogLevel.CRITICAL, message, LogCategory.ERROR, data)
+        self.log(LogLevel.CRITICAL, message, data=data)
 
 
-# Factory functions
 def create_enhanced_logger(session_id: str = None, bot_type: str = None, project_id: str = None, enable_firestore: bool = True, enable_gcs: bool = True) -> EnhancedLogger:
-    """Factory function to create an EnhancedLogger instance"""
-    return EnhancedLogger(
-        session_id=session_id,
-        bot_type=bot_type,
-        project_id=project_id,
-        enable_firestore=enable_firestore,
-        enable_gcs=enable_gcs
-    )
+    """
+    Factory function to create an EnhancedLogger instance.
+    This is the recommended logger for most use cases.
+    """
+    # Simple validation
+    if not session_id:
+        session_id = f"session_{int(time.time())}"
+    if not bot_type:
+        bot_type = "generic_bot"
+        
+    return EnhancedLogger(session_id, bot_type, project_id, enable_firestore, enable_gcs)
 
 
 # Backward compatibility functions for existing code
