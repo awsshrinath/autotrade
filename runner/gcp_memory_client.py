@@ -16,6 +16,24 @@ from google.cloud import storage
 from google.cloud import firestore
 import logging
 
+def get_k8s_gcp_client(project_id: str = "autotrade-453303") -> 'GCPMemoryClient':
+    """
+    Factory function to create a GCP Memory Client optimized for Kubernetes environments.
+    Uses pod service account for authentication.
+    
+    Args:
+        project_id: GCP project ID
+    
+    Returns:
+        Configured GCPMemoryClient instance
+    """
+    logging.info(f"Initializing GCP Memory Client for project: {project_id}")
+    return GCPMemoryClient(
+        project_id=project_id,
+        bucket_name="tron-trade-logs",
+        firestore_collection="cognitive_memory"
+    )
+
 # Try importing OpenAI for embeddings, fallback to sentence-transformers
 try:
     import openai
