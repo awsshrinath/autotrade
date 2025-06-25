@@ -502,6 +502,54 @@ LogCategory = LegacyLogCategory
 LogEntry = LegacyLogEntry
 
 
+# Legacy Logger class for backward compatibility
+class Logger:
+    """Legacy logger wrapper for backward compatibility"""
+    
+    def __init__(self, today_date: str = None):
+        self.today_date = today_date or datetime.datetime.now().strftime("%Y-%m-%d")
+        self.enhanced_logger = EnhancedLogger(bot_type="legacy")
+    
+    def log_event(self, event_text: str):
+        """Legacy log_event method"""
+        self.enhanced_logger.log_event(event_text)
+        
+        # Also print to console for backward compatibility
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} {event_text}")
+    
+    # Add standard logging interface methods for compatibility
+    def error(self, message: str):
+        """Standard logging error method"""
+        self.enhanced_logger.log_event(f"❌ [ERROR] {message}", LegacyLogLevel.ERROR)
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} ERROR: {message}")
+    
+    def warning(self, message: str):
+        """Standard logging warning method"""
+        self.enhanced_logger.log_event(f"⚠️ [WARNING] {message}", LegacyLogLevel.WARNING)
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} WARNING: {message}")
+    
+    def info(self, message: str):
+        """Standard logging info method"""
+        self.enhanced_logger.log_event(f"ℹ️ [INFO] {message}", LegacyLogLevel.INFO)
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} INFO: {message}")
+    
+    def debug(self, message: str):
+        """Standard logging debug method"""
+        self.enhanced_logger.log_event(f"🔍 [DEBUG] {message}", LegacyLogLevel.DEBUG)
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} DEBUG: {message}")
+    
+    def critical(self, message: str):
+        """Standard logging critical method"""
+        self.enhanced_logger.log_event(f"🚨 [CRITICAL] {message}", LegacyLogLevel.CRITICAL)
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        print(f"{timestamp} CRITICAL: {message}")
+
+
 # Factory function for backward compatibility
 def create_enhanced_logger(session_id: str = None, project_id: str = None, 
                           enable_gcs: bool = True, enable_firestore: bool = True,
