@@ -9,7 +9,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 import json
 import logging
-from .k8s_native_gcp_client import get_k8s_gcp_client
+from runner.gcp_memory_client import get_k8s_gcp_client
 
 
 class CognitiveState(Enum):
