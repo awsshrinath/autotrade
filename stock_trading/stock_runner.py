@@ -12,12 +12,14 @@ from typing import Dict, Any, Optional
 import requests
 import kiteconnect
 
-from runner.config import get_trading_config, PAPER_TRADE
+from runner.config import get_trading_config, PAPER_TRADE, initialize_config, get_config
 from runner.firestore_client import FirestoreClient, get_firestore_client
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import create_enhanced_logger
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory, TradingLogger
 from runner.strategy_factory import StrategyFactory, load_strategy
-from runner.trade_manager import create_enhanced_trade_manager, EnhancedTradeManager, execute_trade, simulate_exit
+from runner.strategy_selector import StrategySelector
+from runner.trade_manager import create_enhanced_trade_manager, EnhancedTradeManager, execute_trade, simulate_exit, create_trade_manager
 from runner.market_data.market_data_fetcher import MarketDataFetcher
 from runner.utils.notifications import send_slack_notification
 from runner.position_monitor import PositionMonitor

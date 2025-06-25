@@ -15,7 +15,7 @@ from runner.logger import Logger
 
 # Fallback logger setup
 try:
-logger = Logger(datetime.date.today().isoformat())
+    logger = Logger(datetime.date.today().isoformat())
 except Exception:
     logger = logging.getLogger(__name__)
 
