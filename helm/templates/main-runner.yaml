@@ -19,7 +19,6 @@ spec:
         - name: {{ .Values.mainRunner.name }}
           image: "{{ .Values.mainRunner.image.repository }}:{{ .Values.global.imageTag | default .Values.mainRunner.image.tag }}"
           command: ["/bin/bash", "/entrypoint.sh"]
-          args: ["runner/main_runner.py"]
           resources:
             {{- toYaml .Values.mainRunner.resources | nindent 12 }}
           env:
@@ -57,15 +56,15 @@ spec:
                   key: kite-api-secret
                   optional: true
             {{- range $key, $val := .Values.mainRunner.env }}
-            {{- if ne $key "RUNNER_SCRIPT" }}
             - name: {{ $key }}
               value: "{{ $val }}"
-            {{- end }}
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner"
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.mainRunner.healthCheck.enabled }}"
+            - name: SERVICE_PORT
+              value: "{{ .Values.mainRunner.service.targetPort }}"
           volumeMounts:
             - name: entrypoint
               mountPath: /entrypoint.sh

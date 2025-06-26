@@ -75,6 +75,8 @@ spec:
               value: "/app:/app/runner:/app/options_trading"
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.optionsTrader.healthCheck.enabled }}"
+            - name: SERVICE_PORT
+              value: "{{ .Values.optionsTrader.service.targetPort }}"
           readinessProbe:
             httpGet:
               path: /health

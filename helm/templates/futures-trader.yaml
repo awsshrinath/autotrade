@@ -63,6 +63,8 @@ spec:
               value: "/app:/app/runner:/app/futures_trading"
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.futuresTrader.healthCheck.enabled }}"
+            - name: SERVICE_PORT
+              value: "{{ .Values.futuresTrader.service.targetPort }}"
           readinessProbe:
             httpGet:
               path: /health
