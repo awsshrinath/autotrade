@@ -64,6 +64,8 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner"
+            - name: HEALTH_CHECK_ENABLED
+              value: "{{ .Values.mainRunner.healthCheck.enabled }}"
           volumeMounts:
             - name: entrypoint
               mountPath: /entrypoint.sh

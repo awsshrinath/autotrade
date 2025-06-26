@@ -61,6 +61,8 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner:/app/futures_trading"
+            - name: HEALTH_CHECK_ENABLED
+              value: "{{ .Values.futuresTrader.healthCheck.enabled }}"
           readinessProbe:
             exec:
               command:

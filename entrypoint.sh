@@ -21,8 +21,17 @@ echo "Python Version: $(python3 --version)"
 echo "PYTHONPATH: $PYTHONPATH"
 echo "Working Directory: $(pwd)"
 echo "Runner Script: $RUNNER_SCRIPT"
+echo "Service Port: ${SERVICE_PORT:-'Not set'}"
+echo "Health Check Required: ${HEALTH_CHECK_ENABLED:-'Not set'}"
 echo "--- Starting Application ---"
 
-# Execute the main application script passed as an environment variable
-# The -u flag ensures that the output is unbuffered and sent straight to stdout
-exec python3 -u "$RUNNER_SCRIPT"
+# Check if this service needs health checks
+if [ "$HEALTH_CHECK_ENABLED" = "true" ] && [ -n "$SERVICE_PORT" ]; then
+    echo "Starting with health check wrapper on port $SERVICE_PORT"
+    exec python3 -u runner/health_server.py
+else
+    echo "Starting script directly without health checks"
+    # Execute the main application script passed as an environment variable
+    # The -u flag ensures that the output is unbuffered and sent straight to stdout
+    exec python3 -u "$RUNNER_SCRIPT"
+fi

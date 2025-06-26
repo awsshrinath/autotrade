@@ -73,6 +73,8 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner:/app/options_trading"
+            - name: HEALTH_CHECK_ENABLED
+              value: "{{ .Values.optionsTrader.healthCheck.enabled }}"
           readinessProbe:
             exec:
               command:

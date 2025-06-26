@@ -60,6 +60,8 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner"
+            - name: HEALTH_CHECK_ENABLED
+              value: "{{ .Values.cognitiveEngine.healthCheck.enabled }}"
           resources:
             {{- toYaml .Values.cognitiveEngine.resources | nindent 12 }}
           {{- if .Values.cognitiveEngine.healthCheck.enabled }}
@@ -160,6 +162,8 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner"
+            - name: HEALTH_CHECK_ENABLED
+              value: "{{ .Values.thoughtJournal.healthCheck.enabled }}"
           resources:
             {{- toYaml .Values.thoughtJournal.resources | nindent 12 }}
           {{- if .Values.thoughtJournal.healthCheck.enabled }}
@@ -260,6 +264,8 @@ spec:
             {{- end }}
             - name: PYTHONPATH
               value: "/app:/app/runner"
+            - name: HEALTH_CHECK_ENABLED
+              value: "{{ .Values.memoryManager.healthCheck.enabled }}"
           resources:
             {{- toYaml .Values.memoryManager.resources | nindent 12 }}
           {{- if .Values.memoryManager.healthCheck.enabled }}
