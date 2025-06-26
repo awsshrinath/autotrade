@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 import requests
 import kiteconnect
 
-from runner.config import get_trading_config, PAPER_TRADE, initialize_config, get_config
+from runner.config import get_trading_config, PAPER_TRADE, get_config
 from runner.firestore_client import FirestoreClient, get_firestore_client
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import create_enhanced_logger
