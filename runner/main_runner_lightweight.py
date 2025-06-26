@@ -65,7 +65,7 @@ def safe_initialize_loggers():
     try:
         from runner.common_utils import create_daily_folders
         from runner.logger import Logger
-        from runner.enhanced_logger import create_enhanced_logger, LogLevel as LL, LogCategory as LC
+        from runner.enhanced_logging import create_trading_logger, LogLevel as LL, LogCategory as LC
         
         # Set global variables
         LogLevel = LL
@@ -78,7 +78,7 @@ def safe_initialize_loggers():
         
         # Enhanced logger
         session_id = f"lightweight_runner_{int(time.time())}"
-        enhanced_logger = create_enhanced_logger(
+        enhanced_logger = create_trading_logger(
             session_id=session_id,
             enable_gcs=True,
             enable_firestore=True
@@ -198,8 +198,12 @@ def main():
                 print("🚀 Market is open - starting lightweight monitoring...")
                 logger.log_event("🚀 Market is open - starting lightweight monitoring")
                 
-                # Start lightweight monitoring
-                lightweight_market_monitor(logger, enhanced_logger)
+                try:
+                    # Start lightweight monitoring
+                    lightweight_market_monitor(logger, enhanced_logger)
+                except Exception as e:
+                    print(f"❌ Monitoring function failed: {e}")
+                    print(f"🔄 Will retry in 60 seconds...")
                 
                 # After monitoring, wait a bit before checking again if market is open
                 print("💤 Market monitoring finished. Waiting before next check...")
