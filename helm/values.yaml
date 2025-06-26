@@ -109,8 +109,8 @@ optionsTrader:
       memory: "128Mi"
       cpu: "50m"
     limits:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: "512Mi"
+      cpu: "200m"
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "options_trading/options_runner.py"
@@ -358,8 +358,8 @@ thoughtJournal:
       memory: "128Mi"
       cpu: "50m"
     limits:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: "512Mi"
+      cpu: "200m"
   env:
     SERVICE_PORT: "8086"
     COGNITIVE_ENGINE_SERVICE: "cognitive-engine-service.gpt.svc.cluster.local:8085"

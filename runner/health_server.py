@@ -135,50 +135,93 @@ def run_script_with_monitoring(script_path: str):
     """Run the trading script with monitoring"""
     logger = logging.getLogger(__name__)
     
-    try:
-        logger.info(f"Starting script: {script_path}")
-        health_status.set_running()
-        
-        # Start the script as a subprocess
-        process = subprocess.Popen(
-            [sys.executable, "-u", script_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            universal_newlines=True
-        )
-        
-        health_status.script_process = process
-        
-        # Monitor the process and output
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())  # Forward output to container logs
-                health_status.update_heartbeat()
-                
-        # Process has finished
-        exit_code = process.poll()
-        health_status.set_completed(exit_code)
-        logger.info(f"Script completed with exit code: {exit_code}")
-        
-        # For trading scripts, we might want to restart them
-        # For now, just keep the health server running
-        while True:
-            time.sleep(60)
-            health_status.update_heartbeat()
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            logger.info(f"Starting script: {script_path} (attempt {retry_count + 1})")
+            health_status.set_running()
             
-    except Exception as e:
-        error_msg = f"Error running script: {str(e)}"
-        logger.error(error_msg)
-        health_status.set_error(error_msg)
-        
-        # Keep health server running even if script fails
-        while True:
-            time.sleep(60)
+            # Start the script as a subprocess with timeout
+            process = subprocess.Popen(
+                [sys.executable, "-u", script_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            health_status.script_process = process
+            
+            # Monitor the process with timeout
+            start_time = time.time()
+            last_output_time = time.time()
+            
+            while True:
+                # Check if process is still running
+                if process.poll() is not None:
+                    break
+                    
+                # Read output with timeout
+                try:
+                    output = process.stdout.readline()
+                    if output:
+                        print(output.strip())  # Forward output to container logs
+                        health_status.update_heartbeat()
+                        last_output_time = time.time()
+                except:
+                    pass
+                
+                # Check for stuck process (no output for 10 minutes)
+                if time.time() - last_output_time > 600:
+                    logger.warning("Script appears stuck, will restart")
+                    process.terminate()
+                    time.sleep(5)
+                    if process.poll() is None:
+                        process.kill()
+                    break
+                    
+                time.sleep(1)
+                
+            # Process has finished
+            exit_code = process.poll()
+            health_status.set_completed(exit_code)
+            logger.info(f"Script completed with exit code: {exit_code}")
+            
+            # If script completed successfully, keep running
+            if exit_code == 0:
+                # Keep health server running
+                while True:
+                    time.sleep(60)
+                    health_status.update_heartbeat()
+            else:
+                # Script failed, retry
+                retry_count += 1
+                if retry_count < max_retries:
+                    logger.info(f"Script failed, retrying in 30 seconds...")
+                    time.sleep(30)
+                else:
+                    health_status.set_error(f"Script failed after {max_retries} attempts")
+                    break
+                
+        except Exception as e:
+            error_msg = f"Error running script: {str(e)}"
+            logger.error(error_msg)
+            retry_count += 1
+            if retry_count < max_retries:
+                logger.info(f"Exception occurred, retrying in 30 seconds...")
+                time.sleep(30)
+            else:
+                health_status.set_error(error_msg)
+                break
+    
+    # Keep health server running even if all retries failed
+    logger.info("Keeping health server running...")
+    while True:
+        time.sleep(60)
+        health_status.update_heartbeat()
 
 def start_health_server(port: int = 8080):
     """Start the health check HTTP server"""

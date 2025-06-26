@@ -2,10 +2,8 @@ from fastapi import APIRouter, Depends
 import sys
 import os
 
-# Add project root to path to allow importing 'services'
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
-from services.portfolio_manager import PortfolioManager, Portfolio
+# Import from local dashboard_api services
+from dashboard_api.services.portfolio_manager import PortfolioManager, Portfolio
 from utils.gcp_utils import get_firestore_client
 from google.cloud.firestore_v1.client import Client
 
