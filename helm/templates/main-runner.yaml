@@ -74,21 +74,17 @@ spec:
             - containerPort: {{ .Values.mainRunner.service.targetPort }}
               name: http
           readinessProbe:
-            exec:
-              command:
-                - pgrep
-                - -f
-                - "runner/main_runner_lightweight.py"
+            httpGet:
+              path: /health
+              port: {{ .Values.mainRunner.service.targetPort }}
             initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
-            exec:
-              command:
-                - pgrep
-                - -f
-                - "runner/main_runner_lightweight.py"
+            httpGet:
+              path: /health
+              port: {{ .Values.mainRunner.service.targetPort }}
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10

@@ -76,21 +76,17 @@ spec:
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.optionsTrader.healthCheck.enabled }}"
           readinessProbe:
-            exec:
-              command:
-                - pgrep
-                - -f
-                - "{{ .Values.optionsTrader.env.RUNNER_SCRIPT }}"
+            httpGet:
+              path: /health
+              port: {{ .Values.optionsTrader.service.targetPort }}
             initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
-            exec:
-              command:
-                - pgrep
-                - -f
-                - "{{ .Values.optionsTrader.env.RUNNER_SCRIPT }}"
+            httpGet:
+              path: /health
+              port: {{ .Values.optionsTrader.service.targetPort }}
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10

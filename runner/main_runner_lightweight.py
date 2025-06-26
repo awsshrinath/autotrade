@@ -134,7 +134,8 @@ def lightweight_market_monitor(logger, enhanced_logger):
             
         except Exception as e:
             error_count += 1
-            print(f"❌ Error in monitoring (#{error_count}): {e}")
+            error_details = str(e) if str(e) else traceback.format_exc()
+            print(f"❌ Error in monitoring (#{error_count}): {error_details}")
             
             if error_count >= max_errors:
                 print(f"❌ Too many consecutive errors ({max_errors}), stopping monitoring")
