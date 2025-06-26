@@ -51,14 +51,26 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def read_root():
     return {"message": "Welcome to the Log Aggregator API!"}
 
-# Basic health check endpoint
-@app.get(f"{app_config.api_prefix}/health", tags=["Health"])
-async def health_check():
-    # Basic health check - just return that the API is running
+# Basic health check endpoint for Kubernetes probes
+@app.get("/health", tags=["Health"])
+async def health_check_k8s():
+    # Simple health check for Kubernetes readiness/liveness probes
     return {
         "status": "ok", 
         "message": "Log Aggregator API is running", 
         "version": "0.1.0"
+    }
+
+# Detailed health check endpoint 
+@app.get(f"{app_config.api_prefix}/health", tags=["Health"])
+async def health_check():
+    # Detailed health check - return more comprehensive status
+    return {
+        "status": "ok", 
+        "message": "Log Aggregator API is running", 
+        "version": "0.1.0",
+        "api_prefix": app_config.api_prefix,
+        "timestamp": datetime.now().isoformat()
     }
 
 # Include routers
