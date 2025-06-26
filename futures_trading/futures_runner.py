@@ -13,7 +13,7 @@ from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
 from runner.logger import TradingLogger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
-from runner.trade_manager import simulate_exit, execute_trade, create_trade_manager
+from runner.trade_manager import EnhancedTradeManager, create_enhanced_trade_manager, TradeRequest
 from runner.enhanced_logging import create_trading_logger
 from runner.risk_governor import RiskGovernor
 from runner.position_monitor import PositionMonitor

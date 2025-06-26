@@ -19,7 +19,7 @@ from runner.logger import create_enhanced_logger
 from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory, TradingLogger
 from runner.strategy_factory import StrategyFactory, load_strategy
 from runner.strategy_selector import StrategySelector
-from runner.trade_manager import create_enhanced_trade_manager, EnhancedTradeManager, execute_trade, simulate_exit, create_trade_manager
+from runner.trade_manager import create_enhanced_trade_manager, EnhancedTradeManager, TradeRequest
 from runner.market_data.market_data_fetcher import MarketDataFetcher
 from runner.utils.notifications import send_slack_notification
 from runner.position_monitor import PositionMonitor
