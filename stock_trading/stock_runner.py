@@ -69,7 +69,12 @@ try:
 except ImportError:
     PAPER_TRADING_AVAILABLE = False
 
-IST = pytz.timezone("Asia/Kolkata")
+# Set up timezone
+if PYTZ_AVAILABLE:
+    IST = pytz.timezone("Asia/Kolkata")
+else:
+    IST = None
+    print("Warning: pytz not available. Using system timezone.")
 
 # PAPER_TRADE already imported above
 
@@ -386,8 +391,19 @@ class StockTrader:
                 time.sleep(60)
 
 def run_stock_trader(strategy_name: str, paper_trade: bool = False):
+    print(f"🔄 Creating StockTrader instance with strategy: {strategy_name}, paper_trade: {paper_trade}")
     trader = StockTrader(strategy_name=strategy_name, paper_trade=paper_trade)
+    print("✅ StockTrader instance created successfully")
+    print("🚀 Starting trader main loop...")
     trader.run()
 
 if __name__ == "__main__":
-    run_stock_trader(strategy_name="ORB", paper_trade=True)
+    print("🚀 Stock Trading Runner Starting...")
+    try:
+        print("📊 Initializing stock trader...")
+        run_stock_trader(strategy_name="ORB", paper_trade=True)
+    except Exception as e:
+        print(f"❌ Failed to start stock trader: {e}")
+        import traceback
+        traceback.print_exc()
+        exit(1)
