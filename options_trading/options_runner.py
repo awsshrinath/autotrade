@@ -7,11 +7,31 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import time
 from datetime import datetime
 from datetime import time as dtime
-import pytz
+try:
+    import pytz
+    PYTZ_AVAILABLE = True
+except ImportError:
+    PYTZ_AVAILABLE = False
+    print("Warning: pytz not available. Timezone functionality may be limited.")
 from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import TradingLogger, LogLevel, LogCategory
+try:
+    from runner.logger import TradingLogger, LogLevel, LogCategory
+except ImportError:
+    # Fallback for missing LogLevel
+    from runner.logger import TradingLogger
+    class LogLevel:
+        DEBUG = "DEBUG"
+        INFO = "INFO" 
+        WARNING = "WARNING"
+        ERROR = "ERROR"
+        CRITICAL = "CRITICAL"
+    
+    class LogCategory:
+        TRADE = "TRADE"
+        SYSTEM = "SYSTEM"
+        ERROR = "ERROR"
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import EnhancedTradeManager, create_enhanced_trade_manager, TradeRequest
 from runner.enhanced_logging.core_logger import create_trading_logger
@@ -132,7 +152,7 @@ class OptionsTrader:
         
         self.kite_manager = KiteConnectManager(logger=self.logger)
         self.risk_governor = RiskGovernor(self.logger)
-        self.trade_manager = create_trade_manager(
+        self.trade_manager = create_enhanced_trade_manager(
             logger=self.logger, 
             kite_manager=self.kite_manager
         )

@@ -3,7 +3,12 @@ import sys
 import time
 from datetime import datetime
 from datetime import time as dtime
-import pytz
+try:
+    import pytz
+    PYTZ_AVAILABLE = True
+except ImportError:
+    PYTZ_AVAILABLE = False
+    print("Warning: pytz not available. Timezone functionality may be limited.")
 import logging
 import asyncio
 import traceback
@@ -334,7 +339,7 @@ class StockTrader:
         
         self.kite_manager = KiteConnectManager(logger=self.logger, config=self.config)
         self.risk_governor = RiskGovernor(self.logger)
-        self.trade_manager = create_trade_manager(
+        self.trade_manager = create_enhanced_trade_manager(
             logger=self.logger, 
             kite_manager=self.kite_manager,
             config=self.config

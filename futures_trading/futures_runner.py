@@ -7,16 +7,37 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import time
 from datetime import datetime
 from datetime import time as dtime
-import pytz
+try:
+    import pytz
+    PYTZ_AVAILABLE = True
+except ImportError:
+    PYTZ_AVAILABLE = False
+    print("Warning: pytz not available. Timezone functionality may be limited.")
 from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.logger import TradingLogger, LogLevel, LogCategory
+try:
+    from runner.logger import TradingLogger, LogLevel, LogCategory
+except ImportError:
+    # Fallback for missing LogLevel
+    from runner.logger import TradingLogger
+    class LogLevel:
+        DEBUG = "DEBUG"
+        INFO = "INFO" 
+        WARNING = "WARNING"
+        ERROR = "ERROR"
+        CRITICAL = "CRITICAL"
+    
+    class LogCategory:
+        TRADE = "TRADE"
+        SYSTEM = "SYSTEM"
+        ERROR = "ERROR"
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import EnhancedTradeManager, create_enhanced_trade_manager, TradeRequest
 from runner.enhanced_logging import create_trading_logger
 from runner.risk_governor import RiskGovernor
 from runner.position_monitor import PositionMonitor
+from runner.utils.paper_trade_utils import simulate_exit
 
 def create_enhanced_logger(*args, **kwargs):
     """Wrapper for backward compatibility"""
@@ -147,7 +168,7 @@ class FuturesTrader:
         
         self.kite_manager = KiteConnectManager(logger=self.logger)
         self.risk_governor = RiskGovernor(self.logger)
-        self.trade_manager = create_trade_manager(
+        self.trade_manager = create_enhanced_trade_manager(
             logger=self.logger, 
             kite_manager=self.kite_manager
         )
@@ -180,7 +201,7 @@ class FuturesTrader:
                         self.logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
                         # Execute trade in both paper and live mode
                         try:
-                            result = execute_trade(trade_signal, paper_mode=self.paper_trade)
+                            result = self.trade_manager.execute_trade(trade_signal)
                             if result:
                                 self.logger.log_event(f"[SUCCESS] Futures trade executed successfully: {result}")
                             else:

@@ -20,6 +20,42 @@ try:
 except ImportError:
     NEW_LOGGING_AVAILABLE = False
     print("Warning: New logging system not available. Using legacy mode.")
+    
+    # Create dummy classes for compatibility
+    class LogLevel:
+        DEBUG = "DEBUG"
+        INFO = "INFO"
+        WARNING = "WARNING"
+        ERROR = "ERROR"
+        CRITICAL = "CRITICAL"
+    
+    class LogCategory:
+        TRADE = "TRADE"
+        SYSTEM = "SYSTEM"
+        ERROR = "ERROR"
+        COGNITIVE = "COGNITIVE"
+    
+    class LogType:
+        TRADE = "TRADE"
+        SYSTEM = "SYSTEM"
+    
+    # Dummy TradingLogger for compatibility
+    class TradingLogger:
+        def __init__(self, *args, **kwargs):
+            self.session_id = kwargs.get('session_id', 'default')
+            self.bot_type = kwargs.get('bot_type', 'unknown')
+            
+        def log_trade(self, *args, **kwargs):
+            pass
+            
+        def log_cognitive(self, *args, **kwargs):
+            pass
+            
+        def log_error(self, *args, **kwargs):
+            pass
+            
+        def log_system(self, *args, **kwargs):
+            pass
 
 # Legacy imports for backward compatibility
 try:

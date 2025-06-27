@@ -157,6 +157,24 @@ def save_current_config():
     return _config_manager.save_current_config()
 
 
+def initialize_config():
+    """Initialize configuration - backward compatibility function"""
+    # This function provides backward compatibility for code that expects initialize_config()
+    # The actual configuration is already initialized at module import time
+    try:
+        # Re-validate configuration to ensure it's still valid
+        validation = validate_config()
+        if not validation["valid"]:
+            print(f"⚠️  Configuration validation failed: {validation['issues']}")
+            return False
+        
+        print("✅ Configuration initialized successfully")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to initialize configuration: {e}")
+        return False
+
+
 # Display configuration on import (for debugging)
 if is_development():
     print("📊 TRON Configuration Loaded:")

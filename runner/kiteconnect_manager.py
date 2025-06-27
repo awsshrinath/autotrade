@@ -3,15 +3,48 @@
 import logging
 import time
 from typing import Optional
-from kiteconnect import KiteConnect, KiteTicker
-from kiteconnect.exceptions import (
-    KiteException, 
-    TokenException, 
-    PermissionException, 
-    OrderException,
-    DataException,
-    NetworkException
-)
+
+try:
+    from kiteconnect import KiteConnect, KiteTicker
+    from kiteconnect.exceptions import (
+        KiteException, 
+        TokenException, 
+        PermissionException, 
+        OrderException,
+        DataException,
+        NetworkException
+    )
+    KITECONNECT_AVAILABLE = True
+except ImportError:
+    KITECONNECT_AVAILABLE = False
+    print("Warning: kiteconnect library not available. Trading functionality will be limited.")
+    
+    # Create dummy classes for development
+    class KiteConnect:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class KiteTicker:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class KiteException(Exception):
+        pass
+    
+    class TokenException(Exception):
+        pass
+    
+    class PermissionException(Exception):
+        pass
+    
+    class OrderException(Exception):
+        pass
+    
+    class DataException(Exception):
+        pass
+    
+    class NetworkException(Exception):
+        pass
 
 from runner.secret_manager import access_secret, validate_secret_access
 from runner.logger import TradingLogger

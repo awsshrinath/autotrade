@@ -2,15 +2,49 @@
 
 import datetime
 
-from google.cloud import firestore
+try:
+    from google.cloud import firestore
+    FIRESTORE_AVAILABLE = True
+except ImportError:
+    FIRESTORE_AVAILABLE = False
+    print("Warning: Google Cloud Firestore not available. Some features may be disabled.")
 
 _firestore_client = None
 
 
 def get_firestore_client():
     global _firestore_client
+    if not FIRESTORE_AVAILABLE:
+        return None
+        
     if _firestore_client is None:
-        _firestore_client = firestore.Client()
+        # Use direct service account authentication to avoid impersonation issues
+        import os
+        try:
+            from google.oauth2 import service_account
+        except ImportError:
+            print("Warning: Google OAuth2 not available")
+            return None
+        
+        try:
+            # Check for service account key file
+            sa_key_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '/mnt/c/Users/MY PC/Documents/GitHub/Tron/gpt-runner-sa-key.json')
+            
+            if os.path.exists(sa_key_path):
+                # Use service account key file directly
+                credentials = service_account.Credentials.from_service_account_file(sa_key_path)
+                _firestore_client = firestore.Client(project="autotrade-453303", credentials=credentials)
+            else:
+                # Fallback to default credentials (pod service account)
+                _firestore_client = firestore.Client(project="autotrade-453303")
+        except Exception as e:
+            print(f"Warning: Failed to initialize Firestore client with specific credentials: {e}")
+            # Fallback to basic client
+            try:
+                _firestore_client = firestore.Client()
+            except Exception as e2:
+                print(f"Warning: Failed to initialize basic Firestore client: {e2}")
+                return None
     return _firestore_client
 
 
@@ -18,6 +52,10 @@ class FirestoreClient:
     def __init__(self, logger=None):
         self.db = get_firestore_client()
         self.logger = logger
+        self.available = self.db is not None
+        
+        if not self.available and logger:
+            logger.log_event("[WARNING] Firestore client not available - some features will be disabled")
 
     # --- TRADE LOGGING ---
 
@@ -121,7 +159,7 @@ class FirestoreClient:
 
     def fetch_daily_plan(self, date_str=None):
         """
-        Fetch the daily trading plan from Firestore
+        Fetch the daily trading plan from Firestore with graceful error handling
 
         Args:
             date_str (str): The date to fetch the plan for. If None, uses today's date.
@@ -129,6 +167,11 @@ class FirestoreClient:
         Returns:
             dict: The daily plan or an empty dict if not found
         """
+        if not self.available:
+            if self.logger:
+                self.logger.log_event("[WARNING] Firestore not available, returning empty daily plan")
+            return {}
+            
         try:
             if date_str is None:
                 date_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -151,8 +194,16 @@ class FirestoreClient:
                 return {}
 
         except Exception as e:
+            error_msg = str(e)
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] fetch_daily_plan failed: {e}")
+                if "403" in error_msg or "permission" in error_msg.lower():
+                    self.logger.log_event(f"[Firestore Error] Access denied when fetching daily plan: {e}")
+                elif "timeout" in error_msg.lower():
+                    self.logger.log_event(f"[Firestore Error] Timeout when fetching daily plan: {e}")
+                elif "impersonated credentials" in error_msg.lower():
+                    self.logger.log_event(f"[Firestore Error] Authentication issue (impersonation failed): {e}")
+                else:
+                    self.logger.log_event(f"[Firestore Error] fetch_daily_plan failed: {e}")
             return {}
 
     def fetch_reflection(self, bot_name, date_str):

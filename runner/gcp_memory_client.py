@@ -122,11 +122,26 @@ class GCPMemoryClient:
         self._init_faiss_indices()
     
     def _init_clients(self):
-        """Initialize GCP clients with error handling"""
+        """Initialize GCP clients with error handling and direct authentication"""
         try:
-            self.firestore_client = firestore.Client(project=self.project_id)
-            self.storage_client = storage.Client(project=self.project_id)
-            self.logger.info("GCP clients initialized successfully")
+            # Use direct service account authentication to avoid impersonation issues
+            import os
+            from google.oauth2 import service_account
+            
+            # Check for service account key file
+            sa_key_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '/mnt/c/Users/MY PC/Documents/GitHub/Tron/gpt-runner-sa-key.json')
+            
+            if os.path.exists(sa_key_path):
+                # Use service account key file directly
+                credentials = service_account.Credentials.from_service_account_file(sa_key_path)
+                self.firestore_client = firestore.Client(project=self.project_id, credentials=credentials)
+                self.storage_client = storage.Client(project=self.project_id, credentials=credentials)
+                self.logger.info("GCP clients initialized with service account key file")
+            else:
+                # Fallback to default credentials (pod service account)
+                self.firestore_client = firestore.Client(project=self.project_id)
+                self.storage_client = storage.Client(project=self.project_id)
+                self.logger.info("GCP clients initialized with default credentials")
         except Exception as e:
             self.logger.error(f"Failed to initialize GCP clients: {e}")
             raise
@@ -188,7 +203,7 @@ class GCPMemoryClient:
             return None
     
     def _ensure_buckets_exist(self):
-        """Ensure all required Cloud Storage buckets exist"""
+        """Ensure all required Cloud Storage buckets exist with graceful error handling"""
         buckets = [
             self.memory_bucket,
             self.thought_bucket, 
@@ -200,31 +215,44 @@ class GCPMemoryClient:
         for bucket_name in buckets:
             try:
                 bucket = self.storage_client.bucket(bucket_name)
-                if not bucket.exists():
-                    # Create bucket in asia-south1 region (labels set separately)
-                    bucket = self.storage_client.create_bucket(
-                        bucket_name,
-                        location='asia-south1'  # Force asia-south1 region
-                    )
-                    
-                    # FIXED: Set labels after bucket creation
-                    bucket.labels = {
-                        'environment': 'production',
-                        'system': 'tron-trading',
-                        'purpose': 'memory-management',
-                        'region': 'asia-south1'
-                    }
-                    bucket.patch()  # Apply the labels
-                    
-                    self.logger.info(f"Created bucket: {bucket_name} in asia-south1")
-                    
-                # Ensure bucket is in correct region
-                bucket.reload()
-                if bucket.location != 'asia-south1':
-                    self.logger.warning(f"Bucket {bucket_name} is in {bucket.location}, not asia-south1")
-                    
+                
+                # Check if bucket exists - if not, try to create it
+                try:
+                    bucket.reload()  # This will succeed if bucket exists and we have access
+                    self.logger.info(f"Bucket {bucket_name} exists and accessible")
+                except Exception as check_error:
+                    if "404" in str(check_error):
+                        # Bucket doesn't exist, try to create it
+                        try:
+                            bucket = self.storage_client.create_bucket(
+                                bucket_name,
+                                location='asia-south1'  # Force asia-south1 region
+                            )
+                            
+                            # Set labels after bucket creation
+                            bucket.labels = {
+                                'environment': 'production',
+                                'system': 'tron-trading',
+                                'purpose': 'memory-management',
+                                'region': 'asia-south1'
+                            }
+                            bucket.patch()  # Apply the labels
+                            
+                            self.logger.info(f"Created bucket: {bucket_name} in asia-south1")
+                        except Exception as create_error:
+                            if "permission" in str(create_error).lower() or "403" in str(create_error):
+                                self.logger.warning(f"No permission to create bucket {bucket_name}, continuing without it")
+                                continue
+                            else:
+                                raise create_error
+                    else:
+                        # Some other error, log and continue
+                        self.logger.warning(f"Cannot access bucket {bucket_name}: {check_error}")
+                        continue
+                        
             except Exception as e:
                 self.logger.error(f"Failed to ensure bucket {bucket_name}: {e}")
+                # Continue with other buckets even if one fails
     
     # === ENHANCED FIRESTORE OPERATIONS ===
     
@@ -650,22 +678,58 @@ class GCPMemoryClient:
             return False
     
     def _load_faiss_index(self, doc_type: str) -> bool:
-        """🆕 Load FAISS index from Google Cloud Storage"""
+        """🆕 Load FAISS index from Google Cloud Storage with graceful error handling"""
         try:
+            # Check if we have access to the storage client
+            if not self.storage_client:
+                self.logger.warning(f"No storage client available, cannot load FAISS index for {doc_type}")
+                return False
+                
             bucket = self.storage_client.bucket(self.embeddings_bucket)
+            
+            # Check if bucket is accessible
+            try:
+                bucket.reload()
+            except Exception as bucket_error:
+                if "403" in str(bucket_error) or "permission" in str(bucket_error).lower():
+                    self.logger.warning(f"No permission to access bucket {self.embeddings_bucket}, skipping FAISS index loading")
+                    return False
+                elif "404" in str(bucket_error):
+                    self.logger.info(f"Bucket {self.embeddings_bucket} does not exist, cannot load FAISS index")
+                    return False
+                else:
+                    raise bucket_error
             
             # Download index file
             index_blob = bucket.blob(f"faiss_indices/{doc_type}_index.bin")
             if not index_blob.exists():
+                self.logger.debug(f"FAISS index file does not exist for {doc_type}")
                 return False
             
             index_file = f"/tmp/faiss_index_{doc_type}.bin"
-            index_blob.download_to_filename(index_file)
+            try:
+                index_blob.download_to_filename(index_file)
+            except Exception as download_error:
+                if "403" in str(download_error) or "permission" in str(download_error).lower():
+                    self.logger.warning(f"No permission to download FAISS index for {doc_type}")
+                    return False
+                else:
+                    raise download_error
             
             # Download metadata file
             metadata_blob = bucket.blob(f"faiss_indices/{doc_type}_metadata.pkl")
             metadata_file = f"/tmp/metadata_{doc_type}.pkl"
-            metadata_blob.download_to_filename(metadata_file)
+            try:
+                metadata_blob.download_to_filename(metadata_file)
+            except Exception as download_error:
+                if "403" in str(download_error) or "permission" in str(download_error).lower():
+                    self.logger.warning(f"No permission to download metadata for {doc_type}")
+                    # Cleanup partial download
+                    if os.path.exists(index_file):
+                        os.remove(index_file)
+                    return False
+                else:
+                    raise download_error
             
             # Load FAISS index
             self.faiss_indices[doc_type] = faiss.read_index(index_file)
