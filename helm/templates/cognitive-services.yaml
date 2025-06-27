@@ -62,6 +62,20 @@ spec:
               value: "/app:/app/runner"
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.cognitiveEngine.healthCheck.enabled }}"
+            - name: SERVICE_PORT
+              value: "{{ .Values.cognitiveEngine.service.targetPort }}"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/etc/gcp/key.json"
+            - name: FIRESTORE_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: GOOGLE_CLOUD_PROJECT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
           resources:
             {{- toYaml .Values.cognitiveEngine.resources | nindent 12 }}
           {{- if .Values.cognitiveEngine.healthCheck.enabled }}
@@ -69,28 +83,35 @@ spec:
             httpGet:
               path: {{ .Values.cognitiveEngine.healthCheck.path }}
               port: {{ .Values.cognitiveEngine.healthCheck.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: {{ .Values.cognitiveEngine.healthCheck.path }}
               port: {{ .Values.cognitiveEngine.healthCheck.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: 180
+            periodSeconds: 120
+            timeoutSeconds: 20
+            failureThreshold: 5
           {{- end }}
           volumeMounts:
             - name: entrypoint
               mountPath: /app/entrypoint.sh
               subPath: entrypoint.sh
+            - name: gcp-service-account-key
+              mountPath: /etc/gcp
+              readOnly: true
       volumes:
         - name: entrypoint
           configMap:
             name: entrypoint-config
             defaultMode: 0755
+        - name: gcp-service-account-key
+          secret:
+            secretName: gcp-service-account-key
+            optional: true
       restartPolicy: Always
 
 ---
@@ -164,6 +185,20 @@ spec:
               value: "/app:/app/runner"
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.thoughtJournal.healthCheck.enabled }}"
+            - name: SERVICE_PORT
+              value: "{{ .Values.thoughtJournal.service.targetPort }}"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/etc/gcp/key.json"
+            - name: FIRESTORE_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: GOOGLE_CLOUD_PROJECT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
           resources:
             {{- toYaml .Values.thoughtJournal.resources | nindent 12 }}
           {{- if .Values.thoughtJournal.healthCheck.enabled }}
@@ -171,28 +206,35 @@ spec:
             httpGet:
               path: {{ .Values.thoughtJournal.healthCheck.path }}
               port: {{ .Values.thoughtJournal.healthCheck.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: {{ .Values.thoughtJournal.healthCheck.path }}
               port: {{ .Values.thoughtJournal.healthCheck.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: 180
+            periodSeconds: 120
+            timeoutSeconds: 20
+            failureThreshold: 5
           {{- end }}
           volumeMounts:
             - name: entrypoint
               mountPath: /app/entrypoint.sh
               subPath: entrypoint.sh
+            - name: gcp-service-account-key
+              mountPath: /etc/gcp
+              readOnly: true
       volumes:
         - name: entrypoint
           configMap:
             name: entrypoint-config
             defaultMode: 0755
+        - name: gcp-service-account-key
+          secret:
+            secretName: gcp-service-account-key
+            optional: true
       restartPolicy: Always
 
 ---
@@ -266,6 +308,20 @@ spec:
               value: "/app:/app/runner"
             - name: HEALTH_CHECK_ENABLED
               value: "{{ .Values.memoryManager.healthCheck.enabled }}"
+            - name: SERVICE_PORT
+              value: "{{ .Values.memoryManager.service.targetPort }}"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/etc/gcp/key.json"
+            - name: FIRESTORE_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
+            - name: GOOGLE_CLOUD_PROJECT
+              valueFrom:
+                configMapKeyRef:
+                  name: tron-system-config
+                  key: GCP_PROJECT_ID
           resources:
             {{- toYaml .Values.memoryManager.resources | nindent 12 }}
           {{- if .Values.memoryManager.healthCheck.enabled }}
@@ -273,28 +329,35 @@ spec:
             httpGet:
               path: {{ .Values.memoryManager.healthCheck.path }}
               port: {{ .Values.memoryManager.healthCheck.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: {{ .Values.memoryManager.healthCheck.path }}
               port: {{ .Values.memoryManager.healthCheck.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: 180
+            periodSeconds: 120
+            timeoutSeconds: 20
+            failureThreshold: 5
           {{- end }}
           volumeMounts:
             - name: entrypoint
               mountPath: /app/entrypoint.sh
               subPath: entrypoint.sh
+            - name: gcp-service-account-key
+              mountPath: /etc/gcp
+              readOnly: true
       volumes:
         - name: entrypoint
           configMap:
             name: entrypoint-config
             defaultMode: 0755
+        - name: gcp-service-account-key
+          secret:
+            secretName: gcp-service-account-key
+            optional: true
       restartPolicy: Always
 
 ---

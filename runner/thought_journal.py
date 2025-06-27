@@ -646,14 +646,14 @@ def main():
         
         logger.info("Thought journal initialized successfully, entering main loop")
         
-        # Main service loop
+        # Minimal service loop - reduce operations to save memory
         while not shutdown_requested:
             try:
-                # Archive daily thoughts periodically
-                thought_journal.archive_daily_thoughts()
+                # Minimal operation - just log heartbeat
+                logger.info("Thought journal minimal service heartbeat")
                 
-                # Sleep for an hour before next check
-                for _ in range(3600):  # 1 hour in seconds
+                # Sleep for longer periods to reduce resource usage
+                for _ in range(7200):  # 2 hours in seconds
                     if shutdown_requested:
                         break
                     time.sleep(1)

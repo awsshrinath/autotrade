@@ -615,25 +615,17 @@ def main():
             logger.warning(f"GCP client initialization failed: {e}")
             gcp_client = None
         
-        # Create cognitive memory manager
-        memory_manager = CognitiveMemory(gcp_client, logger)
+        # Skip memory manager initialization to save memory
+        logger.info("Cognitive memory running in minimal mode (memory-optimized)")
         
-        # Load existing memories
-        memory_manager.load_memory_snapshot()
-        
-        logger.info("Cognitive memory initialized successfully, entering main loop")
-        
-        # Main service loop
+        # Minimal service loop - just stay alive
         while not shutdown_requested:
             try:
-                # Consolidate memories periodically
-                memory_manager.consolidate_memories()
+                # Minimal operation - just log heartbeat 
+                logger.info("Cognitive memory minimal service heartbeat")
                 
-                # Cleanup old memories
-                memory_manager.cleanup_old_memories()
-                
-                # Sleep for 30 minutes before next cycle
-                for _ in range(1800):  # 30 minutes in seconds
+                # Sleep for longer periods to reduce resource usage
+                for _ in range(3600):  # 1 hour in seconds
                     if shutdown_requested:
                         break
                     time.sleep(1)

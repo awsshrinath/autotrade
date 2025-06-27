@@ -2,16 +2,57 @@
 set -e
 cd /app
 
-# Set up Python path to include the app root
-export PYTHONPATH="/app:/app/runner:$PYTHONPATH"
+# Set up Python path with comprehensive coverage
+export PYTHONPATH="/app:/app/runner:/app/gpt_runner:/app/runner/utils:/app/runner/enhanced_logging:$PYTHONPATH"
 
 # Ensure all necessary directories are valid Python packages
-# This is critical for services that run from subdirectories
+# Create directories if they don't exist and add __init__.py files
 echo "Initializing Python package structure..."
-for dir in runner gpt_runner runner/capital runner/enhanced_logging runner/indicators runner/market_data runner/options runner/production runner/utils gpt_runner/rag gpt_runner/log_aggregator; do
-    if [ -d "$dir" ] && [ ! -f "$dir/__init__.py" ]; then
+PACKAGE_DIRS=(
+    "runner"
+    "runner/capital"
+    "runner/enhanced_logging" 
+    "runner/indicators"
+    "runner/market_data"
+    "runner/options"
+    "runner/production"
+    "runner/utils"
+    "runner/strategies"
+    "gpt_runner"
+    "gpt_runner/rag"
+    "gpt_runner/log_aggregator"
+    "stock_trading"
+    "futures_trading"
+    "options_trading"
+    "strategies"
+    "config"
+    "utils"
+    "services"
+)
+
+for dir in "${PACKAGE_DIRS[@]}"; do
+    if [ ! -d "$dir" ]; then
+        echo "Creating directory: $dir"
+        mkdir -p "$dir"
+    fi
+    if [ ! -f "$dir/__init__.py" ]; then
         echo "Creating __init__.py in $dir"
         touch "$dir/__init__.py"
+    fi
+done
+
+# Validate critical files exist
+echo "Validating critical files..."
+CRITICAL_FILES=(
+    "runner/config.py"
+    "runner/logger.py"
+    "runner/health_server.py"
+)
+
+for file in "${CRITICAL_FILES[@]}"; do
+    if [ ! -f "$file" ]; then
+        echo "❌ CRITICAL: Missing file $file"
+        exit 1
     fi
 done
 
@@ -40,14 +81,42 @@ else
     exit 1
 fi
 
+# Validate the script exists
+if [ ! -f "$SCRIPT_TO_RUN" ]; then
+    echo "❌ ERROR: Script file not found: $SCRIPT_TO_RUN"
+    echo "Available files in /app:"
+    find /app -name "*.py" | head -20
+    exit 1
+fi
+
+# Test import of the script before running
+echo "Testing script import..."
+if ! python3 -c "import sys; sys.path.insert(0, '/app'); import importlib.util; spec = importlib.util.spec_from_file_location('test_module', '$SCRIPT_TO_RUN'); spec.loader.load_module(spec)" 2>/dev/null; then
+    echo "⚠️  WARNING: Script import test failed, but continuing anyway..."
+else
+    echo "✅ Script import test passed"
+fi
+
+# Set default environment variables if not provided
+export PAPER_TRADE="${PAPER_TRADE:-true}"
+export LOG_LEVEL="${LOG_LEVEL:-INFO}"
+export ENVIRONMENT="${ENVIRONMENT:-development}"
+
 # Check if this service needs health checks
 if [ "$HEALTH_CHECK_ENABLED" = "true" ] && [ -n "$SERVICE_PORT" ]; then
     echo "Starting with health check wrapper on port $SERVICE_PORT"
+    echo "Health server will run: $SCRIPT_TO_RUN"
     export RUNNER_SCRIPT="$SCRIPT_TO_RUN"
-    exec python3 -u runner/health_server.py
+    
+    # Validate health server exists
+    if [ ! -f "runner/health_server.py" ]; then
+        echo "❌ ERROR: Health server not found, running script directly"
+        exec python3 -u "$SCRIPT_TO_RUN"
+    else
+        exec python3 -u runner/health_server.py
+    fi
 else
     echo "Starting script directly without health checks: $SCRIPT_TO_RUN"
-    # Execute the main application script
-    # The -u flag ensures that the output is unbuffered and sent straight to stdout
+    # Execute the main application script with better error handling
     exec python3 -u "$SCRIPT_TO_RUN"
 fi

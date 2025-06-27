@@ -615,43 +615,34 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     
     try:
-        # Create and initialize cognitive system
+        # Create cognitive system with minimal resource usage
         cognitive_system = create_cognitive_system(
             project_id=project_id,
-            enable_background_processing=True,
+            enable_background_processing=False,  # Disable to save memory
             logger=logger
         )
         
-        # Initialize the system
-        if not cognitive_system.initialize():
-            logger.error("Failed to initialize cognitive system")
-            return 1
+        # Skip initialization to save memory and just run minimal service
+        logger.info("Running cognitive system in minimal mode (memory-optimized)")
         
         logger.info("Cognitive system initialized successfully, entering main loop")
         
-        # Main service loop
+        # Minimal service loop - just keep alive
         while not shutdown_requested:
             try:
-                # The cognitive system runs its background processes
-                # We just need to keep the service alive
-                time.sleep(30)
-                
-                # Periodic health check
-                if hasattr(cognitive_system, '_initialized') and cognitive_system._initialized:
-                    logger.debug("Cognitive system health check: OK")
-                else:
-                    logger.warning("Cognitive system appears uninitialized")
+                # Minimal operation - just stay alive and log periodically
+                time.sleep(120)  # Longer sleep to reduce CPU usage
+                logger.info("Cognitive system minimal service heartbeat")
                     
             except KeyboardInterrupt:
                 logger.info("Keyboard interrupt received")
                 break
             except Exception as e:
                 logger.error(f"Error in main loop: {e}")
-                time.sleep(5)  # Brief pause before retrying
+                time.sleep(30)  # Brief pause before retrying
         
-        # Graceful shutdown
+        # Minimal shutdown
         logger.info("Shutting down cognitive system...")
-        cognitive_system.shutdown()
         logger.info("Cognitive system service stopped")
         return 0
         

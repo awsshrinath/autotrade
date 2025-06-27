@@ -69,7 +69,7 @@ def is_market_open():
     return market_open_time <= current_time <= market_close_time
 
 def safe_initialize_loggers():
-    """Initialize loggers with fallback"""
+    """Initialize loggers with minimal memory footprint"""
     global LogLevel, LogCategory
     
     # Set up fallback classes first
@@ -90,38 +90,17 @@ def safe_initialize_loggers():
     LogCategory = FallbackLogCategory
     
     try:
-        from runner.common_utils import create_daily_folders
+        # Use basic logger only to minimize memory usage
         from runner.logger import Logger
         
-        # Try to import enhanced logging
-        try:
-            from runner.enhanced_logging import create_trading_logger, LogLevel as LL, LogCategory as LC
-            LogLevel = LL
-            LogCategory = LC
-            enhanced_logging_available = True
-        except ImportError:
-            print("Warning: Enhanced logging not available, using basic logging only")
-            enhanced_logging_available = False
-        
-        # Basic logger
         today_date = get_ist_time().strftime("%Y-%m-%d")
-        create_daily_folders(today_date)
+        
+        # Skip creating daily folders to save memory
         logger = Logger(today_date)
         
-        # Enhanced logger if available
+        # Skip enhanced logging to save memory - use basic logging only
         enhanced_logger = None
-        if enhanced_logging_available:
-            try:
-                session_id = f"lightweight_runner_{int(time.time())}"
-                enhanced_logger = create_trading_logger(
-                    session_id=session_id,
-                    enable_gcs=True,
-                    enable_firestore=True
-                )
-            except Exception as e:
-                print(f"Warning: Enhanced logger creation failed: {e}")
-        
-        print("✅ Loggers initialized successfully")
+        print("✅ Basic logger initialized (memory-optimized mode)")
         return logger, enhanced_logger, f"lightweight_runner_{int(time.time())}", today_date
         
     except Exception as e:
