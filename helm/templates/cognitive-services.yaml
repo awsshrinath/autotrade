@@ -1,6 +1,7 @@
 # TRON Trading System - Cognitive Services
 # Cognitive Engine, Thought Journal, and Memory Manager deployments
 
+{{- if .Values.cognitiveEngine.enabled }}
 ---
 # Cognitive Engine Deployment
 apiVersion: apps/v1
@@ -129,7 +130,9 @@ spec:
       port: {{ .Values.cognitiveEngine.service.port }}
       targetPort: {{ .Values.cognitiveEngine.service.targetPort }}
   type: {{ .Values.cognitiveEngine.service.type | default "ClusterIP" }}
+{{- end }}
 
+{{- if .Values.thoughtJournal.enabled }}
 ---
 # Thought Journal Deployment
 apiVersion: apps/v1
@@ -252,7 +255,9 @@ spec:
       port: {{ .Values.thoughtJournal.service.port }}
       targetPort: {{ .Values.thoughtJournal.service.targetPort }}
   type: {{ .Values.thoughtJournal.service.type | default "ClusterIP" }}
+{{- end }}
 
+{{- if .Values.memoryManager.enabled }}
 ---
 # Memory Manager Deployment
 apiVersion: apps/v1
@@ -375,3 +380,4 @@ spec:
       port: {{ .Values.memoryManager.service.port }}
       targetPort: {{ .Values.memoryManager.service.targetPort }}
   type: {{ .Values.memoryManager.service.type | default "ClusterIP" }}
+{{- end }}

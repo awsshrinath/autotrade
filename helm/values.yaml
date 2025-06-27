@@ -316,6 +316,7 @@ frontend:
 
 # Cognitive System Services
 cognitiveEngine:
+  enabled: false  # Disabled to free up resources for trading pods
   name: cognitive-engine
   replicaCount: 1
   image:
@@ -343,6 +344,7 @@ cognitiveEngine:
     port: 8085
 
 thoughtJournal:
+  enabled: false  # Disabled to free up resources for trading pods
   name: thought-journal
   replicaCount: 1
   image:
@@ -369,6 +371,7 @@ thoughtJournal:
     port: 8086
 
 memoryManager:
+  enabled: false  # Disabled to free up resources for trading pods
   name: memory-manager
   replicaCount: 1
   image:
@@ -439,9 +442,6 @@ serviceDependencies:
     - stock-trader
     - options-trader
     - futures-trader
-    - cognitive-engine
-    - thought-journal
-    - memory-manager
     - backend
     - dashboard
     - frontend
