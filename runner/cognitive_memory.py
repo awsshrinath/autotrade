@@ -567,3 +567,99 @@ class CognitiveMemory:
         
         self._memory_loaded = False
         self.logger.warning("Emergency memory reset completed")
+
+
+def main():
+    """Main entry point for running cognitive memory as a service"""
+    import os
+    import sys
+    import signal
+    import logging
+    import time
+    import traceback
+    
+    # Add project paths
+    sys.path.insert(0, '/app')
+    sys.path.insert(0, '/app/runner')
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    
+    # Get configuration from environment
+    project_id = os.environ.get('GCP_PROJECT_ID', 'autotrade-453303')
+    
+    logger.info(f"Starting Cognitive Memory service for project: {project_id}")
+    
+    # Global shutdown flag
+    shutdown_requested = False
+    
+    def signal_handler(signum, frame):
+        nonlocal shutdown_requested
+        logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+        shutdown_requested = True
+    
+    # Set up signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        # Import GCP client with fallback handling
+        try:
+            from runner.gcp_memory_client import get_k8s_gcp_client
+            gcp_client = get_k8s_gcp_client(project_id=project_id)
+        except Exception as e:
+            logger.warning(f"GCP client initialization failed: {e}")
+            gcp_client = None
+        
+        # Create cognitive memory manager
+        memory_manager = CognitiveMemory(gcp_client, logger)
+        
+        # Load existing memories
+        memory_manager.load_memory_snapshot()
+        
+        logger.info("Cognitive memory initialized successfully, entering main loop")
+        
+        # Main service loop
+        while not shutdown_requested:
+            try:
+                # Consolidate memories periodically
+                memory_manager.consolidate_memories()
+                
+                # Cleanup old memories
+                memory_manager.cleanup_old_memories()
+                
+                # Sleep for 30 minutes before next cycle
+                for _ in range(1800):  # 30 minutes in seconds
+                    if shutdown_requested:
+                        break
+                    time.sleep(1)
+                    
+            except KeyboardInterrupt:
+                logger.info("Keyboard interrupt received")
+                break
+            except Exception as e:
+                logger.error(f"Error in main loop: {e}")
+                time.sleep(300)  # 5 minute pause before retrying
+        
+        # Graceful shutdown
+        logger.info("Shutting down cognitive memory...")
+        try:
+            memory_manager.consolidate_memories()
+        except Exception as e:
+            logger.error(f"Final consolidation failed: {e}")
+        
+        logger.info("Cognitive memory service stopped")
+        return 0
+        
+    except Exception as e:
+        logger.error(f"Fatal error in cognitive memory service: {e}")
+        logger.error(traceback.format_exc())
+        return 1
+
+
+if __name__ == "__main__":
+    exit(main())

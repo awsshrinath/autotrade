@@ -593,3 +593,93 @@ class ThoughtJournal:
         self._recent_thoughts_cache.clear()
         self._thought_patterns.clear()
         self.logger.info("Thought cache cleared")
+
+
+def main():
+    """Main entry point for running thought journal as a service"""
+    import os
+    import sys
+    import signal
+    import logging
+    import time
+    import traceback
+    
+    # Add project paths
+    sys.path.insert(0, '/app')
+    sys.path.insert(0, '/app/runner')
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    
+    # Get configuration from environment
+    project_id = os.environ.get('GCP_PROJECT_ID', 'autotrade-453303')
+    
+    logger.info(f"Starting Thought Journal service for project: {project_id}")
+    
+    # Global shutdown flag
+    shutdown_requested = False
+    
+    def signal_handler(signum, frame):
+        nonlocal shutdown_requested
+        logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+        shutdown_requested = True
+    
+    # Set up signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        # Import GCP client with fallback handling
+        try:
+            from runner.gcp_memory_client import get_k8s_gcp_client
+            gcp_client = get_k8s_gcp_client(project_id=project_id)
+        except Exception as e:
+            logger.warning(f"GCP client initialization failed: {e}")
+            gcp_client = None
+        
+        # Create thought journal
+        thought_journal = ThoughtJournal(gcp_client, logger)
+        
+        logger.info("Thought journal initialized successfully, entering main loop")
+        
+        # Main service loop
+        while not shutdown_requested:
+            try:
+                # Archive daily thoughts periodically
+                thought_journal.archive_daily_thoughts()
+                
+                # Sleep for an hour before next check
+                for _ in range(3600):  # 1 hour in seconds
+                    if shutdown_requested:
+                        break
+                    time.sleep(1)
+                    
+            except KeyboardInterrupt:
+                logger.info("Keyboard interrupt received")
+                break
+            except Exception as e:
+                logger.error(f"Error in main loop: {e}")
+                time.sleep(60)  # Brief pause before retrying
+        
+        # Graceful shutdown
+        logger.info("Shutting down thought journal...")
+        try:
+            thought_journal.archive_daily_thoughts()
+        except Exception as e:
+            logger.error(f"Final archive failed: {e}")
+        
+        logger.info("Thought journal service stopped")
+        return 0
+        
+    except Exception as e:
+        logger.error(f"Fatal error in thought journal service: {e}")
+        logger.error(traceback.format_exc())
+        return 1
+
+
+if __name__ == "__main__":
+    exit(main())

@@ -22,7 +22,13 @@ import time
 import sys
 import traceback
 import signal
-import pytz
+
+try:
+    import pytz
+    PYTZ_AVAILABLE = True
+except ImportError:
+    PYTZ_AVAILABLE = False
+    print("Warning: pytz not available. Using UTC time.")
 
 # Add project paths
 sys.path.insert(0, '/app')
@@ -47,8 +53,12 @@ SHUTDOWN_REQUESTED = False
 
 def get_ist_time():
     """Get current time in IST timezone"""
-    ist = pytz.timezone('Asia/Kolkata')
-    return datetime.datetime.now(ist)
+    if PYTZ_AVAILABLE:
+        ist = pytz.timezone('Asia/Kolkata')
+        return datetime.datetime.now(ist)
+    else:
+        # Fallback to UTC if pytz not available
+        return datetime.datetime.utcnow()
 
 def is_market_open():
     """Check if market is currently open"""
@@ -62,30 +72,57 @@ def safe_initialize_loggers():
     """Initialize loggers with fallback"""
     global LogLevel, LogCategory
     
+    # Set up fallback classes first
+    class FallbackLogLevel:
+        DEBUG = "DEBUG"
+        INFO = "INFO" 
+        WARNING = "WARNING"
+        ERROR = "ERROR"
+        CRITICAL = "CRITICAL"
+    
+    class FallbackLogCategory:
+        TRADE = "TRADE"
+        SYSTEM = "SYSTEM"
+        ERROR = "ERROR"
+        COGNITIVE = "COGNITIVE"
+    
+    LogLevel = FallbackLogLevel
+    LogCategory = FallbackLogCategory
+    
     try:
         from runner.common_utils import create_daily_folders
         from runner.logger import Logger
-        from runner.enhanced_logging import create_trading_logger, LogLevel as LL, LogCategory as LC
         
-        # Set global variables
-        LogLevel = LL
-        LogCategory = LC
+        # Try to import enhanced logging
+        try:
+            from runner.enhanced_logging import create_trading_logger, LogLevel as LL, LogCategory as LC
+            LogLevel = LL
+            LogCategory = LC
+            enhanced_logging_available = True
+        except ImportError:
+            print("Warning: Enhanced logging not available, using basic logging only")
+            enhanced_logging_available = False
         
         # Basic logger
         today_date = get_ist_time().strftime("%Y-%m-%d")
         create_daily_folders(today_date)
         logger = Logger(today_date)
         
-        # Enhanced logger
-        session_id = f"lightweight_runner_{int(time.time())}"
-        enhanced_logger = create_trading_logger(
-            session_id=session_id,
-            enable_gcs=True,
-            enable_firestore=True
-        )
+        # Enhanced logger if available
+        enhanced_logger = None
+        if enhanced_logging_available:
+            try:
+                session_id = f"lightweight_runner_{int(time.time())}"
+                enhanced_logger = create_trading_logger(
+                    session_id=session_id,
+                    enable_gcs=True,
+                    enable_firestore=True
+                )
+            except Exception as e:
+                print(f"Warning: Enhanced logger creation failed: {e}")
         
         print("✅ Loggers initialized successfully")
-        return logger, enhanced_logger, session_id, today_date
+        return logger, enhanced_logger, f"lightweight_runner_{int(time.time())}", today_date
         
     except Exception as e:
         print(f"❌ Logger initialization failed: {e}")

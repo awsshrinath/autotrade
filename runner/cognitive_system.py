@@ -9,6 +9,11 @@ from dataclasses import dataclass
 import threading
 import time
 import traceback
+import sys
+
+# Add project paths
+sys.path.insert(0, '/app')
+sys.path.insert(0, '/app/runner')
 
 from runner.gcp_memory_client import get_k8s_gcp_client
 from runner.cognitive_memory import CognitiveMemory, MemoryType, ImportanceLevel
@@ -578,3 +583,83 @@ def create_cognitive_system(project_id: str = None,
     )
     
     return CognitiveSystem(config=config, logger=logger)
+
+
+def main():
+    """Main entry point for running cognitive system as a service"""
+    import os
+    import signal
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    
+    # Get configuration from environment
+    project_id = os.environ.get('GCP_PROJECT_ID', 'autotrade-453303')
+    
+    logger.info(f"Starting Cognitive System service for project: {project_id}")
+    
+    # Global shutdown flag
+    shutdown_requested = False
+    
+    def signal_handler(signum, frame):
+        nonlocal shutdown_requested
+        logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+        shutdown_requested = True
+    
+    # Set up signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        # Create and initialize cognitive system
+        cognitive_system = create_cognitive_system(
+            project_id=project_id,
+            enable_background_processing=True,
+            logger=logger
+        )
+        
+        # Initialize the system
+        if not cognitive_system.initialize():
+            logger.error("Failed to initialize cognitive system")
+            return 1
+        
+        logger.info("Cognitive system initialized successfully, entering main loop")
+        
+        # Main service loop
+        while not shutdown_requested:
+            try:
+                # The cognitive system runs its background processes
+                # We just need to keep the service alive
+                time.sleep(30)
+                
+                # Periodic health check
+                if hasattr(cognitive_system, '_initialized') and cognitive_system._initialized:
+                    logger.debug("Cognitive system health check: OK")
+                else:
+                    logger.warning("Cognitive system appears uninitialized")
+                    
+            except KeyboardInterrupt:
+                logger.info("Keyboard interrupt received")
+                break
+            except Exception as e:
+                logger.error(f"Error in main loop: {e}")
+                time.sleep(5)  # Brief pause before retrying
+        
+        # Graceful shutdown
+        logger.info("Shutting down cognitive system...")
+        cognitive_system.shutdown()
+        logger.info("Cognitive system service stopped")
+        return 0
+        
+    except Exception as e:
+        logger.error(f"Fatal error in cognitive system service: {e}")
+        logger.error(traceback.format_exc())
+        return 1
+
+
+if __name__ == "__main__":
+    exit(main())

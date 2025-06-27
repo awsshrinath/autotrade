@@ -25,13 +25,29 @@ echo "Service Port: ${SERVICE_PORT:-'Not set'}"
 echo "Health Check Required: ${HEALTH_CHECK_ENABLED:-'Not set'}"
 echo "--- Starting Application ---"
 
+# Determine script to run - from args or environment variable
+SCRIPT_TO_RUN=""
+if [ $# -gt 0 ]; then
+    # Script passed as argument
+    SCRIPT_TO_RUN="$1"
+    echo "Script from args: $SCRIPT_TO_RUN"
+elif [ -n "$RUNNER_SCRIPT" ]; then
+    # Script from environment variable
+    SCRIPT_TO_RUN="$RUNNER_SCRIPT"
+    echo "Script from env: $SCRIPT_TO_RUN"
+else
+    echo "❌ ERROR: No script specified via args or RUNNER_SCRIPT environment variable"
+    exit 1
+fi
+
 # Check if this service needs health checks
 if [ "$HEALTH_CHECK_ENABLED" = "true" ] && [ -n "$SERVICE_PORT" ]; then
     echo "Starting with health check wrapper on port $SERVICE_PORT"
+    export RUNNER_SCRIPT="$SCRIPT_TO_RUN"
     exec python3 -u runner/health_server.py
 else
-    echo "Starting script directly without health checks"
-    # Execute the main application script passed as an environment variable
+    echo "Starting script directly without health checks: $SCRIPT_TO_RUN"
+    # Execute the main application script
     # The -u flag ensures that the output is unbuffered and sent straight to stdout
-    exec python3 -u "$RUNNER_SCRIPT"
+    exec python3 -u "$SCRIPT_TO_RUN"
 fi
