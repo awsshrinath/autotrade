@@ -73,11 +73,11 @@ stockTrader:
     targetPort: 8081
   resources:
     requests:
-      memory: "128Mi"
+      memory: "256Mi"
       cpu: "50m"
     limits:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: "512Mi"
+      cpu: "200m"
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "stock_trading/stock_runner.py"
@@ -106,7 +106,7 @@ optionsTrader:
     targetPort: 8082
   resources:
     requests:
-      memory: "128Mi"
+      memory: "256Mi"
       cpu: "50m"
     limits:
       memory: "512Mi"
@@ -139,11 +139,11 @@ futuresTrader:
     targetPort: 8083
   resources:
     requests:
-      memory: "128Mi"
+      memory: "256Mi"
       cpu: "50m"
     limits:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: "512Mi"
+      cpu: "200m"
   env:
     PAPER_TRADE: "true"
     RUNNER_SCRIPT: "futures_trading/futures_runner.py"
