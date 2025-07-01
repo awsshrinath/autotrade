@@ -7,6 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import time
 from datetime import datetime
 from datetime import time as dtime
+from runner.enhanced_logging.log_types import LogLevel, LogCategory
+from runner.enhanced_logging import create_enhanced_logger
 try:
     import pytz
     PYTZ_AVAILABLE = True
@@ -16,32 +18,11 @@ except ImportError:
 from runner.config import PAPER_TRADE
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-try:
-    from runner.logger import TradingLogger, LogLevel, LogCategory
-except ImportError:
-    # Fallback for missing LogLevel
-    from runner.logger import TradingLogger
-    class LogLevel:
-        DEBUG = "DEBUG"
-        INFO = "INFO" 
-        WARNING = "WARNING"
-        ERROR = "ERROR"
-        CRITICAL = "CRITICAL"
-    
-    class LogCategory:
-        TRADE = "TRADE"
-        SYSTEM = "SYSTEM"
-        ERROR = "ERROR"
 from runner.strategy_factory import load_strategy
-from runner.trade_manager import EnhancedTradeManager, create_enhanced_trade_manager, TradeRequest
-from runner.enhanced_logging import create_trading_logger
+from runner.trade_manager import EnhancedTradeManager, create_enhanced_trade_manager
 from runner.risk_governor import RiskGovernor
 from runner.position_monitor import PositionMonitor
 from runner.utils.paper_trade_utils import simulate_exit
-
-def create_enhanced_logger(*args, **kwargs):
-    """Wrapper for backward compatibility"""
-    return create_trading_logger(*args, **kwargs)
 
 # Import market components with fallbacks
 try:
@@ -65,11 +46,11 @@ IST = pytz.timezone("Asia/Kolkata")
 
 
 def wait_until_market_opens(logger):
-    logger.log_event("[WAIT] Waiting for market to open...")
+    logger.log_system_event("Waiting for market to open...")
     while True:
         now = datetime.now().astimezone(IST).time()
         if dtime(9, 15) <= now <= dtime(15, 15):
-            logger.log_event("[START] Market is open. Continuing.")
+            logger.log_system_event("Market is open. Continuing.")
             break
         time.sleep(30)
 
@@ -145,26 +126,27 @@ def wait_for_daily_plan(firestore_client, today_date, logger, max_wait_minutes=1
     for attempt in range(max_attempts):
         daily_plan = firestore_client.fetch_daily_plan(today_date)
         if daily_plan:
-            logger.log_event(f"[PLAN] Daily plan found after {attempt * wait_interval} seconds")
+            logger.info(f"Daily plan found after {attempt * wait_interval} seconds")
             return daily_plan
         
         if attempt == 0:
-            logger.log_event(f"[WAIT] Daily plan not found, waiting for main runner to create it...")
+            logger.info(f"Daily plan not found, waiting for main runner to create it...")
         
-        logger.log_event(f"[WAIT] Plan not available yet, retrying in {wait_interval}s... (attempt {attempt + 1}/{max_attempts})")
+        logger.info(f"Plan not available yet, retrying in {wait_interval}s... (attempt {attempt + 1}/{max_attempts})")
         time.sleep(wait_interval)
     
-    logger.log_event(f"[TIMEOUT] Daily plan not found after {max_wait_minutes} minutes, using fallback")
+    logger.warning(f"Daily plan not found after {max_wait_minutes} minutes, using fallback")
     return None
 
 
 class FuturesTrader:
-    def __init__(self, strategy_name: str, paper_trade: bool = False):
+    def __init__(self, strategy_name: str, logger, paper_trade: bool = False):
         self.strategy_name = strategy_name
         self.paper_trade = paper_trade
         
         # Initialize logger
-        self.logger = TradingLogger()
+        self.logger = logger
+        self.strategy = None # Initialize strategy attribute
         
         self.kite_manager = KiteConnectManager(logger=self.logger)
         self.risk_governor = RiskGovernor(self.logger)
@@ -177,7 +159,7 @@ class FuturesTrader:
             kite_manager=self.kite_manager
         )
         
-        self.logger.log_info(f"FuturesTrader for '{self.strategy_name}' initialized.")
+        self.logger.info(f"FuturesTrader for '{self.strategy_name}' initialized.")
 
     def _get_market_data_fetcher(self):
         # This can be customized based on needs
@@ -185,122 +167,104 @@ class FuturesTrader:
 
     def _get_strategy(self, strategy_name: str):
         if strategy_name not in STRATEGY_MAP:
-            self.logger.log_error(f"Unknown strategy: {strategy_name}")
+            self.logger.error(f"Unknown strategy: {strategy_name}")
             return None
-        return load_strategy(strategy_name, self.kite_manager.get_kite_client(), self.logger)
+        self.strategy = load_strategy(strategy_name, self.kite_manager.get_kite_client(), self.logger)
+        return self.strategy
 
     def run(self):
         """Main loop for the futures trader."""
-        self.logger.log_info(f"Starting FuturesTrader with strategy: {self.strategy_name}")
+        self.logger.info(f"Starting FuturesTrader with strategy: {self.strategy_name}")
         
-        while True:
+        # Ensure strategy is loaded
+        if not self.strategy:
+            self._get_strategy(self.strategy_name)
+
+        if not self.strategy:
+            self.logger.critical(f"Failed to load strategy '{self.strategy_name}'. Exiting.")
+            return
+
+        while is_market_open() or self.paper_trade:
             try:
-                if self.strategy:
-                    trade_signal = self.strategy.analyze()
-                    if trade_signal:
-                        self.logger.log_event(f"[TRADE] Executing trade: {trade_signal}")
-                        # Execute trade in both paper and live mode
+                trade_signals = self.strategy.analyze()
+                if trade_signals:
+                    for trade_signal in trade_signals:
+                        self.logger.info(f"Executing trade: {trade_signal}")
                         try:
                             result = self.trade_manager.execute_trade(trade_signal)
                             if result:
-                                self.logger.log_event(f"[SUCCESS] Futures trade executed successfully: {result}")
+                                self.logger.info(f"Futures trade executed successfully: {result}")
                             else:
-                                self.logger.log_event(f"[FAILED] Futures trade execution failed")
+                                self.logger.warning(f"Futures trade execution failed.")
                         except Exception as trade_error:
-                            self.logger.log_event(f"[ERROR] Futures trade execution exception: {trade_error}")
-                    else:
-                        self.logger.log_event("[WAIT] No valid trade signal.")
+                            self.logger.error(f"Futures trade execution exception: {trade_error}", exc_info=True)
                 else:
-                    self.logger.log_event("[ERROR] Strategy object not loaded.")
+                    self.logger.debug("No valid trade signal from strategy.")
+                
+                if self.paper_trade:
+                    self.logger.info("Paper trading mode: single run complete.")
+                    break
+                
+                time.sleep(60)
+
             except KeyboardInterrupt:
-                self.logger.log_info("FuturesTrader stopped by user.")
+                self.logger.info("FuturesTrader stopped by user.")
                 break
             except Exception as e:
-                self.logger.log_error(f"An unexpected error occurred in FuturesTrader: {e}", exc_info=True)
-                # Wait longer after an error
-                time.sleep(60)
+                self.logger.error(f"An unexpected error occurred in FuturesTrader: {e}", exc_info=True)
+                time.sleep(60) # Wait longer after an error
 
 
 def run_futures_trader(strategy_name: str, paper_trade: bool = False):
     today_date = datetime.now().strftime("%Y-%m-%d")
-    paper_trade_mode = PAPER_TRADE
     
-    # Initialize enhanced logger
     session_id = f"futures_trader_{int(time.time())}"
-    enhanced_logger = create_enhanced_logger(
-        session_id=session_id,
-        bot_type="futures-trader"
+    logger = create_enhanced_logger(session_id=session_id, bot_type="futures-trader")
+    
+    logger.log_system_event(
+        "Futures Trading Bot Initializing",
+        {"version": "1.1", "paper_trade": paper_trade, "strategy": strategy_name}
     )
-    
-    # Initialize basic logger for backward compatibility
-    logger = TradingLogger()
-    
-    # Log startup with enhanced logger
-    enhanced_logger.log_system_event(
-        "Futures Trading Bot Started",
-        {"version": "1.0", "paper_trade": paper_trade_mode}
-    )
-    
-    logger.log_event("[BOOT] Starting Futures Trading Bot...")
-
-    # Initialize Firestore client to fetch daily plan
-    firestore_client = FirestoreClient(logger)
-
-    # Wait for daily plan to be created by main runner (with timeout)
-    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
-    
-    if not daily_plan:
-        logger.log_event(
-            "[FALLBACK] No daily plan found even after waiting. Using intelligent fallback strategy."
-        )
-        
-        # Intelligent fallback for futures
-        strategy_name = "orb"  # Default for futures
-        
-        # Try to get market sentiment independently for better fallback
-        try:
-            from runner.market_monitor import MarketMonitor
-            
-            # Initialize Kite connection for fallback analysis
-            kite_manager = KiteConnectManager(logger)
-            kite_manager.set_access_token()
-            kite = kite_manager.get_kite_client()
-            
-            market_monitor = MarketMonitor(logger)
-            sentiment_data = market_monitor.get_market_sentiment(kite)
-            
-            # Use market sentiment to choose better fallback
-            vix = sentiment_data.get("INDIA VIX", 15)
-            if vix > 20:
-                strategy_name = "orb"  # High volatility - ORB works well
-                logger.log_event(f"[FALLBACK] High VIX ({vix}), using orb strategy")
-            else:
-                strategy_name = "orb"  # Default for futures
-                logger.log_event(f"[FALLBACK] VIX ({vix}), using orb strategy")
-                
-        except Exception as e:
-            logger.log_event(f"[FALLBACK] Could not get market sentiment for fallback: {e}")
-    else:
-        # Extract the futures strategy from the plan
-        strategy_tuple = daily_plan.get("futures", "orb")
-        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
-        logger.log_event(f"[PLAN] Using strategy from daily plan: {strategy_name}")
-
-        # Log market sentiment from the plan
-        sentiment = daily_plan.get("market_sentiment", {})
-        if sentiment:
-            logger.log_event(f"[SENTIMENT] Market sentiment from plan: {sentiment}")
-
-    wait_until_market_opens(logger)
 
     try:
-        trader = FuturesTrader(strategy_name=strategy_name, paper_trade=paper_trade_mode)
+        firestore_client = FirestoreClient(logger)
+        daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
+        
+        if not daily_plan:
+            logger.warning("No daily plan. Using default fallback strategy: ORB.")
+            # Use provided strategy name as fallback or default to ORB
+            strategy_name = strategy_name or "ORB"
+        else:
+            # Extract the futures strategy from the plan, with fallback
+            strategy_tuple = daily_plan.get("futures", (strategy_name or "ORB",))
+            strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
+            logger.info(f"Using strategy from daily plan: {strategy_name}")
+            sentiment = daily_plan.get("market_sentiment", {})
+            if sentiment:
+                logger.info(f"Market sentiment from plan: {sentiment}")
+
+        trader = FuturesTrader(strategy_name=strategy_name, logger=logger, paper_trade=paper_trade)
+        
+        if not paper_trade:
+            wait_until_market_opens(logger)
+        
         trader.run()
 
     except Exception as e:
-        logger.log_event(f"[FATAL] Bot crashed: {e}")
+        logger.critical(f"Bot crashed during initialization or run: {e}", exc_info=True)
         sys.exit(1)
+
+    logger.log_system_event("Futures trading bot shutting down.")
 
 
 if __name__ == "__main__":
-    run_futures_trader(strategy_name="ORB", paper_trade=True)
+    import argparse
+    parser = argparse.ArgumentParser(description="Futures Trading Bot")
+    parser.add_argument("strategy", nargs='?', default="ORB", help="Name of the strategy to run (e.g., ORB)")
+    parser.add_argument("--paper", action="store_true", help="Run in paper trading mode")
+    args = parser.parse_args()
+
+    # Determine paper trade status from argument or config
+    paper_trade_mode = args.paper or PAPER_TRADE
+
+    run_futures_trader(strategy_name=args.strategy, paper_trade=paper_trade_mode)

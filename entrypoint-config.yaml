@@ -7,35 +7,103 @@ data:
   entrypoint.sh: |
     #!/bin/bash
     set -e
+    cd /app
     
     echo "🚀 Starting Trading Pod..."
     echo "PAPER_TRADE: $PAPER_TRADE"
     echo "GCP_PROJECT_ID: $GCP_PROJECT_ID"
-    echo "PYTHONPATH: $PYTHONPATH"
+    echo "RUNNER_SCRIPT: $RUNNER_SCRIPT"
     
-    # Set up Python path
-    export PYTHONPATH="/app:/app/runner:$PYTHONPATH"
+    # Set up Python path with comprehensive coverage
+    export PYTHONPATH="/app:/app/runner:/app/gpt_runner:/app/runner/utils:/app/runner/enhanced_logging:$PYTHONPATH"
     
-    # Create __init__.py files if they don't exist
-    touch /app/__init__.py
-    touch /app/runner/__init__.py
+    # Ensure all necessary directories are valid Python packages
+    echo "Initializing Python package structure..."
+    PACKAGE_DIRS=(
+        "runner"
+        "runner/capital"
+        "runner/enhanced_logging" 
+        "runner/indicators"
+        "runner/market_data"
+        "runner/options"
+        "runner/production"
+        "runner/utils"
+        "runner/strategies"
+        "gpt_runner"
+        "gpt_runner/rag"
+        "gpt_runner/log_aggregator"
+        "stock_trading"
+        "futures_trading"
+        "options_trading"
+        "strategies"
+        "config"
+        "utils"
+        "services"
+    )
     
-    # Navigate to app directory
-    cd /app
+    for dir in "${PACKAGE_DIRS[@]}"; do
+        if [ ! -d "$dir" ]; then
+            echo "Creating directory: $dir"
+            mkdir -p "$dir"
+        fi
+        if [ ! -f "$dir/__init__.py" ]; then
+            echo "Creating __init__.py in $dir"
+            touch "$dir/__init__.py"
+        fi
+    done
     
-    # Determine which script to run based on the image
-    if [[ "$0" == *"stock"* ]] || [[ "$HOSTNAME" == *"stock"* ]]; then
-        echo "🏃 Running Stock Trading Script..."
-        python stock_trading/stock_runner.py
-    elif [[ "$0" == *"options"* ]] || [[ "$HOSTNAME" == *"options"* ]]; then
-        echo "🏃 Running Options Trading Script..."
-        python options_trading/options_runner.py
-    elif [[ "$0" == *"futures"* ]] || [[ "$HOSTNAME" == *"futures"* ]]; then
-        echo "🏃 Running Futures Trading Script..."
-        python futures_trading/futures_runner.py
-    elif [[ "$0" == *"main"* ]] || [[ "$HOSTNAME" == *"main"* ]]; then
-        echo "🏃 Running Main Runner Script..."
-        python runner/main_runner_combined.py
-    else
-        echo "❌ Unknown trading pod type, defaulting to main runner..."
-        python runner/main_runner_combined.py 
+    # Validate critical files exist
+    echo "Validating critical files..."
+    CRITICAL_FILES=(
+        "runner/config.py"
+        "runner/logger.py" 
+        "runner/health_server.py"
+    )
+    
+    for file in "${CRITICAL_FILES[@]}"; do
+        if [ ! -f "$file" ]; then
+            echo "❌ Critical file missing: $file"
+            exit 1
+        fi
+    done
+    
+    # Start health server in background
+    echo "Starting health server..."
+    python -c "
+import sys
+sys.path.insert(0, '/app')
+try:
+    from runner.health_server import start_health_server
+    start_health_server()
+except Exception as e:
+    print(f'Warning: Could not start health server: {e}')
+" &
+    
+    # Wait a moment for health server to start
+    sleep 2
+    
+    # Execute the main script with comprehensive error handling
+    echo "🏃 Running: $RUNNER_SCRIPT"
+    
+    # Test import before running
+    echo "Testing script imports..."
+    python -c "
+import sys
+sys.path.insert(0, '/app')
+script_path = '$RUNNER_SCRIPT'
+if '/' in script_path:
+    module_path = script_path.replace('/', '.').replace('.py', '')
+else:
+    module_path = script_path.replace('.py', '')
+    
+try:
+    import importlib
+    importlib.import_module(module_path.split('.')[0])
+    print('✅ Script imports successful')
+except Exception as e:
+    print(f'❌ Import test failed: {e}')
+    sys.exit(1)
+"
+    
+    # Run the main script
+    exec python "$RUNNER_SCRIPT" 

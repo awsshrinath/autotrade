@@ -102,21 +102,6 @@ export PAPER_TRADE="${PAPER_TRADE:-true}"
 export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 export ENVIRONMENT="${ENVIRONMENT:-development}"
 
-# Check if this service needs health checks
-if [ "$HEALTH_CHECK_ENABLED" = "true" ] && [ -n "$SERVICE_PORT" ]; then
-    echo "Starting with health check wrapper on port $SERVICE_PORT"
-    echo "Health server will run: $SCRIPT_TO_RUN"
-    export RUNNER_SCRIPT="$SCRIPT_TO_RUN"
-    
-    # Validate health server exists
-    if [ ! -f "runner/health_server.py" ]; then
-        echo "❌ ERROR: Health server not found, running script directly"
-        exec python3 -u "$SCRIPT_TO_RUN"
-    else
-        exec python3 -u runner/health_server.py
-    fi
-else
-    echo "Starting script directly without health checks: $SCRIPT_TO_RUN"
-    # Execute the main application script with better error handling
-    exec python3 -u "$SCRIPT_TO_RUN"
-fi
+# Execute the main application script directly
+echo "Executing main application script: $SCRIPT_TO_RUN"
+exec python3 -u "$SCRIPT_TO_RUN"

@@ -22,6 +22,8 @@ from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.firestore_client import FirestoreClient
 from runner.config import PAPER_TRADE, get_config, initialize_config
 from runner.trade_manager import TradeManager
+from runner.enhanced_logging import create_enhanced_logger, LogLevel
+from runner.trade_manager import create_enhanced_trade_manager
 
 # Import paper trading components
 try:
@@ -164,45 +166,57 @@ def main():
     Main function to run the trading bot.
     Initializes components and enters the main trading loop.
     """
+    logger = None  # Initialize logger to None
     try:
         # Initialize configuration
-        initialize_config('config/base.yaml', 'config/development.yaml')
-        
-        # Initialize necessary components
-        logger = TradingLogger()
+        initialize_config()
         config = get_config()
+
+        # Initialize enhanced logger
+        session_id = f"main_runner_{int(time.time())}"
+        logger = create_enhanced_logger(session_id=session_id, bot_type="main-runner")
+
+        logger.log_system_event("Main Trading Runner Initializing", {"version": "1.1"})
+
+        # Initialize necessary components
         kite_manager = KiteConnectManager(logger=logger, config=config)
-        trade_manager = TradeManager(logger=logger, kite_manager=kite_manager, config=config)
+        trade_manager = create_enhanced_trade_manager(logger, kite_manager)
+
+        logger.info("All core components initialized successfully.")
 
         # Main loop
         while True:
             try:
-                # Placeholder for trading logic
-                # For example, check for signals and execute trades
-                # trade_manager.execute_trade(...)
-                time.sleep(60)  # Wait for a minute before the next iteration
+                # Placeholder for master trading logic
+                logger.debug("Main loop iteration.")
+                # For example, orchestrate other runners, generate daily plans, etc.
+                time.sleep(300)  # Wait for 5 minutes before the next iteration
 
             except KeyboardInterrupt:
-                logger.log_info("Trading bot stopped by user.")
+                logger.info("Trading bot stopped by user.")
                 break
             except Exception as e:
-                logger.log_error(f"An error occurred in the main loop: {e}")
-                logger.log_error(traceback.format_exc())
+                logger.error(f"An error occurred in the main loop: {e}", exc_info=True)
                 time.sleep(60)  # Wait before retrying
 
     except Exception as e:
         # Log critical initialization errors
-        # Using a fallback basic logger if TradingLogger fails
-        print(f"A critical error occurred during initialization: {e}")
-        print(traceback.format_exc())
+        if logger:
+            logger.critical(f"A critical error occurred during initialization: {e}", exc_info=True)
+        else:
+            # Fallback to print if logger failed to initialize
+            print(f"A critical error occurred during initialization: {e}")
+            print(traceback.format_exc())
 
     finally:
         # Clean up resources if they were initialized
         if 'kite_manager' in locals() and kite_manager:
-            kite_manager.close_session()
+            # Add a close_session method to your kite_manager if it doesn't exist
+            pass
         
-        if 'logger' in locals() and logger:
-            logger.log_info("Trading bot has finished its run.")
+        if logger:
+            logger.log_system_event("Trading bot shutting down.")
+            logger.shutdown()
 
 if __name__ == "__main__":
     main()

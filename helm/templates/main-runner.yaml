@@ -88,22 +88,30 @@ spec:
           ports:
             - containerPort: {{ .Values.mainRunner.service.targetPort }}
               name: http
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mainRunner.service.targetPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /health
               port: {{ .Values.mainRunner.service.targetPort }}
-            initialDelaySeconds: 120
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 5
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /health
               port: {{ .Values.mainRunner.service.targetPort }}
-            initialDelaySeconds: 180
-            periodSeconds: 60
-            timeoutSeconds: 15
-            failureThreshold: 5
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
       volumes:
         - name: entrypoint
           configMap:
@@ -111,5 +119,4 @@ spec:
             defaultMode: 0755
         - name: gcp-service-account-key
           secret:
-            secretName: gcp-service-account-key
-            optional: true 
+            secretName: gcp-service-account-key 

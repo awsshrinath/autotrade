@@ -65,11 +65,19 @@ spec:
               value: "{{ .Values.futuresTrader.healthCheck.enabled }}"
             - name: SERVICE_PORT
               value: "{{ .Values.futuresTrader.service.targetPort }}"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.futuresTrader.service.targetPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /health
               port: {{ .Values.futuresTrader.service.targetPort }}
-            initialDelaySeconds: 30
+            initialDelaySeconds: 5
             periodSeconds: 15
             timeoutSeconds: 5
             failureThreshold: 3
@@ -77,7 +85,7 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.futuresTrader.service.targetPort }}
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
@@ -85,8 +93,14 @@ spec:
             - name: entrypoint
               mountPath: /entrypoint.sh
               subPath: entrypoint.sh
+            - name: gcp-service-account-key
+              mountPath: /etc/gcp
+              readOnly: true
       volumes:
         - name: entrypoint
           configMap:
             name: entrypoint-config
             defaultMode: 0755
+        - name: gcp-service-account-key
+          secret:
+            secretName: gcp-service-account-key
