@@ -197,7 +197,7 @@ class FuturesTrader:
                             else:
                                 self.logger.warning(f"Futures trade execution failed.")
                         except Exception as trade_error:
-                            self.logger.error(f"Futures trade execution exception: {trade_error}", exc_info=True)
+                            self.logger.log_error(trade_error, context={"source": "futures_trade_execution"}, source="futures_trader")
                 else:
                     self.logger.debug("No valid trade signal from strategy.")
                 
@@ -211,7 +211,7 @@ class FuturesTrader:
                 self.logger.info("FuturesTrader stopped by user.")
                 break
             except Exception as e:
-                self.logger.error(f"An unexpected error occurred in FuturesTrader: {e}", exc_info=True)
+                self.logger.log_error(e, context={"source": "futures_trader_run"}, source="futures_trader")
                 time.sleep(60) # Wait longer after an error
 
 
@@ -251,7 +251,7 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
         trader.run()
 
     except Exception as e:
-        logger.critical(f"Bot crashed during initialization or run: {e}", exc_info=True)
+        logger.log_error(e, context={"source": "futures_trader_main", "critical": True}, source="futures_trader", urgent=True)
         sys.exit(1)
 
     logger.log_system_event("Futures trading bot shutting down.")

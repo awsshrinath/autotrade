@@ -55,7 +55,7 @@ class FirestoreClient:
         self.available = self.db is not None
         
         if not self.available and logger:
-            logger.log_event("[WARNING] Firestore client not available - some features will be disabled")
+            logger.warning("Firestore client not available - some features will be disabled")
 
     # --- TRADE LOGGING ---
 
@@ -69,12 +69,12 @@ class FirestoreClient:
             )
             doc_ref.set(trade_data)
             if self.logger:
-                self.logger.log_event(
+                self.logger.info(
                     f"Trade logged for {bot_name} on {date_str}: {trade_data}"
                 )
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] log_trade failed: {e}")
+                self.logger.error(f"Firestore Error - log_trade failed: {e}")
 
     def fetch_trades(self, bot_name, date_str=None, date=None):
         # Handle backward compatibility for 'date' parameter
@@ -93,7 +93,7 @@ class FirestoreClient:
             return [doc.to_dict() for doc in docs]
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] fetch_trades failed: {e}")
+                self.logger.error(f"Firestore Error - fetch_trades failed: {e}")
             return []
 
     # --- TRADE EXIT LOGGING ---
@@ -142,7 +142,7 @@ class FirestoreClient:
                 self.logger.log_event(f"Reflection logged for {bot_name} on {date_str}")
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] log_reflection failed: {e}")
+                self.logger.error(f"Firestore Error - log_reflection failed: {e}")
 
     def store_daily_plan(self, plan):
         try:
@@ -155,7 +155,7 @@ class FirestoreClient:
                 )
         except Exception as e:
             if self.logger:
-                self.logger.log_event(f"[Firestore Error] store_daily_plan failed: {e}")
+                self.logger.error(f"Firestore Error - store_daily_plan failed: {e}")
 
     def fetch_daily_plan(self, date_str=None):
         """
@@ -197,13 +197,13 @@ class FirestoreClient:
             error_msg = str(e)
             if self.logger:
                 if "403" in error_msg or "permission" in error_msg.lower():
-                    self.logger.log_event(f"[Firestore Error] Access denied when fetching daily plan: {e}")
+                    self.logger.error(f"Firestore Error - Access denied when fetching daily plan: {e}")
                 elif "timeout" in error_msg.lower():
-                    self.logger.log_event(f"[Firestore Error] Timeout when fetching daily plan: {e}")
+                    self.logger.error(f"Firestore Error - Timeout when fetching daily plan: {e}")
                 elif "impersonated credentials" in error_msg.lower():
-                    self.logger.log_event(f"[Firestore Error] Authentication issue (impersonation failed): {e}")
+                    self.logger.error(f"Firestore Error - Authentication issue (impersonation failed): {e}")
                 else:
-                    self.logger.log_event(f"[Firestore Error] fetch_daily_plan failed: {e}")
+                    self.logger.error(f"Firestore Error - fetch_daily_plan failed: {e}")
             return {}
 
     def fetch_reflection(self, bot_name, date_str):

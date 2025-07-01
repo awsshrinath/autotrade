@@ -196,13 +196,13 @@ def main():
                 logger.info("Trading bot stopped by user.")
                 break
             except Exception as e:
-                logger.error(f"An error occurred in the main loop: {e}", exc_info=True)
+                logger.log_error(e, context={"source": "main_loop"}, source="main_runner")
                 time.sleep(60)  # Wait before retrying
 
     except Exception as e:
         # Log critical initialization errors
         if logger:
-            logger.critical(f"A critical error occurred during initialization: {e}", exc_info=True)
+            logger.log_error(e, context={"source": "main_initialization", "critical": True}, source="main_runner", urgent=True)
         else:
             # Fallback to print if logger failed to initialize
             print(f"A critical error occurred during initialization: {e}")

@@ -121,7 +121,7 @@ class OptionsTrader:
                 self.logger.info("OptionsTrader stopped by user.")
                 break
             except Exception as e:
-                self.logger.error(f"An unexpected error occurred in OptionsTrader: {e}", exc_info=True)
+                self.logger.log_error(e, context={"source": "options_trader_run"}, source="options_trader")
                 time.sleep(60)
 
 
@@ -156,7 +156,7 @@ def run_options_trader(strategy_name: str, paper_trade: bool = False):
         trader.run()
 
     except Exception as e:
-        logger.critical(f"Bot crashed during initialization or run: {e}", exc_info=True)
+        logger.log_error(e, context={"source": "options_trader_main", "critical": True}, source="options_trader", urgent=True)
         sys.exit(1)
     finally:
         logger.log_system_event("Options trading bot shutting down.")

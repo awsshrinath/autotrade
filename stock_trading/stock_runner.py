@@ -258,7 +258,7 @@ def run_stock_trading_bot():
                     for signal in signals:
                         trade_manager.execute_trade(signal)
                 except Exception as e:
-                    logger.error(f"Error analyzing {symbol} with {strategy.__class__.__name__}: {e}", exc_info=True)
+                    logger.log_error(e, context={"symbol": symbol, "strategy": strategy.__class__.__name__, "source": "strategy_analysis"}, source="stock_trader")
 
             if PAPER_TRADE:
                 logger.info("Paper trading mode: single run complete.")
@@ -269,7 +269,7 @@ def run_stock_trading_bot():
     except KeyboardInterrupt:
         logger.info("Stock trading bot stopped by user.")
     except Exception as e:
-        logger.critical(f"A critical error occurred in the stock trading bot: {e}", exc_info=True)
+        logger.log_error(e, context={"source": "stock_trader_main", "critical": True}, source="stock_trader", urgent=True)
         # Optional: send a notification on critical failure
         # send_slack_notification(f"CRITICAL: Stock trading bot crashed: {e}")
     finally:
