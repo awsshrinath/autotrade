@@ -26,7 +26,7 @@ Usage:
     logger.log_cognitive(...)
 """
 
-from .core_logger import TradingLogger, create_trading_logger
+from .core_logger import TradingLogger, create_trading_logger, create_enhanced_logger
 from .firestore_logger import FirestoreLogger
 from .gcs_logger import GCSLogger
 from .lifecycle_manager import LogLifecycleManager
@@ -44,6 +44,7 @@ from .log_types import (
 __all__ = [
     "TradingLogger",
     "create_trading_logger",
+    "create_enhanced_logger",
     "FirestoreLogger",
     "GCSLogger",
     "LogLifecycleManager",
