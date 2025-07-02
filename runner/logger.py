@@ -22,8 +22,8 @@ from .enhanced_logging import (
     PerformanceLogData,
 )
 
-# Create aliases for backward compatibility
-Logger = TradingLogger  # Old Logger class -> TradingLogger
+# Import the proper legacy Logger class that has log_event() method
+from .enhanced_logging.core_logger import Logger
 
 # For compatibility with old create_enhanced_logger calls
 # Some files might expect different function signatures
