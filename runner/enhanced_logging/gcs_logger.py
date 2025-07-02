@@ -24,10 +24,15 @@ import io
 import os
 import time
 import uuid
+import threading
 from typing import Dict, Any, List, Optional, Union
 from google.cloud import storage
+from google.cloud.exceptions import GoogleCloudError, Conflict
 from .log_types import LogEntry, LogType, TradeLogData, CognitiveLogData, ErrorLogData
 
+# Module-level flag to track if buckets have been set up successfully
+_buckets_initialized = False
+_initialization_lock = threading.Lock()
 
 class GCSBuckets:
     """GCS bucket names organized by purpose"""
@@ -43,8 +48,27 @@ class GCSLogger:
     """Optimized GCS logger for bulk storage and archival"""
     
     def __init__(self, project_id: str = None):
-        self.project_id = project_id
-        self.client = storage.Client(project=project_id)
+        global _buckets_initialized
+        
+        self.project_id = project_id or os.getenv('GCP_PROJECT_ID')
+        
+        try:
+            self.client = storage.Client(project=self.project_id)
+        except Exception as e:
+            print(f"❌ Failed to initialize GCS client: {e}")
+            raise
+        
+        # Only run bucket setup once per process
+        with _initialization_lock:
+            if not _buckets_initialized:
+                try:
+                    self._ensure_buckets_with_lifecycle()
+                    _buckets_initialized = True
+                    print("✅ GCS bucket initialization completed successfully")
+                except Exception as e:
+                    print(f"⚠️ GCS bucket setup failed, but continuing: {e}")
+                    # Don't raise here - allow the logger to continue working with existing buckets
+        
         self.today = datetime.datetime.now().strftime("%Y-%m-%d")
         self.year = datetime.datetime.now().strftime("%Y")
         self.month = datetime.datetime.now().strftime("%m")
@@ -58,12 +82,15 @@ class GCSLogger:
         
         # Version tracking for deduplication
         self.version_tracker = {}
-        
-        # Ensure buckets exist with lifecycle policies
-        self._ensure_buckets_with_lifecycle()
     
     def _ensure_buckets_with_lifecycle(self):
         """Ensure buckets exist with proper lifecycle policies in asia-south1 region"""
+        
+        # Allow disabling bucket creation via environment variable for testing
+        if os.getenv('DISABLE_GCS_BUCKET_CREATION', 'false').lower() == 'true':
+            print("🔧 GCS bucket creation disabled via DISABLE_GCS_BUCKET_CREATION environment variable")
+            return
+        
         buckets_config = {
             GCSBuckets.TRADE_LOGS: {
                 'lifecycle_days': 365,  # 1 year retention
@@ -86,6 +113,8 @@ class GCSLogger:
                 'storage_class': 'ARCHIVE'
             }
         }
+        
+        setup_count = 0
         
         for bucket_name, config in buckets_config.items():
             try:
@@ -113,6 +142,9 @@ class GCSLogger:
                         bucket.patch()  # Apply the labels
                         
                         print(f"✅ Created GCS bucket: {bucket_name} in asia-south1")
+                    except Conflict:
+                        # Bucket already exists (created by another process)
+                        print(f"✅ Bucket {bucket_name} already exists")
                     except Exception as create_error:
                         print(f"❌ Failed to create bucket {bucket_name}: {create_error}")
                         continue
@@ -122,161 +154,55 @@ class GCSLogger:
                         bucket.reload()
                         current_region = bucket.location.upper() if bucket.location else 'UNKNOWN'
                         
-                        if current_region == 'US':
-                            # Existing US bucket - this is the problem we need to address
-                            print(f"⚠️ REGION ISSUE: Bucket {bucket_name} is in US region (needs asia-south1)")
-                            print(f"   SOLUTION: Consider recreating bucket in asia-south1:")
-                            print(f"   1. Export data: gsutil -m cp -r gs://{bucket_name}/* /local/backup/")
-                            print(f"   2. Delete bucket: gsutil rm -r gs://{bucket_name}")
-                            print(f"   3. Let system recreate in asia-south1")
-                            print(f"   4. Restore data: gsutil -m cp -r /local/backup/* gs://{bucket_name}/")
-                            print(f"   OR use gsutil to move bucket region (if supported)")
-                            
-                            # For now, continue with existing US bucket but flag it
-                            self._mark_bucket_for_migration(bucket_name, current_region)
-                            
-                        elif current_region == 'ASIA-SOUTH1':
+                        if current_region == 'ASIA-SOUTH1':
                             # Perfect region
                             print(f"✅ Bucket {bucket_name} already in asia-south1")
                         else:
-                            # Other region
-                            print(f"⚠️ Bucket {bucket_name} is in {current_region} (expected asia-south1)")
+                            # Different region - note but continue
+                            print(f"ℹ️ Bucket {bucket_name} in {current_region} (not asia-south1, but usable)")
                     except Exception as reload_error:
-                        print(f"❌ Could not check region for {bucket_name}: {reload_error}")
+                        print(f"⚠️ Could not check region for {bucket_name}: {reload_error}")
                 
                 # Set lifecycle policy only if bucket exists and we can modify it
-                try:
-                    # Use the modern, dictionary-based approach for setting lifecycle rules.
-                    # This is the most reliable method and avoids deprecated classes.
-                    lifecycle_rules = [
-                        {
-                            "action": {"type": "Delete"},
-                            "condition": {"age": config['lifecycle_days']}
-                        }
-                    ]
-                    
-                    # Add storage class transition rule if applicable.
-                    if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
-                        lifecycle_rules.append({
-                            "action": {
-                                "type": "SetStorageClass",
-                                "storageClass": config['storage_class']
-                            },
-                            "condition": {"age": 30}
-                        })
-                    
-                    # Apply the new lifecycle rules to the bucket.
-                    bucket.lifecycle_rules = lifecycle_rules
-                    bucket.patch()
-                    
-                    print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
+                # LIMIT attempts to prevent infinite loops
+                if setup_count < 5:  # Only try lifecycle setup for first 5 buckets
+                    try:
+                        # Use the dictionary format for lifecycle rules
+                        lifecycle_rules = [
+                            {
+                                "action": {"type": "Delete"},
+                                "condition": {"age": config['lifecycle_days']}
+                            }
+                        ]
+                        
+                        # Add storage class transition rule if applicable
+                        if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                            lifecycle_rules.append({
+                                "action": {
+                                    "type": "SetStorageClass",
+                                    "storageClass": config['storage_class']
+                                },
+                                "condition": {"age": 30}
+                            })
+                        
+                        # Apply the new lifecycle rules to the bucket
+                        bucket.lifecycle_rules = lifecycle_rules
+                        bucket.patch()
+                        
+                        print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
+                        setup_count += 1
 
-                except Exception as lifecycle_error:
-                    print(f"❌ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
+                    except Exception as lifecycle_error:
+                        print(f"⚠️ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
+                        # Continue with other buckets
+                else:
+                    print(f"ℹ️ Skipping lifecycle setup for {bucket_name} (limit reached)")
                 
             except Exception as e:
                 print(f"❌ Error setting up bucket {bucket_name}: {e}")
                 # Continue with other buckets even if one fails
-    
-    def _mark_bucket_for_migration(self, bucket_name: str, current_region: str):
-        """Mark bucket for region migration"""
-        # Store migration info for later processing
-        if not hasattr(self, 'buckets_needing_migration'):
-            self.buckets_needing_migration = {}
         
-        self.buckets_needing_migration[bucket_name] = {
-            'current_region': current_region,
-            'target_region': 'asia-south1',
-            'timestamp': datetime.datetime.now().isoformat()
-        }
-    
-    def get_migration_status(self) -> Dict[str, Any]:
-        """Get status of buckets that need region migration"""
-        if not hasattr(self, 'buckets_needing_migration'):
-            return {}
-        return self.buckets_needing_migration
-    
-    def create_bucket_migration_script(self, output_file: str = "migrate_buckets.sh") -> str:
-        """Create a shell script to migrate buckets to asia-south1"""
-        if not hasattr(self, 'buckets_needing_migration') or not self.buckets_needing_migration:
-            return "No buckets need migration"
-        
-        script_content = """#!/bin/bash
-# GCS Bucket Migration Script - Move from US to asia-south1
-# Generated automatically by TRON Trading System
-
-set -e  # Exit on any error
-
-echo "🚀 Starting GCS bucket migration to asia-south1..."
-echo "⚠️  IMPORTANT: This will temporarily disrupt logging!"
-echo "📋 Buckets to migrate:"
-"""
-        
-        for bucket_name, info in self.buckets_needing_migration.items():
-            script_content += f'echo "   - {bucket_name} ({info["current_region"]} → {info["target_region"]})"\n'
-        
-        script_content += """
-echo ""
-read -p "Continue with migration? (y/N): " confirm
-if [[ $confirm != [yY] ]]; then
-    echo "Migration cancelled"
-    exit 1
-fi
-
-# Create backup directory
-BACKUP_DIR="/tmp/gcs_migration_$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$BACKUP_DIR"
-echo "📁 Backup directory: $BACKUP_DIR"
-
-"""
-        
-        for bucket_name in self.buckets_needing_migration.keys():
-            script_content += f"""
-echo "🔄 Migrating {bucket_name}..."
-
-# 1. Backup existing data
-echo "  📥 Backing up {bucket_name}..."
-gsutil -m cp -r "gs://{bucket_name}/*" "$BACKUP_DIR/{bucket_name}/" || echo "  ⚠️  No data to backup in {bucket_name}"
-
-# 2. Delete old bucket
-echo "  🗑️  Deleting old {bucket_name}..."
-gsutil rm -r "gs://{bucket_name}"
-
-# 3. Wait a moment for propagation
-sleep 5
-
-# 4. Recreate bucket in asia-south1 (system will handle this automatically)
-echo "  ✨ {bucket_name} will be recreated in asia-south1 on next application start"
-
-# 5. Restore data if backup exists
-if [ "$(ls -A $BACKUP_DIR/{bucket_name}/ 2>/dev/null)" ]; then
-    echo "  📤 Restoring data to {bucket_name}..."
-    # Wait for bucket to be recreated by the application
-    sleep 10
-    gsutil -m cp -r "$BACKUP_DIR/{bucket_name}/*" "gs://{bucket_name}/"
-    echo "  ✅ {bucket_name} migration complete"
-else
-    echo "  ℹ️  No data to restore for {bucket_name}"
-fi
-
-"""
-        
-        script_content += f"""
-echo "🎉 Migration complete!"
-echo "📁 Backup stored in: $BACKUP_DIR"
-echo "🔄 Restart the application to verify all buckets are in asia-south1"
-echo "🧹 You can delete the backup after verifying: rm -rf '$BACKUP_DIR'"
-"""
-        
-        # Write script to file
-        with open(output_file, 'w') as f:
-            f.write(script_content)
-        
-        # Make executable
-        import stat
-        os.chmod(output_file, stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH)
-        
-        return f"Migration script created: {output_file}"
+        print(f"🏁 GCS bucket setup completed. Processed {setup_count} lifecycle policies.")
     
     def _get_blob_path(self, bucket_type: str, file_type: str, bot_type: str = None, 
                       version: str = None) -> str:

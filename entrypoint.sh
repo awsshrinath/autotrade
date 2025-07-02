@@ -102,6 +102,14 @@ export PAPER_TRADE="${PAPER_TRADE:-true}"
 export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 export ENVIRONMENT="${ENVIRONMENT:-development}"
 
-# Execute the main application script directly
-echo "Executing main application script: $SCRIPT_TO_RUN"
-exec python3 -u "$SCRIPT_TO_RUN"
+# Set the script path for the health server wrapper
+export RUNNER_SCRIPT="$SCRIPT_TO_RUN"
+
+# Use health server wrapper if health checks are enabled, otherwise run script directly
+if [ "${HEALTH_CHECK_ENABLED}" = "true" ]; then
+    echo "🏥 Starting application with health server wrapper on port ${SERVICE_PORT:-8080}..."
+    exec python3 -u -m runner.health_server
+else
+    echo "🏃 Executing main application script directly: $SCRIPT_TO_RUN"
+    exec python3 -u "$SCRIPT_TO_RUN"
+fi

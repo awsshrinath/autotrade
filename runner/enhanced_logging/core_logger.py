@@ -35,19 +35,26 @@ class TradingLogger:
         self.gcs_logger = None
         self.lifecycle_manager = None
         
+        # Add startup delay to prevent simultaneous initialization
+        import random
+        startup_delay = random.uniform(0.5, 2.0)  # Random delay between 0.5-2 seconds
+        time.sleep(startup_delay)
+        
         if self.enable_firestore:
             try:
                 self.firestore_logger = FirestoreLogger(project_id)
+                print(f"✅ Firestore logger initialized for {self.bot_type}")
             except Exception as e:
-                print(f"Warning: Failed to initialize Firestore logger: {e}")
+                print(f"⚠️ Failed to initialize Firestore logger: {e}")
                 self.enable_firestore = False
                 
         if self.enable_gcs:
             try:
                 self.gcs_logger = GCSLogger(project_id)
                 self.lifecycle_manager = LogLifecycleManager(project_id)
+                print(f"✅ GCS logger initialized for {self.bot_type}")
             except Exception as e:
-                print(f"Warning: Failed to initialize GCS logger: {e}")
+                print(f"⚠️ Failed to initialize GCS logger: {e}")
                 self.enable_gcs = False
         
         # Buffering for efficient batch operations
@@ -56,9 +63,12 @@ class TradingLogger:
         self.last_gcs_flush = time.time()
         self.gcs_flush_interval = 300  # 5 minutes
         
-        # Background thread for periodic tasks
-        self.background_thread = threading.Thread(target=self._background_tasks, daemon=True)
-        self.background_thread.start()
+        # Background thread for periodic tasks - only start if we have loggers
+        if self.firestore_logger or self.gcs_logger:
+            self.background_thread = threading.Thread(target=self._background_tasks, daemon=True)
+            self.background_thread.start()
+        else:
+            print(f"⚠️ No loggers available for {self.bot_type}, background thread not started")
         
         # Performance metrics
         self.metrics = {
@@ -68,30 +78,52 @@ class TradingLogger:
             'start_time': datetime.datetime.now()
         }
         
-        # Log initialization
-        self.log_system_event("Trading logger initialized", {
+        # Log initialization with fallback to console if loggers failed
+        init_message = f"Trading logger initialized for {self.bot_type}"
+        init_data = {
             'session_id': self.session_id,
-            'bot_type': self.bot_type
-        })
+            'bot_type': self.bot_type,
+            'firestore_enabled': self.enable_firestore,
+            'gcs_enabled': self.enable_gcs
+        }
+        
+        try:
+            self.log_system_event(init_message, init_data)
+        except Exception as e:
+            # Fallback to console if logging fails
+            print(f"✅ {init_message} - {init_data}")
+            print(f"⚠️ Initial log failed: {e}")
     
     def _background_tasks(self):
         """Background thread for periodic maintenance tasks"""
         while True:
             try:
+                # Only run tasks if loggers are available
+                tasks_run = 0
+                
                 # Flush GCS buffer periodically
-                if self.gcs_logger and (time.time() - self.last_gcs_flush > self.gcs_flush_interval or 
+                if self.gcs_logger and self.enable_gcs and (time.time() - self.last_gcs_flush > self.gcs_flush_interval or 
                     len(self.gcs_buffer) >= self.buffer_size):
                     self._flush_gcs_buffer()
+                    tasks_run += 1
                 
                 # Flush Firestore batch
-                if self.firestore_logger:
-                    self.firestore_logger.flush_batch()
+                if self.firestore_logger and self.enable_firestore:
+                    try:
+                        self.firestore_logger.flush_batch()
+                        tasks_run += 1
+                    except Exception as fb_error:
+                        print(f"⚠️ Firestore batch flush failed: {fb_error}")
+                
+                # If no tasks were run, we might not have any working loggers
+                if tasks_run == 0 and not (self.firestore_logger or self.gcs_logger):
+                    print(f"🔄 Background tasks: No active loggers for {self.bot_type}")
                 
                 # Sleep before next check
                 time.sleep(30)
                 
             except Exception as e:
-                print(f"Error in background tasks: {e}")
+                print(f"❌ Error in background tasks for {self.bot_type}: {e}")
                 time.sleep(60)  # Wait longer on error
     
     def _flush_gcs_buffer(self):
@@ -149,26 +181,58 @@ class TradingLogger:
     
     def _route_log(self, entry: LogEntry):
         """Route log entry to appropriate storage based on type"""
+        logged_somewhere = False
+        
         try:
             # Always log to Firestore for real-time data
-            if self.firestore_logger and entry.log_type in [LogType.REAL_TIME, LogType.DASHBOARD, LogType.COGNITIVE_LIVE]:
-                self._log_to_firestore(entry)
+            if self.firestore_logger and self.enable_firestore and entry.log_type in [LogType.REAL_TIME, LogType.DASHBOARD, LogType.COGNITIVE_LIVE]:
+                try:
+                    self._log_to_firestore(entry)
+                    logged_somewhere = True
+                except Exception as fs_error:
+                    print(f"⚠️ Firestore logging failed: {fs_error}")
             
             # Always archive to GCS for bulk/archival data
-            if self.gcs_logger and entry.log_type in [LogType.ARCHIVAL, LogType.BULK, LogType.ANALYTICS]:
-                self._log_to_gcs(entry)
+            if self.gcs_logger and self.enable_gcs and entry.log_type in [LogType.ARCHIVAL, LogType.BULK, LogType.ANALYTICS]:
+                try:
+                    self._log_to_gcs(entry)
+                    logged_somewhere = True
+                except Exception as gcs_error:
+                    print(f"⚠️ GCS logging failed: {gcs_error}")
             
             # Some entries go to both (e.g., critical errors)
             if (entry.level in [LogLevel.ERROR, LogLevel.CRITICAL] or 
                 entry.category == LogCategory.TRADE):
                 # Critical data goes to both for redundancy
-                if self.firestore_logger:
-                    self._log_to_firestore(entry)
-                if self.gcs_logger:
-                    self._log_to_gcs(entry)
+                if self.firestore_logger and self.enable_firestore:
+                    try:
+                        self._log_to_firestore(entry)
+                        logged_somewhere = True
+                    except Exception as fs_error:
+                        print(f"⚠️ Critical Firestore logging failed: {fs_error}")
+                        
+                if self.gcs_logger and self.enable_gcs:
+                    try:
+                        self._log_to_gcs(entry)
+                        logged_somewhere = True
+                    except Exception as gcs_error:
+                        print(f"⚠️ Critical GCS logging failed: {gcs_error}")
+            
+            # If nothing worked, at least log to console as fallback
+            if not logged_somewhere:
+                timestamp = entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                print(f"[{timestamp}] {entry.level.value.upper()} {self.bot_type}: {entry.message}")
+                if entry.data:
+                    print(f"  Data: {entry.data}")
                 
         except Exception as e:
-            print(f"Error routing log: {e}")
+            print(f"❌ Critical error routing log for {self.bot_type}: {e}")
+            # Last resort console output
+            try:
+                timestamp = entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                print(f"[{timestamp}] FALLBACK {self.bot_type}: {entry.message}")
+            except:
+                print(f"EMERGENCY LOG {self.bot_type}: {entry.message}")
             self.metrics['errors'] += 1
     
     def _log_to_firestore(self, entry: LogEntry):
@@ -317,20 +381,26 @@ class TradingLogger:
     
     def log_system_event(self, message: str, data: Dict[str, Any] = None, 
                         level: LogLevel = LogLevel.INFO):
-        """Log system events"""
-        entry = LogEntry(
-            timestamp=datetime.datetime.now(),
-            level=level,
-            category=LogCategory.SYSTEM,
-            log_type=LogType.DASHBOARD,
-            message=message,
-            data=data or {},
-            source="system",
-            session_id=self.session_id,
-            bot_type=self.bot_type
-        )
-        
-        self._route_log(entry)
+        """Log system events and status updates"""
+        try:
+            entry = LogEntry(
+                timestamp=datetime.datetime.now(),
+                level=level,
+                category=LogCategory.SYSTEM,
+                log_type=LogType.REAL_TIME,
+                message=message,
+                data=data or {},
+                source=self.bot_type,
+                session_id=self.session_id,
+                bot_type=self.bot_type
+            )
+            self._route_log(entry)
+        except Exception as e:
+            # Fallback to console if all logging fails
+            print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {self.bot_type}: {message}")
+            if data:
+                print(f"  Data: {data}")
+            print(f"⚠️ System event logging failed: {e}")
     
     def log_performance_metric(self, metric_name: str, metric_value: Any, 
                               metadata: Dict[str, Any] = None):

@@ -136,23 +136,23 @@ def run_options_trader(strategy_name: str, paper_trade: bool = False):
     )
 
     try:
-        firestore_client = FirestoreClient(logger)
+    firestore_client = FirestoreClient(logger)
         today_date = get_today_date()
-        daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
-
-        if not daily_plan:
+    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
+    
+    if not daily_plan:
             logger.warning("No daily plan. Using default fallback strategy: scalp.")
             strategy_name = strategy_name or "scalp"
-        else:
+            else:
             strategy_tuple = daily_plan.get("options", (strategy_name or "scalp",))
-            strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
+        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
             logger.info(f"Using strategy from daily plan: {strategy_name}")
 
         trader = OptionsTrader(strategy_name=strategy_name, logger=logger, paper_trade=paper_trade)
         
         if not paper_trade:
-            wait_until_market_opens(logger)
-        
+    wait_until_market_opens(logger)
+
         trader.run()
 
     except Exception as e:

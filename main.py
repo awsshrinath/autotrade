@@ -177,7 +177,7 @@ def main():
         logger = create_enhanced_logger(session_id=session_id, bot_type="main-runner")
 
         logger.log_system_event("Main Trading Runner Initializing", {"version": "1.1"})
-
+        
         # Initialize necessary components
         kite_manager = KiteConnectManager(logger=logger, config=config)
         trade_manager = create_enhanced_trade_manager(logger, kite_manager)
@@ -205,8 +205,8 @@ def main():
             logger.log_error(e, context={"source": "main_initialization", "critical": True}, source="main_runner", urgent=True)
         else:
             # Fallback to print if logger failed to initialize
-            print(f"A critical error occurred during initialization: {e}")
-            print(traceback.format_exc())
+        print(f"A critical error occurred during initialization: {e}")
+        print(traceback.format_exc())
 
     finally:
         # Clean up resources if they were initialized

@@ -124,18 +124,16 @@ def lightweight_market_monitor(logger, enhanced_logger):
                 print(f"⏰ Lightweight monitoring active - IST time: {now.strftime('%H:%M:%S')}")
                 logger.log_event(f"📊 Lightweight monitoring heartbeat - IST: {now.strftime('%H:%M:%S')}")
                 
+                # Only use enhanced logger if available
                 if enhanced_logger:
-                    enhanced_logger.log_event(
+                    enhanced_logger.log_system_event(
                         "Lightweight monitoring heartbeat",
-                        LogLevel.INFO,
-                        LogCategory.SYSTEM,
                         data={
                             'ist_time': now.strftime('%H:%M:%S'),
                             'market_open': is_market_open(),
                             'error_count': error_count,
                             'mode': 'lightweight'
-                        },
-                        source="lightweight_monitor"
+                        }
                     )
                 
                 last_log_time = now
@@ -150,8 +148,7 @@ def lightweight_market_monitor(logger, enhanced_logger):
             
         except Exception as e:
             error_count += 1
-            error_details = str(e) if str(e) else traceback.format_exc()
-            print(f"❌ Error in monitoring (#{error_count}): {error_details}")
+            print(f"❌ Error in monitoring (#{error_count}): {e}")
             
             if error_count >= max_errors:
                 print(f"❌ Too many consecutive errors ({max_errors}), stopping monitoring")
@@ -190,20 +187,17 @@ def main():
     print(f"📉 Market close: 15:30")
     print(f"📊 Market currently: {'OPEN' if is_market_open() else 'CLOSED'}")
     
-    # Log startup
+    # Log startup - only use enhanced logger if available
     if enhanced_logger:
-        enhanced_logger.log_event(
+        enhanced_logger.log_system_event(
             "Lightweight GPT Runner Started",
-            LogLevel.INFO,
-            LogCategory.SYSTEM,
             data={
                 'session_id': session_id,
                 'date': today_date,
                 'startup_time': now.isoformat(),
                 'market_open': is_market_open(),
                 'lightweight_mode': True
-            },
-            source="lightweight_startup"
+            }
         )
     
     logger.log_event("✅ Lightweight GPT Runner Started")

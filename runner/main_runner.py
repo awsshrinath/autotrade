@@ -107,17 +107,15 @@ def lightweight_market_monitor(logger, enhanced_logger, LogLevel, LogCategory):
                 print(f"⏰ Lightweight monitoring active - IST time: {now.strftime('%H:%M:%S')}")
                 logger.log_event(f"📊 Lightweight monitoring heartbeat - IST: {now.strftime('%H:%M:%S')}")
                 
-                enhanced_logger.log_event(
+                # Use the correct method for enhanced logger
+                enhanced_logger.log_system_event(
                     "Lightweight monitoring heartbeat",
-                    LogLevel.INFO,
-                    LogCategory.MONITORING,
                     data={
                         'ist_time': now.strftime('%H:%M:%S'),
                         'market_open': is_market_open(),
                         'error_count': error_count,
                         'mode': 'lightweight'
-                    },
-                    source="lightweight_monitor"
+                    }
                 )
                 
                 last_log_time = now
@@ -171,19 +169,16 @@ def main():
     print(f"📉 Market close: 15:30")
     print(f"📊 Market currently: {'OPEN' if is_market_open() else 'CLOSED'}")
     
-    # Log startup
-    enhanced_logger.log_event(
+    # Log startup using the correct method
+    enhanced_logger.log_system_event(
         "Lightweight GPT Runner Started",
-        LogLevel.INFO,
-        LogCategory.SYSTEM,
         data={
             'session_id': session_id,
             'date': today_date,
             'startup_time': now.isoformat(),
             'market_open': is_market_open(),
             'lightweight_mode': True
-        },
-        source="lightweight_startup"
+        }
     )
     
     logger.log_event("✅ Lightweight GPT Runner Started")
