@@ -7,7 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import time
 from datetime import datetime
 from datetime import time as dtime
-    try:
+
+try:
     import pytz
     PYTZ_AVAILABLE = True
 except ImportError:
@@ -22,9 +23,8 @@ from runner.strategy_factory import load_strategy
 from runner.trade_manager import create_enhanced_trade_manager
 from runner.utils.trade_utils import is_market_open, get_today_date
 
-
 # Import market components with fallbacks
-    try:
+try:
     from runner.market_data import MarketDataFetcher
     from runner.market_monitor import MarketMonitor
 except ImportError:
@@ -106,7 +106,7 @@ class OptionsTrader:
             return
 
         while is_market_open() or self.paper_trade:
-    try:
+            try:
                 signals = self.strategy.analyze()
                 for signal in signals:
                     self.trade_manager.execute_trade(signal)
@@ -162,7 +162,9 @@ def run_options_trader(strategy_name: str, paper_trade: bool = False):
         logger.log_system_event("Options trading bot shutting down.")
         logger.shutdown()
 
-if __name__ == "__main__":
+
+def main():
+    """Main entry point for options runner."""
     import argparse
     parser = argparse.ArgumentParser(description="Options Trading Bot")
     parser.add_argument("strategy", nargs='?', default="scalp", help="Name of the strategy to run (e.g., scalp)")
@@ -171,3 +173,7 @@ if __name__ == "__main__":
 
     paper_trade_mode = args.paper or PAPER_TRADE
     run_options_trader(strategy_name=args.strategy, paper_trade=paper_trade_mode)
+
+
+if __name__ == "__main__":
+    main()
