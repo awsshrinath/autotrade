@@ -640,7 +640,9 @@ def main():
         # Graceful shutdown
         logger.info("Shutting down cognitive memory...")
         try:
-            memory_manager.consolidate_memories()
+            # memory_manager was not initialized in this minimal service mode
+            # memory_manager.consolidate_memories()
+            logger.info("Memory consolidation skipped in minimal mode")
         except Exception as e:
             logger.error(f"Final consolidation failed: {e}")
         

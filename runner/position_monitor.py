@@ -146,20 +146,20 @@ class PositionMonitor:
         }
         
         if self.logger:
-            self.logger.log_event("PositionMonitor initialized")
+            if hasattr(self.logger, 'log_event'):
+                self.logger.log_event("PositionMonitor initialized")
+            else:
+                self.logger.info("PositionMonitor initialized")
         
-        self.enhanced_logger.log_event(
+        self.enhanced_logger.log_system_event(
             "PositionMonitor initialized with enhanced logging",
-            LogLevel.INFO,
-            LogCategory.SYSTEM,
-            data={
+            {
                 'update_interval': self.update_interval,
                 'recovery_file': self.crash_recovery_file,
                 'config': {
                     'paper_trade': self.config.paper_trade if self.config else True
                 }
-            },
-            source="position_monitor"
+            }
         )
     
     def ensure_recovery_directory(self):

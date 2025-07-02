@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import time
 from datetime import datetime
 from datetime import time as dtime
-try:
+    try:
     import pytz
     PYTZ_AVAILABLE = True
 except ImportError:
@@ -24,7 +24,7 @@ from runner.utils.trade_utils import is_market_open, get_today_date
 
 
 # Import market components with fallbacks
-try:
+    try:
     from runner.market_data import MarketDataFetcher
     from runner.market_monitor import MarketMonitor
 except ImportError:
@@ -106,7 +106,7 @@ class OptionsTrader:
             return
 
         while is_market_open() or self.paper_trade:
-            try:
+    try:
                 signals = self.strategy.analyze()
                 for signal in signals:
                     self.trade_manager.execute_trade(signal)
@@ -136,22 +136,22 @@ def run_options_trader(strategy_name: str, paper_trade: bool = False):
     )
 
     try:
-    firestore_client = FirestoreClient(logger)
+        firestore_client = FirestoreClient(logger)
         today_date = get_today_date()
-    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
-    
-    if not daily_plan:
+        daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
+        
+        if not daily_plan:
             logger.warning("No daily plan. Using default fallback strategy: scalp.")
             strategy_name = strategy_name or "scalp"
-            else:
+        else:
             strategy_tuple = daily_plan.get("options", (strategy_name or "scalp",))
-        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
+            strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
             logger.info(f"Using strategy from daily plan: {strategy_name}")
 
         trader = OptionsTrader(strategy_name=strategy_name, logger=logger, paper_trade=paper_trade)
         
         if not paper_trade:
-    wait_until_market_opens(logger)
+            wait_until_market_opens(logger)
 
         trader.run()
 

@@ -25,10 +25,13 @@ from .enhanced_logging import (
 # Import the proper legacy Logger class that has log_event() method
 from .enhanced_logging.core_logger import Logger
 
+# For backward compatibility - add EnhancedLogger alias
+EnhancedLogger = TradingLogger
+
 # For compatibility with old create_enhanced_logger calls
 # Some files might expect different function signatures
 def create_logger(*args, **kwargs):
-    """Compatibility function for old create_logger calls"""
+    """Legacy function for creating loggers"""
     return create_enhanced_logger(*args, **kwargs)
 
 # Export everything that old code might expect
