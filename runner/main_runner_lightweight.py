@@ -99,15 +99,14 @@ def safe_initialize_loggers():
         logger = Logger(today_date)
         
         # Skip enhanced logging to save memory - use basic logging only
-        enhanced_logger = None
         print("✅ Basic logger initialized (memory-optimized mode)")
-        return logger, enhanced_logger, f"lightweight_runner_{int(time.time())}", today_date
+        return logger, f"lightweight_runner_{int(time.time())}", today_date
         
     except Exception as e:
         print(f"❌ Logger initialization failed: {e}")
-        return None, None, None, None
+        return None, None, None
 
-def lightweight_market_monitor(logger, enhanced_logger):
+def lightweight_market_monitor(logger):
     """Lightweight market monitoring without heavy dependencies"""
     print("📊 Starting lightweight market monitoring...")
     
@@ -123,18 +122,6 @@ def lightweight_market_monitor(logger, enhanced_logger):
             if last_log_time is None or (now - last_log_time).total_seconds() >= 600:
                 print(f"⏰ Lightweight monitoring active - IST time: {now.strftime('%H:%M:%S')}")
                 logger.log_event(f"📊 Lightweight monitoring heartbeat - IST: {now.strftime('%H:%M:%S')}")
-                
-                # Only use enhanced logger if available
-                if enhanced_logger:
-                    enhanced_logger.log_system_event(
-                        "Lightweight monitoring heartbeat",
-                        data={
-                            'ist_time': now.strftime('%H:%M:%S'),
-                            'market_open': is_market_open(),
-                            'error_count': error_count,
-                            'mode': 'lightweight'
-                        }
-                    )
                 
                 last_log_time = now
                 error_count = 0
@@ -170,7 +157,7 @@ def main():
     setup_signal_handlers()
     
     # Initialize loggers
-    logger, enhanced_logger, session_id, today_date = safe_initialize_loggers()
+    logger, session_id, today_date = safe_initialize_loggers()
     
     if logger is None:
         print("❌ Cannot proceed without basic logger")
@@ -187,19 +174,7 @@ def main():
     print(f"📉 Market close: 15:30")
     print(f"📊 Market currently: {'OPEN' if is_market_open() else 'CLOSED'}")
     
-    # Log startup - only use enhanced logger if available
-    if enhanced_logger:
-        enhanced_logger.log_system_event(
-            "Lightweight GPT Runner Started",
-            data={
-                'session_id': session_id,
-                'date': today_date,
-                'startup_time': now.isoformat(),
-                'market_open': is_market_open(),
-                'lightweight_mode': True
-            }
-        )
-    
+    # Log startup
     logger.log_event("✅ Lightweight GPT Runner Started")
     
     try:
@@ -210,7 +185,7 @@ def main():
                 
                 try:
                     # Start lightweight monitoring
-                    lightweight_market_monitor(logger, enhanced_logger)
+                    lightweight_market_monitor(logger)
                 except Exception as e:
                     print(f"❌ Monitoring function failed: {e}")
                     print(f"🔄 Will retry in 60 seconds...")
@@ -231,10 +206,6 @@ def main():
     
     finally:
         print("✅ Lightweight execution completed successfully")
-        
-        # Shutdown loggers
-        if enhanced_logger:
-            enhanced_logger.shutdown()
         
         print("🔄 Starting graceful shutdown...")
         # Add any other cleanup logic here

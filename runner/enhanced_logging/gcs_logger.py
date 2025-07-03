@@ -166,33 +166,33 @@ class GCSLogger:
                 # Set lifecycle policy only if bucket exists and we can modify it
                 # LIMIT attempts to prevent infinite loops
                 if setup_count < 5:  # Only try lifecycle setup for first 5 buckets
-                    try:
+                try:
                         # Use the dictionary format for lifecycle rules
-                        lifecycle_rules = [
-                            {
-                                "action": {"type": "Delete"},
-                                "condition": {"age": config['lifecycle_days']}
-                            }
-                        ]
-                        
+                    lifecycle_rules = [
+                        {
+                            "action": {"type": "Delete"},
+                            "condition": {"age": config['lifecycle_days']}
+                        }
+                    ]
+                    
                         # Add storage class transition rule if applicable
-                        if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
-                            lifecycle_rules.append({
-                                "action": {
-                                    "type": "SetStorageClass",
-                                    "storageClass": config['storage_class']
-                                },
-                                "condition": {"age": 30}
-                            })
-                        
+                    if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                        lifecycle_rules.append({
+                            "action": {
+                                "type": "SetStorageClass",
+                                "storageClass": config['storage_class']
+                            },
+                            "condition": {"age": 30}
+                        })
+                    
                         # Apply the new lifecycle rules to the bucket
-                        bucket.lifecycle_rules = lifecycle_rules
-                        bucket.patch()
-                        
-                        print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
+                    bucket.lifecycle_rules = lifecycle_rules
+                    bucket.patch()
+                    
+                    print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
                         setup_count += 1
 
-                    except Exception as lifecycle_error:
+                except Exception as lifecycle_error:
                         print(f"⚠️ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
                         # Continue with other buckets
                 else:
@@ -201,7 +201,7 @@ class GCSLogger:
             except Exception as e:
                 print(f"❌ Error setting up bucket {bucket_name}: {e}")
                 # Continue with other buckets even if one fails
-        
+    
         print(f"🏁 GCS bucket setup completed. Processed {setup_count} lifecycle policies.")
     
     def _get_blob_path(self, bucket_type: str, file_type: str, bot_type: str = None, 

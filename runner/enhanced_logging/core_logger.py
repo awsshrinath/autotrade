@@ -65,8 +65,8 @@ class TradingLogger:
         
         # Background thread for periodic tasks - only start if we have loggers
         if self.firestore_logger or self.gcs_logger:
-            self.background_thread = threading.Thread(target=self._background_tasks, daemon=True)
-            self.background_thread.start()
+        self.background_thread = threading.Thread(target=self._background_tasks, daemon=True)
+        self.background_thread.start()
         else:
             print(f"⚠️ No loggers available for {self.bot_type}, background thread not started")
         
@@ -110,7 +110,7 @@ class TradingLogger:
                 # Flush Firestore batch
                 if self.firestore_logger and self.enable_firestore:
                     try:
-                        self.firestore_logger.flush_batch()
+                    self.firestore_logger.flush_batch()
                         tasks_run += 1
                     except Exception as fb_error:
                         print(f"⚠️ Firestore batch flush failed: {fb_error}")
@@ -187,7 +187,7 @@ class TradingLogger:
             # Always log to Firestore for real-time data
             if self.firestore_logger and self.enable_firestore and entry.log_type in [LogType.REAL_TIME, LogType.DASHBOARD, LogType.COGNITIVE_LIVE]:
                 try:
-                    self._log_to_firestore(entry)
+                self._log_to_firestore(entry)
                     logged_somewhere = True
                 except Exception as fs_error:
                     print(f"⚠️ Firestore logging failed: {fs_error}")
@@ -195,7 +195,7 @@ class TradingLogger:
             # Always archive to GCS for bulk/archival data
             if self.gcs_logger and self.enable_gcs and entry.log_type in [LogType.ARCHIVAL, LogType.BULK, LogType.ANALYTICS]:
                 try:
-                    self._log_to_gcs(entry)
+                self._log_to_gcs(entry)
                     logged_somewhere = True
                 except Exception as gcs_error:
                     print(f"⚠️ GCS logging failed: {gcs_error}")
@@ -206,14 +206,14 @@ class TradingLogger:
                 # Critical data goes to both for redundancy
                 if self.firestore_logger and self.enable_firestore:
                     try:
-                        self._log_to_firestore(entry)
+                    self._log_to_firestore(entry)
                         logged_somewhere = True
                     except Exception as fs_error:
                         print(f"⚠️ Critical Firestore logging failed: {fs_error}")
                         
                 if self.gcs_logger and self.enable_gcs:
                     try:
-                        self._log_to_gcs(entry)
+                    self._log_to_gcs(entry)
                         logged_somewhere = True
                     except Exception as gcs_error:
                         print(f"⚠️ Critical GCS logging failed: {gcs_error}")
@@ -383,18 +383,18 @@ class TradingLogger:
                         level: LogLevel = LogLevel.INFO):
         """Log system events and status updates"""
         try:
-            entry = LogEntry(
-                timestamp=datetime.datetime.now(),
-                level=level,
-                category=LogCategory.SYSTEM,
+        entry = LogEntry(
+            timestamp=datetime.datetime.now(),
+            level=level,
+            category=LogCategory.SYSTEM,
                 log_type=LogType.REAL_TIME,
-                message=message,
-                data=data or {},
+            message=message,
+            data=data or {},
                 source=self.bot_type,
-                session_id=self.session_id,
-                bot_type=self.bot_type
-            )
-            self._route_log(entry)
+            session_id=self.session_id,
+            bot_type=self.bot_type
+        )
+        self._route_log(entry)
         except Exception as e:
             # Fallback to console if all logging fails
             print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {self.bot_type}: {message}")

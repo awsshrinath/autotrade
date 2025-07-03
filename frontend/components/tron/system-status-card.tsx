@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { CheckCircle, Cpu, AlertTriangle, Loader2 } from "lucide-react"
 
 interface ComponentStatus {
@@ -20,13 +21,11 @@ export default function SystemStatusCard() {
 
   useEffect(() => {
     const fetchSystemStatus = async () => {
-      // Use environment variable in production, fallback to localhost for development
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       try {
         setLoading(true)
-        const response = await fetch(`${apiUrl}/api/system/health`)
+        const response = await fetch(`/api/system/health`)
         if (!response.ok) {
-          throw new Error("Network response was not ok")
+          throw new Error("Failed to fetch")
         }
         const result: SystemStatus = await response.json()
         setData(result)
@@ -89,14 +88,16 @@ export default function SystemStatusCard() {
   }
   
   return (
-    <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23]">
-      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
-        <Cpu className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
-        System Status
-      </h2>
-      <div className="flex-grow">
-        {renderContent()}
+    <Link href="/system/health">
+      <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23] h-full">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
+          <Cpu className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
+          System Status
+        </h2>
+        <div className="flex-grow">
+          {renderContent()}
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }

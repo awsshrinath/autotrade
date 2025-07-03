@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Brain, Loader2 } from "lucide-react"
 
 interface CognitiveSummary {
@@ -25,9 +26,9 @@ export default function AIMetricsCard() {
     const fetchCognitiveSummary = async () => {
       try {
         setLoading(true)
-        const response = await fetch("http://localhost:8000/api/cognitive/summary")
+        const response = await fetch("/api/cognitive/summary")
         if (!response.ok) {
-          throw new Error("Network response was not ok")
+          throw new Error("Failed to fetch")
         }
         const result: CognitiveSummary = await response.json()
         setData(result)
@@ -102,14 +103,16 @@ export default function AIMetricsCard() {
   }
 
   return (
-    <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23]">
-      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
-        <Brain className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
-        AI Thought & Memory
-      </h2>
-      <div className="flex-grow">
-        {renderContent()}
+    <Link href="/analytics">
+      <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23] h-full">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
+          <Brain className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
+          AI Thought & Memory
+        </h2>
+        <div className="flex-grow">
+          {renderContent()}
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }

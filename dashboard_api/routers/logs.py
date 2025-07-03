@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from typing import List, Dict, Any, Optional
 
-from services.log_service import LogService, get_log_service
+from dashboard_api.services.log_service import LogService, get_log_service
 
 router = APIRouter()
 

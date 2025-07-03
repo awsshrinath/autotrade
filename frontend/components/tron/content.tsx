@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Activity, Brain, Cpu, LineChart, Shield, BarChart2, Loader2 } from "lucide-react"
 import SystemStatusCard from "./system-status-card"
 import AIMetricsCard from "./ai-metrics-card"
@@ -21,6 +22,7 @@ interface StrategySummary {
 }
 
 export default function Content() {
+  const router = useRouter()
   const [pnlData, setPnlData] = useState<PnlSummary | null>(null)
   const [riskData, setRiskData] = useState<RiskSummary | null>(null)
   const [strategyData, setStrategyData] = useState<StrategySummary | null>(null)
@@ -31,9 +33,9 @@ export default function Content() {
       try {
         setLoading(true)
         const [pnlRes, riskRes, strategyRes] = await Promise.all([
-          fetch("http://localhost:8000/api/trade/summary/daily"),
-          fetch("http://localhost:8000/api/trade/summary/positions"),
-          fetch("http://localhost:8000/api/trade/summary/strategy"),
+          fetch("/api/trade/summary/daily"),
+          fetch("/api/trade/summary/positions"),
+          fetch("/api/trade/summary/strategy"),
         ])
         
         if (!pnlRes.ok || !riskRes.ok || !strategyRes.ok) {
@@ -127,19 +129,31 @@ export default function Content() {
           Quick Actions
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => router.push('/system/trades')}
+            className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+          >
             <Activity className="w-4 h-4" />
             View Live Trades
           </button>
-          <button className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => router.push('/cognitive/insights')}
+            className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+          >
             <Brain className="w-4 h-4" />
             AI Insights
           </button>
-          <button className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => router.push('/analytics/risk')}
+            className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+          >
             <Shield className="w-4 h-4" />
             Risk Analysis
           </button>
-          <button className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => router.push('/system/health')}
+            className="bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 py-3 px-4 rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+          >
             <Cpu className="w-4 h-4" />
             System Status
           </button>

@@ -103,8 +103,8 @@ export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 export ENVIRONMENT="${ENVIRONMENT:-development}"
 
 # Set the script path for the health server wrapper
-export RUNNER_SCRIPT="$SCRIPT_TO_RUN"
-
+    export RUNNER_SCRIPT="$SCRIPT_TO_RUN"
+    
 # Use health server wrapper if health checks are enabled, otherwise run script directly
 if [ "${HEALTH_CHECK_ENABLED}" = "true" ]; then
     echo "🏥 Starting application with health server wrapper on port ${SERVICE_PORT:-8080}..."

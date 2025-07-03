@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Gauge, Loader2 } from "lucide-react"
 
 interface SystemMetrics {
@@ -19,9 +20,9 @@ export default function SystemHealthCard() {
     const fetchSystemMetrics = async () => {
       try {
         setLoading(true)
-        const response = await fetch("http://localhost:8000/api/system/metrics")
+        const response = await fetch("/api/system/metrics")
         if (!response.ok) {
-          throw new Error("Network response was not ok")
+          throw new Error("Failed to fetch")
         }
         const result: SystemMetrics = await response.json()
         setData(result)
@@ -81,14 +82,16 @@ export default function SystemHealthCard() {
   }
 
   return (
-    <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23]">
-      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
-        <Gauge className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
-        System Resource Usage
-      </h2>
-      <div className="flex-grow">
-        {renderContent()}
+    <Link href="/system/health">
+      <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23] h-full">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
+          <Gauge className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
+          System Resource Usage
+        </h2>
+        <div className="flex-grow">
+          {renderContent()}
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
