@@ -84,14 +84,14 @@ export default function SystemHealthCard() {
   return (
     <Link href="/system/health">
       <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23] h-full">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
-          <Gauge className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
-          System Resource Usage
-        </h2>
-        <div className="flex-grow">
-          {renderContent()}
-        </div>
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
+        <Gauge className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
+        System Resource Usage
+      </h2>
+      <div className="flex-grow">
+        {renderContent()}
       </div>
+    </div>
     </Link>
   )
 }

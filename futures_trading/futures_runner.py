@@ -227,29 +227,29 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
     )
 
     try:
-        firestore_client = FirestoreClient(logger)
-        daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
-        
-        if not daily_plan:
+    firestore_client = FirestoreClient(logger)
+    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
+    
+    if not daily_plan:
             logger.warning("No daily plan. Using default fallback strategy: ORB.")
             # Use provided strategy name as fallback or default to ORB
             strategy_name = strategy_name or "ORB"
-        else:
+            else:
             # Extract the futures strategy from the plan, with fallback
             strategy_tuple = daily_plan.get("futures", (strategy_name or "ORB",))
-            strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
+        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
             logger.info(f"Using strategy from daily plan: {strategy_name}")
-            sentiment = daily_plan.get("market_sentiment", {})
-            if sentiment:
+        sentiment = daily_plan.get("market_sentiment", {})
+        if sentiment:
                 logger.info(f"Market sentiment from plan: {sentiment}")
 
         trader = FuturesTrader(strategy_name=strategy_name, logger=logger, paper_trade=paper_trade)
 
         if not paper_trade:
-            wait_until_market_opens(logger)
-        
+    wait_until_market_opens(logger)
+
         trader.run()
-        
+
     except Exception as e:
         logger.log_error(e, context={"source": "futures_trader_main", "critical": True}, source="futures_trader", urgent=True)
         # Optional: send a notification on critical failure

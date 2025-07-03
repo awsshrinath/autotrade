@@ -205,8 +205,8 @@ def main():
             logger.log_error(e, context={"source": "main_initialization", "critical": True}, source="main_runner", urgent=True)
         else:
             # Fallback to print if logger failed to initialize
-            print(f"A critical error occurred during initialization: {e}")
-            print(traceback.format_exc())
+        print(f"A critical error occurred during initialization: {e}")
+        print(traceback.format_exc())
 
     finally:
         # Clean up resources if they were initialized

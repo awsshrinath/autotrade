@@ -45,7 +45,7 @@ done
 echo "Validating critical files..."
 CRITICAL_FILES=(
     "runner/config.py"
-    "runner/logger.py"
+    "runner/enhanced_logging/core_logger.py"
     "runner/health_server.py"
 )
 

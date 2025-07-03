@@ -65,8 +65,8 @@ class TradingLogger:
         
         # Background thread for periodic tasks - only start if we have loggers
         if self.firestore_logger or self.gcs_logger:
-            self.background_thread = threading.Thread(target=self._background_tasks, daemon=True)
-            self.background_thread.start()
+        self.background_thread = threading.Thread(target=self._background_tasks, daemon=True)
+        self.background_thread.start()
         else:
             print(f"⚠️ No loggers available for {self.bot_type}, background thread not started")
         
@@ -110,7 +110,7 @@ class TradingLogger:
                 # Flush Firestore batch
                 if self.firestore_logger and self.enable_firestore:
                     try:
-                        self.firestore_logger.flush_batch()
+                    self.firestore_logger.flush_batch()
                         tasks_run += 1
                     except Exception as fb_error:
                         print(f"⚠️ Firestore batch flush failed: {fb_error}")
@@ -187,7 +187,7 @@ class TradingLogger:
             # Always log to Firestore for real-time data
             if self.firestore_logger and self.enable_firestore and entry.log_type in [LogType.REAL_TIME, LogType.DASHBOARD, LogType.COGNITIVE_LIVE]:
                 try:
-                    self._log_to_firestore(entry)
+                self._log_to_firestore(entry)
                     logged_somewhere = True
                 except Exception as fs_error:
                     print(f"⚠️ Firestore logging failed: {fs_error}")
@@ -195,7 +195,7 @@ class TradingLogger:
             # Always archive to GCS for bulk/archival data
             if self.gcs_logger and self.enable_gcs and entry.log_type in [LogType.ARCHIVAL, LogType.BULK, LogType.ANALYTICS]:
                 try:
-                    self._log_to_gcs(entry)
+                self._log_to_gcs(entry)
                     logged_somewhere = True
                 except Exception as gcs_error:
                     print(f"⚠️ GCS logging failed: {gcs_error}")
@@ -206,14 +206,14 @@ class TradingLogger:
                 # Critical data goes to both for redundancy
                 if self.firestore_logger and self.enable_firestore:
                     try:
-                        self._log_to_firestore(entry)
+                    self._log_to_firestore(entry)
                         logged_somewhere = True
                     except Exception as fs_error:
                         print(f"⚠️ Critical Firestore logging failed: {fs_error}")
                         
                 if self.gcs_logger and self.enable_gcs:
                     try:
-                        self._log_to_gcs(entry)
+                    self._log_to_gcs(entry)
                         logged_somewhere = True
                     except Exception as gcs_error:
                         print(f"⚠️ Critical GCS logging failed: {gcs_error}")
@@ -265,7 +265,7 @@ class TradingLogger:
                 # Live cognitive state
                 cognitive_data = CognitiveLogData(**entry.data)
                 self.firestore_logger.log_cognitive_state(cognitive_data)
-                
+            
         except Exception as e:
             print(f"Error logging to Firestore: {e}")
             self.metrics['errors'] += 1
@@ -277,12 +277,12 @@ class TradingLogger:
         self.gcs_buffer.append(entry)
         if len(self.gcs_buffer) >= self.buffer_size:
             self._flush_gcs_buffer()
-
+    
     def log_trade_entry(self, trade_data: Union[Dict, TradeLogData], urgent: bool = False):
         """Log a new trade entry"""
         if isinstance(trade_data, dict):
             trade_data = TradeLogData(**trade_data)
-            
+        
         entry = LogEntry(
             timestamp=trade_data.entry_time,
             level=LogLevel.CRITICAL if urgent else LogLevel.INFO,
@@ -295,7 +295,7 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-
+    
     def log_trade_exit(self, trade_data: Union[Dict, TradeLogData], exit_reason: str = None):
         """Log a trade exit"""
         if isinstance(trade_data, dict):
@@ -316,7 +316,7 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-        
+    
     def log_cognitive_decision(self, decision_data: Union[Dict, CognitiveLogData]):
         """Log a cognitive decision or reflection"""
         if isinstance(decision_data, dict):
@@ -334,7 +334,7 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-        
+    
     def log_error(self, error: Exception, context: Dict[str, Any] = None, 
                   source: str = "unknown", urgent: bool = True):
         """Log an application error with context"""
@@ -363,28 +363,28 @@ class TradingLogger:
         )
         self._route_log(entry)
         self.metrics['errors'] += 1
-
+    
     def log_system_event(self, message: str, data: Dict[str, Any] = None, 
                         level: LogLevel = LogLevel.INFO):
         """Log system events and status updates"""
         try:
-            entry = LogEntry(
-                timestamp=datetime.datetime.now(),
-                level=level,
-                category=LogCategory.SYSTEM,
+        entry = LogEntry(
+            timestamp=datetime.datetime.now(),
+            level=level,
+            category=LogCategory.SYSTEM,
                 log_type=LogType.REAL_TIME,
-                message=message,
-                data=data or {},
+            message=message,
+            data=data or {},
                 source=self.bot_type,
-                session_id=self.session_id,
-                bot_type=self.bot_type
-            )
-            self._route_log(entry)
+            session_id=self.session_id,
+            bot_type=self.bot_type
+        )
+        self._route_log(entry)
         except Exception as e:
             # Fallback to console if all logging fails
             print(f"CRITICAL LOGGING FAILURE: {e}")
             print(f"Original message: {message}")
-
+    
     def log_performance_metric(self, metric_name: str, metric_value: Any, 
                               metadata: Dict[str, Any] = None):
         """Log a specific performance metric"""
@@ -404,7 +404,7 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-        
+    
     def log_strategy_signal(self, strategy: str, symbol: str, signal_data: Dict[str, Any]):
         """Log a signal generated by a trading strategy"""
         entry = LogEntry(
@@ -423,7 +423,7 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-
+    
     def log_market_data(self, data_type: str, data: Dict[str, Any]):
         """Log market data for archival"""
         entry = LogEntry(
@@ -438,7 +438,7 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-
+    
     def log_daily_reflection(self, reflection_text: str):
         """Log end-of-day reflections from the cognitive system"""
         cognitive_data = CognitiveLogData(
@@ -459,29 +459,29 @@ class TradingLogger:
             bot_type=self.bot_type
         )
         self._route_log(entry)
-
+    
     def log_daily_summary(self, summary_data: Dict[str, Any]):
         """Logs the daily summary to Firestore"""
         if self.firestore_logger:
             self.firestore_logger.log_daily_summary(summary_data)
-
+    
     def get_live_trades(self, status: str = None) -> List[Dict]:
         """Fetch live trades from Firestore"""
         return self.firestore_logger.get_live_trades(status=status) if self.firestore_logger else []
-
+    
     def get_live_alerts(self, severity: str = None) -> List[Dict]:
         """Fetch live alerts from Firestore"""
         return self.firestore_logger.get_live_alerts(severity=severity) if self.firestore_logger else []
-
+    
     def get_system_status(self) -> Dict[str, Dict]:
         """Fetch system status from all bots"""
         return self.firestore_logger.get_system_status() if self.firestore_logger else {}
-
+    
     def get_performance_history(self, days: int = 30) -> List[Dict]:
         """Fetch historical performance data"""
         # This might involve querying both GCS and Firestore
         return self.gcs_logger.get_performance_history(self.bot_type, days=days) if self.gcs_logger else []
-
+    
     def get_cost_report(self) -> Dict[str, Any]:
         """Generate a report on logging and operational costs"""
         report = {"firestore": {}, "gcs": {}}
@@ -489,12 +489,12 @@ class TradingLogger:
             report['firestore'] = self.firestore_logger.estimate_costs()
         # Add GCS cost estimation later
         return report
-
+    
     def run_cleanup(self):
         """Run log cleanup and archival tasks"""
         if self.lifecycle_manager:
             self.lifecycle_manager.apply_policies()
-
+    
     def optimize_costs(self):
         """Run cost optimization tasks"""
         # Placeholder for future cost-saving measures
@@ -507,7 +507,7 @@ class TradingLogger:
         if self.firestore_logger:
             self.metrics['firestore_pending_writes'] = self.firestore_logger.get_batch_size()
         return self.metrics
-
+    
     def flush_all(self):
         """Manually flush all buffers"""
         if self.firestore_logger:
@@ -517,21 +517,21 @@ class TradingLogger:
 
     def force_upload_to_gcs(self):
         """Forces immediate upload of the GCS buffer"""
-        self._flush_gcs_buffer()
+            self._flush_gcs_buffer()
 
     def shutdown(self):
         """Gracefully shutdown the logger, flushing all buffers"""
         print(f"Shutting down logger for {self.bot_type}...")
-        self.flush_all()
+            self.flush_all()
         # Give a moment for background tasks to finish
         time.sleep(2)
         # Note: The background thread is a daemon, so it will exit automatically
         print("Logger shutdown complete.")
-
+    
     def __del__(self):
         # Ensure buffers are flushed on object deletion
         try:
-            self.shutdown()
+                self.shutdown()
         except Exception:
             # Avoid errors during interpreter shutdown
             pass
@@ -560,7 +560,7 @@ class EnhancedLogger(TradingLogger):
             bot_type=self.bot_type
         )
         self._route_log(entry)
-        
+
     def debug(self, message: str, data: Dict[str, Any] = None):
         self.log(LogLevel.DEBUG, message, data=data)
 
@@ -594,7 +594,7 @@ class Logger:
     def __init__(self, today_date: str):
         self._internal_logger = EnhancedLogger(bot_type="legacy_runner")
         self.today_date = today_date
-
+    
     def log_event(self, event_text: str):
         """Maps old log_event to new info level"""
         # Parse old format if possible
@@ -608,19 +608,19 @@ class Logger:
     def error(self, message: str):
         """Log an error message."""
         self._internal_logger.error(message)
-
+    
     def warning(self, message: str):
         """Log a warning message."""
         self._internal_logger.warning(message)
-
+    
     def info(self, message: str):
         """Log an informational message."""
         self._internal_logger.info(message)
-
+    
     def debug(self, message: str):
         """Log a debug message."""
         self._internal_logger.debug(message)
-
+    
     def critical(self, message: str):
         """Log a critical message."""
         self._internal_logger.critical(message) 

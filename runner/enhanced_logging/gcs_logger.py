@@ -166,33 +166,33 @@ class GCSLogger:
                 # Set lifecycle policy only if bucket exists and we can modify it
                 # LIMIT attempts to prevent infinite loops
                 if setup_count < 5:  # Only try lifecycle setup for first 5 buckets
-                    try:
+                try:
                         # Use the dictionary format for lifecycle rules
-                        lifecycle_rules = [
-                            {
-                                "action": {"type": "Delete"},
-                                "condition": {"age": config['lifecycle_days']}
-                            }
-                        ]
-
+                    lifecycle_rules = [
+                        {
+                            "action": {"type": "Delete"},
+                            "condition": {"age": config['lifecycle_days']}
+                        }
+                    ]
+                    
                         # Add storage class transition rule if applicable
-                        if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
-                            lifecycle_rules.append({
-                                "action": {
-                                    "type": "SetStorageClass",
-                                    "storageClass": config['storage_class']
-                                },
-                                "condition": {"age": 30}
-                            })
-
+                    if config['storage_class'] != 'ARCHIVE' and config['lifecycle_days'] > 30:
+                        lifecycle_rules.append({
+                            "action": {
+                                "type": "SetStorageClass",
+                                "storageClass": config['storage_class']
+                            },
+                            "condition": {"age": 30}
+                        })
+                    
                         # Apply the new lifecycle rules to the bucket
-                        bucket.lifecycle_rules = lifecycle_rules
-                        bucket.patch()
-
-                        print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
+                    bucket.lifecycle_rules = lifecycle_rules
+                    bucket.patch()
+                    
+                    print(f"✅ Successfully applied lifecycle policy for {bucket_name}: {config['lifecycle_days']} days retention")
                         setup_count += 1
 
-                    except Exception as lifecycle_error:
+                except Exception as lifecycle_error:
                         print(f"⚠️ Could not set lifecycle policy for {bucket_name}: {lifecycle_error}")
                         # Continue with other buckets
                 else:
@@ -374,7 +374,7 @@ class GCSLogger:
             self._get_version("reflections", bot_type)
         )
         self._add_to_batch(GCSBuckets.COGNITIVE_ARCHIVES, blob_path, compressed_data)
-
+    
     def archive_error_logs(self, errors: List[ErrorLogData], bot_type: str = None):
         """Archive detailed error logs"""
         # Ensure bot_type is set for path generation
@@ -397,9 +397,9 @@ class GCSLogger:
         key = f"{log_type}_{bot_type}"
         if key not in self.version_tracker:
             self.version_tracker[key] = 0
-        self.version_tracker[key] += 1
+            self.version_tracker[key] += 1
         return str(self.version_tracker[key])
-
+    
     def list_archived_trades(self, bot_type: str = None, date_range: tuple = None) -> List[str]:
         """List archived trade log files"""
         bucket = self.client.bucket(GCSBuckets.TRADE_LOGS)
@@ -408,10 +408,10 @@ class GCSLogger:
         prefix = f"logs/{self.year}/{self.month}/{self.day}/"
         if bot_type:
             prefix += f"{bot_type}/"
-            
+        
         blobs = self.client.list_blobs(bucket, prefix=prefix)
         return [blob.name for blob in blobs]
-
+    
     def download_archived_data(self, bucket_name: str, blob_path: str) -> Dict[str, Any]:
         """Download and decompress data from a GCS blob"""
         try:
@@ -423,7 +423,7 @@ class GCSLogger:
         except Exception as e:
             print(f"Failed to download {blob_path}: {e}")
             return None
-
+    
     def get_performance_history(self, bot_type: str, days: int = 30) -> List[Dict[str, Any]]:
         """Fetch historical performance data for the last N days"""
         history = []
@@ -438,7 +438,7 @@ class GCSLogger:
                     history.append(data)
         
         return history
-
+    
     def cleanup_old_versions(self, keep_versions: int = 5):
         """
         Cleanup old blob versions in buckets where versioning is enabled.
@@ -446,14 +446,14 @@ class GCSLogger:
         """
         print("Note: GCS cleanup should ideally be managed by lifecycle policies.")
         for bucket_name in [GCSBuckets.TRADE_LOGS, GCSBuckets.SYSTEM_LOGS]:
-            bucket = self.client.bucket(bucket_name)
+                bucket = self.client.bucket(bucket_name)
             if bucket.versioning_enabled:
                 print(f"Checking for old versions in {bucket_name}...")
                 # This is a complex operation, placeholder for now
                 # In a real scenario, you'd iterate through all blobs and their versions
                 # and delete older ones, which can be very slow and costly.
                 # Lifecycle management is the preferred way.
-
+    
     def export_data_for_analysis(self, output_format: str = "csv", 
                                 date_range: tuple = None) -> str:
         """
@@ -463,7 +463,7 @@ class GCSLogger:
         # Placeholder for data export logic
         print(f"Exporting data to {output_format} format...")
         return "/tmp/exported_data.csv"
-
+    
     def __del__(self):
         """Ensure batch is flushed on object deletion"""
         try:
