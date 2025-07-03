@@ -31,8 +31,11 @@ RUN chmod +x /app/entrypoint.sh
 # Copy the rest of the application code
 COPY . .
 
-# Set default runner (can be overridden in Kubernetes via ENV)
+# Declare the build argument
+ARG RUNNER_SCRIPT
+
+# Set default runner using the build argument if provided, otherwise default
+ENV RUNNER_SCRIPT=${RUNNER_SCRIPT:-runner/main_runner.py}
 ENV PYTHONPATH=/app
-ENV RUNNER_SCRIPT=runner/main_runner.py
 
 ENTRYPOINT ["/app/entrypoint.sh"]
