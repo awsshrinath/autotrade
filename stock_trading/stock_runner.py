@@ -20,7 +20,7 @@ import kiteconnect
 from runner.config import PAPER_TRADE, initialize_config
 from runner.firestore_client import FirestoreClient
 from runner.kiteconnect_manager import KiteConnectManager
-from runner.enhanced_logging import create_enhanced_logger, LogLevel, LogCategory
+from runner.enhanced_logging import create_trading_logger, LogLevel, LogCategory
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import create_enhanced_trade_manager
 from runner.utils.trade_utils import is_market_open, get_today_date
@@ -212,7 +212,7 @@ def run_stock_trading_bot():
     
     # Initialize enhanced logger
     session_id = f"stock_trader_{int(time.time())}"
-    logger = create_enhanced_logger(session_id=session_id, bot_type="stock-trader")
+    logger = create_trading_logger(session_id=session_id, bot_type="stock-trader")
     
     logger.log_system_event(
         "Stock Trading Bot Initializing",
@@ -257,7 +257,7 @@ def run_stock_trading_bot():
                     signals = strategy.analyze(symbol=symbol)
                     for signal in signals:
                         trade_manager.execute_trade(signal)
-        except Exception as e:
+                except Exception as e:
                     logger.log_error(e, context={"symbol": symbol, "strategy": strategy.__class__.__name__, "source": "strategy_analysis"}, source="stock_trader")
 
             if PAPER_TRADE:
@@ -280,7 +280,7 @@ def run_stock_trading_bot():
 def main():
     """Entry point for the script."""
     try:
-    run_stock_trading_bot()
+        run_stock_trading_bot()
     except Exception as e:
         print(f"Unhandled exception in main: {e}")
         traceback.print_exc()

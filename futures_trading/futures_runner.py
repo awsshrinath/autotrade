@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from datetime import time as dtime
 from runner.enhanced_logging.log_types import LogLevel, LogCategory
-from runner.enhanced_logging import create_enhanced_logger
+from runner.enhanced_logging import create_trading_logger
 try:
     import pytz
     PYTZ_AVAILABLE = True
@@ -219,7 +219,7 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
     today_date = datetime.now().strftime("%Y-%m-%d")
     
     session_id = f"futures_trader_{int(time.time())}"
-    logger = create_enhanced_logger(session_id=session_id, bot_type="futures-trader")
+    logger = create_trading_logger(session_id=session_id, bot_type="futures-trader")
     
     logger.log_system_event(
         "Futures Trading Bot Initializing",
@@ -227,44 +227,44 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
     )
 
     try:
-    firestore_client = FirestoreClient(logger)
-    daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
-    
-    if not daily_plan:
+        firestore_client = FirestoreClient(logger)
+        daily_plan = wait_for_daily_plan(firestore_client, today_date, logger)
+        
+        if not daily_plan:
             logger.warning("No daily plan. Using default fallback strategy: ORB.")
             # Use provided strategy name as fallback or default to ORB
             strategy_name = strategy_name or "ORB"
-            else:
+        else:
             # Extract the futures strategy from the plan, with fallback
             strategy_tuple = daily_plan.get("futures", (strategy_name or "ORB",))
-        strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
+            strategy_name = strategy_tuple[0] if isinstance(strategy_tuple, (list, tuple)) else strategy_tuple
             logger.info(f"Using strategy from daily plan: {strategy_name}")
-        sentiment = daily_plan.get("market_sentiment", {})
-        if sentiment:
+            sentiment = daily_plan.get("market_sentiment", {})
+            if sentiment:
                 logger.info(f"Market sentiment from plan: {sentiment}")
 
         trader = FuturesTrader(strategy_name=strategy_name, logger=logger, paper_trade=paper_trade)
 
         if not paper_trade:
-    wait_until_market_opens(logger)
-
+            wait_until_market_opens(logger)
+        
         trader.run()
-
+        
     except Exception as e:
         logger.log_error(e, context={"source": "futures_trader_main", "critical": True}, source="futures_trader", urgent=True)
-        sys.exit(1)
+        # Optional: send a notification on critical failure
+        # send_slack_notification(f"CRITICAL: Futures trading bot crashed: {e}")
+    finally:
+        if logger:
+            logger.log_system_event("Futures trading bot shutting down.")
+            logger.shutdown()
 
-    logger.log_system_event("Futures trading bot shutting down.")
+
+def main():
+    """Entry point for the script."""
+    # Example usage, can be driven by args
+    run_futures_trader(strategy_name="orb", paper_trade=PAPER_TRADE)
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Futures Trading Bot")
-    parser.add_argument("strategy", nargs='?', default="ORB", help="Name of the strategy to run (e.g., ORB)")
-    parser.add_argument("--paper", action="store_true", help="Run in paper trading mode")
-    args = parser.parse_args()
-
-    # Determine paper trade status from argument or config
-    paper_trade_mode = args.paper or PAPER_TRADE
-
-    run_futures_trader(strategy_name=args.strategy, paper_trade=paper_trade_mode)
+    main()

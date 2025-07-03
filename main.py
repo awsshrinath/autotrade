@@ -22,13 +22,13 @@ from runner.market_data import MarketDataFetcher, TechnicalIndicators
 from runner.firestore_client import FirestoreClient
 from runner.config import PAPER_TRADE, get_config, initialize_config
 from runner.trade_manager import TradeManager
-from runner.enhanced_logging import create_enhanced_logger, LogLevel
+from runner.enhanced_logging import create_trading_logger, LogLevel
 from runner.trade_manager import create_enhanced_trade_manager
 
 # Import paper trading components
 try:
     from runner.paper_trader_integration import PaperTradingManager
-    from runner.enhanced_logger import create_enhanced_logger
+    from runner.enhanced_logger import create_trading_logger
     PAPER_TRADING_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Paper trading components not available: {e}")
@@ -109,18 +109,18 @@ def safe_import_modules():
         import_errors.append(f"Core modules: {e}")
     
     # FIXED: Safe import of optional paper trading components
-    global PAPER_TRADING_AVAILABLE, PaperTradingManager, create_enhanced_logger
+    global PAPER_TRADING_AVAILABLE, PaperTradingManager, create_trading_logger
     PAPER_TRADING_AVAILABLE = False
     
     try:
         from runner.paper_trader_integration import PaperTradingManager
-        from runner.enhanced_logger import create_enhanced_logger
+        from runner.enhanced_logger import create_trading_logger
         PAPER_TRADING_AVAILABLE = True
         print("✅ Paper trading components loaded successfully")
     except ImportError as e:
         print(f"⚠️  Warning: Paper trading components not available: {e}")
         # FIXED: Create fallback functions to prevent runtime errors
-        def create_enhanced_logger(*args, **kwargs):
+        def create_trading_logger(*args, **kwargs):
             print("ℹ️  Using fallback logger - enhanced logging not available")
             return None
     
@@ -174,7 +174,7 @@ def main():
 
         # Initialize enhanced logger
         session_id = f"main_runner_{int(time.time())}"
-        logger = create_enhanced_logger(session_id=session_id, bot_type="main-runner")
+        logger = create_trading_logger(session_id=session_id, bot_type="main-runner")
 
         logger.log_system_event("Main Trading Runner Initializing", {"version": "1.1"})
         
@@ -205,8 +205,8 @@ def main():
             logger.log_error(e, context={"source": "main_initialization", "critical": True}, source="main_runner", urgent=True)
         else:
             # Fallback to print if logger failed to initialize
-        print(f"A critical error occurred during initialization: {e}")
-        print(traceback.format_exc())
+            print(f"A critical error occurred during initialization: {e}")
+            print(traceback.format_exc())
 
     finally:
         # Clean up resources if they were initialized
