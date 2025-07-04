@@ -6,8 +6,15 @@ import time
 from collections import defaultdict
 from typing import Any, Dict, List, Union
 
-from .gcs_logger import GCSLogger
-from .firestore_logger import FirestoreLogger
+try:
+    from .gcs_logger import GCSLogger
+except ImportError:
+    GCSLogger = None
+    
+try:
+    from .firestore_logger import FirestoreLogger
+except ImportError:
+    FirestoreLogger = None
 from .log_types import (CognitiveLogData, ErrorLogData, LogCategory, LogEntry,
                         LogLevel, LogType, TradeLogData)
 
@@ -38,14 +45,14 @@ class TradingLogger:
         self.firestore_logger = None
         self.gcs_logger = None
 
-        if self.enable_firestore:
+        if self.enable_firestore and FirestoreLogger:
             try:
                 self.firestore_logger = FirestoreLogger(project_id=self.project_id)
             except Exception as e:
                 print(f"⚠️ Failed to initialize FirestoreLogger: {e}")
                 self.enable_firestore = False
 
-        if self.enable_gcs:
+        if self.enable_gcs and GCSLogger:
             try:
                 self.gcs_logger = GCSLogger(project_id=self.project_id)
             except Exception as e:
@@ -570,6 +577,15 @@ class EnhancedLogger(TradingLogger):
 def create_trading_logger(session_id: str = None, bot_type: str = None, project_id: str = None, enable_firestore: bool = True, enable_gcs: bool = True) -> TradingLogger:
     """
     Factory function to create a new trading logger instance.
+    - `session_id`: A unique identifier for the current bot session.
+    - `bot_type`: The name of the bot (e.g., 'stock-trader', 'options-trader').
+    - `project_id`: GCP project ID.
+    """
+    return TradingLogger(session_id, bot_type, project_id, enable_firestore, enable_gcs)
+
+def create_enhanced_logger(session_id: str = None, bot_type: str = None, project_id: str = None, enable_firestore: bool = True, enable_gcs: bool = True) -> TradingLogger:
+    """
+    Legacy compatibility function - creates a new trading logger instance.
     - `session_id`: A unique identifier for the current bot session.
     - `bot_type`: The name of the bot (e.g., 'stock-trader', 'options-trader').
     - `project_id`: GCP project ID.

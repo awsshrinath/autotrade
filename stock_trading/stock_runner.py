@@ -257,7 +257,7 @@ def run_stock_trading_bot():
                     signals = strategy.analyze(symbol=symbol)
                     for signal in signals:
                         trade_manager.execute_trade(signal)
-        except Exception as e:
+                except Exception as e:
                     logger.log_error(e, context={"symbol": symbol, "strategy": strategy.__class__.__name__, "source": "strategy_analysis"}, source="stock_trader")
 
             if PAPER_TRADE:
@@ -280,7 +280,7 @@ def run_stock_trading_bot():
 def main():
     """Entry point for the script."""
     try:
-    run_stock_trading_bot()
+        run_stock_trading_bot()
     except Exception as e:
         print(f"Unhandled exception in main: {e}")
         traceback.print_exc()

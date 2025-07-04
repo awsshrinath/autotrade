@@ -27,9 +27,21 @@ Usage:
 """
 
 from .core_logger import TradingLogger, create_trading_logger
-from .firestore_logger import FirestoreLogger
-from .gcs_logger import GCSLogger
-from .lifecycle_manager import LogLifecycleManager
+
+try:
+    from .firestore_logger import FirestoreLogger
+except ImportError:
+    FirestoreLogger = None
+
+try:
+    from .gcs_logger import GCSLogger
+except ImportError:
+    GCSLogger = None
+
+try:
+    from .lifecycle_manager import LogLifecycleManager
+except ImportError:
+    LogLifecycleManager = None
 from .log_types import (
     LogLevel,
     LogCategory,
