@@ -29,7 +29,7 @@ from runner.trade_manager import create_enhanced_trade_manager
 from runner.logger import create_enhanced_logger, TradingLogger
 from stock_trading.stock_runner import load_strategy as stock_load_strategy
 from runner.main_runner import main as main_runner_main
-from runner.logging.log_lifecycle_manager import LogLifecycleManager
+from runner.enhanced_logging.lifecycle_manager import LogLifecycleManager
 
 # Mock logger to capture output without actual logging
 @pytest.fixture

@@ -1,7 +1,7 @@
 from runner.trade_manager import EnhancedTradeManager, TradeRequest
 import unittest
 from unittest.mock import MagicMock, patch
-from runner.strategies.vwap_strategy import VWAPStrategy
+from strategies.vwap_strategy import VWAPStrategy
 
 
 class MockLogger:

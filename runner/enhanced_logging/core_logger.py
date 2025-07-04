@@ -256,11 +256,14 @@ class TradingLogger:
 
             elif entry.category == LogCategory.SYSTEM:
                 # System status update
+                status_data = {
+                    "message": entry.message,
+                    "level": entry.level.value,
+                    **entry.data
+                }
                 self.firestore_logger.log_system_status(
                     self.bot_type,
-                    entry.message,
-                    entry.data,
-                    level=entry.level.value
+                    status_data
                 )
 
             elif entry.category == LogCategory.COGNITIVE:
@@ -300,7 +303,7 @@ class TradingLogger:
             category=LogCategory.TRADE,
             log_type=LogType.REAL_TIME, # Goes to both
             message=f"Trade Entry: {trade_data.symbol}",
-            data=trade_data.dict(),
+            data=trade_data.to_dict(),
             source=trade_data.strategy,
             session_id=self.session_id,
             bot_type=self.bot_type
@@ -321,7 +324,7 @@ class TradingLogger:
             category=LogCategory.TRADE,
             log_type=LogType.REAL_TIME, # Goes to both
             message=f"Trade Exit: {trade_data.symbol}, PnL: {trade_data.pnl:.2f}",
-            data=trade_data.dict(),
+            data=trade_data.to_dict(),
             source=trade_data.strategy,
             session_id=self.session_id,
             bot_type=self.bot_type
@@ -334,12 +337,12 @@ class TradingLogger:
             decision_data = CognitiveLogData(**decision_data)
 
         entry = LogEntry(
-            timestamp=decision_data.timestamp,
+            timestamp=datetime.datetime.now(),
             level=LogLevel.INFO,
             category=LogCategory.COGNITIVE,
             log_type=LogType.COGNITIVE_LIVE,
-            message=f"Cognitive: {decision_data.decision_type} - {decision_data.summary}",
-            data=decision_data.dict(),
+            message=f"Cognitive: {decision_data.decision_type}",
+            data=decision_data.to_dict(),
             source="cognitive_system",
             session_id=self.session_id,
             bot_type=self.bot_type
@@ -349,22 +352,25 @@ class TradingLogger:
     def log_error(self, error: Exception, context: Dict[str, Any] = None,
                   source: str = "unknown", urgent: bool = True):
         """Log an application error"""
+        import uuid
+        import traceback
+        
         error_data = ErrorLogData(
-            timestamp=datetime.datetime.now(),
-            error_message=str(error),
+            error_id=str(uuid.uuid4()),
             error_type=type(error).__name__,
-            stack_trace=str(error.__traceback__),
+            error_message=str(error),
+            stack_trace=traceback.format_exc(),
             context=context or {},
-            source=source
+            recovery_attempted=False
         )
 
         entry = LogEntry(
-            timestamp=error_data.timestamp,
+            timestamp=datetime.datetime.now(),
             level=LogLevel.CRITICAL if urgent else LogLevel.ERROR,
             category=LogCategory.ERROR,
             log_type=LogType.REAL_TIME, # Errors go to both
             message=f"Error in {source}: {error_data.error_message}",
-            data=error_data.dict(),
+            data=error_data.to_dict(),
             source=source,
             session_id=self.session_id,
             bot_type=self.bot_type
@@ -464,6 +470,15 @@ class TradingLogger:
 
     def log_daily_summary(self, summary_data: Dict[str, Any]):
         self.firestore_logger.log_daily_summary(self.bot_type, summary_data)
+
+    # Backward compatibility methods
+    def log_event(self, event_text: str):
+        """Legacy method for backward compatibility"""
+        self.log_system_event(event_text)
+    
+    def error(self, message: str):
+        """Legacy method for backward compatibility"""
+        self.log_error(Exception(message), source=self.bot_type)
 
     def get_live_trades(self, status: str = None) -> List[Dict]:
         if self.firestore_logger:
