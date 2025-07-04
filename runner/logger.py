@@ -17,13 +17,18 @@ from runner.enhanced_logging import (
     SystemMetricsData,
     PerformanceLogData,
 )
-from runner.enhanced_logging.core_logger import create_enhanced_logger
+from runner.enhanced_logging.core_logger import create_enhanced_logger, Logger
+
+# Create alias for backward compatibility
+EnhancedLogger = TradingLogger
 
 # Export all the commonly used classes and functions
 __all__ = [
     "TradingLogger",
     "create_trading_logger", 
     "create_enhanced_logger",
+    "Logger",
+    "EnhancedLogger",
     "LogLevel",
     "LogCategory", 
     "LogType",
