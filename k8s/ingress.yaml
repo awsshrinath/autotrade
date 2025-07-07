@@ -3,12 +3,12 @@ kind: Ingress
 metadata:
   name: tron-ingress
   annotations:
-    kubernetes.io/ingress.class: "gce"
     # If you have a static IP, uncomment the following line
     # kubernetes.io/ingress.global-static-ip-name: "your-static-ip-name"
     # For SSL, you would use a managed certificate
     # networking.gke.io/managed-certificates: "your-managed-cert-name"
 spec:
+  ingressClassName: "gce"
   rules:
   - http:
       paths:

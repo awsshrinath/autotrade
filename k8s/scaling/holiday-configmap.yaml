@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: market-holidays
-  namespace: default
+  namespace: gpt
 data:
   holidays.list: |
     # Indian Stock Market Holidays 2024 (NSE)
