@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tron-backend
+  labels:
+    app: tron-backend
+spec:
+  replicas: 0 # Scales to 1 during market hours
+  selector:
+    matchLabels:
+      app: tron-backend
+  template:
+    metadata:
+      labels:
+        app: tron-backend
+    spec:
+      containers:
+      - name: tron-backend
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend:latest
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tron-backend
+spec:
+  selector:
+    app: tron-backend
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000 

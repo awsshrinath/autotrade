@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: options-trader
+  labels:
+    app: options-trader
+spec:
+  replicas: 0 # Scales to 1 during market hours
+  selector:
+    matchLabels:
+      app: options-trader
+  template:
+    metadata:
+      labels:
+        app: options-trader
+    spec:
+      containers:
+      - name: options-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/options-trader:latest
+        ports:
+        - containerPort: 8082
+        resources:
+          requests:
+            cpu: "1.5"
+            memory: "3Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 15
+          periodSeconds: 20 

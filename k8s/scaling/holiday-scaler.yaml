@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: holiday-scaler
+spec:
+  schedule: "5 0 * * *" # 12:05 AM IST, every day
+  timeZone: "Asia/Kolkata"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cronjob-scaler
+          volumes:
+          - name: holiday-config-volume
+            configMap:
+              name: market-holidays
+          containers:
+          - name: holiday-checker
+            image: bitnami/kubectl:latest
+            volumeMounts:
+            - name: holiday-config-volume
+              mountPath: /etc/config
+            command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              HOLIDAYS_FILE=/etc/config/holidays.list
+              export TZ=Asia/Kolkata
+              TODAY=$(date +%Y-%m-%d)
+              echo "Checking for holiday on $TODAY..."
+              if grep -q "^$TODAY" "$HOLIDAYS_FILE"; then
+                echo "Today is a market holiday. Scaling down all pods."
+                kubectl scale deployment main-runner --replicas=0
+                kubectl scale deployment frontend --replicas=0
+                kubectl scale deployment monitoring-service --replicas=0
+                kubectl scale deployment stock-trader --replicas=0
+                kubectl scale deployment options-trader --replicas=0
+                kubectl scale deployment futures-trader --replicas=0
+                kubectl scale deployment cognitive-system --replicas=0
+                kubectl scale deployment nginx-proxy --replicas=0
+                kubectl scale deployment tron-backend --replicas=0
+                echo "Holiday scaling complete."
+              else
+                echo "Today is not a holiday. No action taken by holiday scaler."
+              fi
+          restartPolicy: OnFailure
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1

@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: scaling-alerts
+  labels:
+    app: kube-prometheus-stack
+spec:
+  groups:
+  - name: cronjob.alerts
+    rules:
+    - alert: CronJobScalingFailed
+      expr: kube_job_status_failed{job_name=~"market-open-scaler.*|market-close-scaler.*|weekend-scaler.*|holiday-scaler.*"} > 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CronJob {{ $labels.job_name }} has failed"
+        description: "The scaling job {{ $labels.job_name }} in namespace {{ $labels.namespace }} has failed. Manual intervention may be required to ensure pods are scaled correctly."
+
+    - alert: CronJobScalingNotRun
+      expr: time() - kube_cronjob_next_schedule_time{cronjob=~"market-open-scaler|market-close-scaler"} > 3600
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "CronJob {{ $labels.cronjob }} seems to be misconfigured or not running."
+        description: "The scaling job {{ $labels.cronjob }} has not been scheduled to run in the last hour when it was expected. Please check the CronJob's schedule and status." 
