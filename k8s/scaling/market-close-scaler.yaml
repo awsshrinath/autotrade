@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: market-close-scaler
+  namespace: gpt
 spec:
   schedule: "30 16 * * 1-5" # 4:30 PM IST, Mon-Fri
   timeZone: "Asia/Kolkata"

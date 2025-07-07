@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tron-backend
+  namespace: gpt
   labels:
     app: tron-backend
 spec:
@@ -36,6 +37,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: tron-backend
+  namespace: gpt
 spec:
   selector:
     app: tron-backend

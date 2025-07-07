@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: weekend-scaler
+  namespace: gpt
 spec:
   schedule: "0 1 * * 6" # 1:00 AM IST on Saturday
   timeZone: "Asia/Kolkata"

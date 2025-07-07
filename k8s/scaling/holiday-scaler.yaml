@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: holiday-scaler
+  namespace: gpt
 spec:
   schedule: "5 0 * * *" # 12:05 AM IST, every day
   timeZone: "Asia/Kolkata"
