@@ -5,7 +5,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: cronjob-scaler
-  namespace: default
+  namespace: gpt
 roleRef:
   kind: ClusterRole
   name: cronjob-scaler-role
