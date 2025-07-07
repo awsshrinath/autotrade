@@ -23,6 +23,9 @@ from runner.trade_manager import EnhancedTradeManager, create_enhanced_trade_man
 from runner.risk_governor import RiskGovernor
 from runner.position_monitor import PositionMonitor
 from runner.utils.paper_trade_utils import simulate_exit
+from runner.health_server import start_health_server, run_script_with_monitoring
+import threading
+
 
 # Import market components with fallbacks
 try:
@@ -270,10 +273,22 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
 
 
 def main():
-    """Entry point for the script."""
-    # Example usage, can be driven by args
-    run_futures_trader(strategy_name="orb", paper_trade=PAPER_TRADE)
+    """
+    Main entry point for the futures trader.
+    Starts the health server and runs the trading logic in a separate thread.
+    """
+    # Define the target function for the trading logic
+    def trading_logic():
+        run_futures_trader("ORB", paper_trade=PAPER_TRADE)
 
+    # Start health server in a separate thread
+    health_port = int(os.environ.get('SERVICE_PORT', 8083))
+    health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
+    health_thread.start()
+
+    # Run the trading logic with monitoring
+    # This will block and manage the trading script
+    run_script_with_monitoring(trading_logic)
 
 if __name__ == "__main__":
     main()

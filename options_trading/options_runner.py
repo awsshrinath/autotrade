@@ -22,6 +22,8 @@ from runner.enhanced_logging import create_enhanced_logger, LogLevel, LogCategor
 from runner.strategy_factory import load_strategy
 from runner.trade_manager import create_enhanced_trade_manager
 from runner.utils.trade_utils import is_market_open, get_today_date
+from runner.health_server import start_health_server, run_script_with_monitoring
+import threading
 
 # Import market components with fallbacks
 try:
@@ -172,7 +174,16 @@ def main():
     args = parser.parse_args()
 
     paper_trade_mode = args.paper or PAPER_TRADE
-    run_options_trader(strategy_name=args.strategy, paper_trade=paper_trade_mode)
+    
+    def trading_logic():
+        run_options_trader(strategy_name=args.strategy, paper_trade=paper_trade_mode)
+
+    # Start health server in a separate thread
+    health_port = int(os.environ.get('SERVICE_PORT', 8082))
+    health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
+    health_thread.start()
+    
+    run_script_with_monitoring(trading_logic)
 
 
 if __name__ == "__main__":

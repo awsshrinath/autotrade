@@ -20,6 +20,7 @@ from runner.cognitive_memory import CognitiveMemory, MemoryType, ImportanceLevel
 from runner.thought_journal import ThoughtJournal, DecisionType, ConfidenceLevel, EmotionalState
 from runner.cognitive_state_machine import CognitiveStateMachine, CognitiveState, StateTransitionTrigger
 from runner.metacognition import MetaCognition, DecisionOutcome
+from runner.health_server import start_health_server, run_script_with_monitoring
 
 
 @dataclass
@@ -576,81 +577,56 @@ class CognitiveSystem:
 def create_cognitive_system(project_id: str = None, 
                                enable_background_processing: bool = True,
                            logger: logging.Logger = None) -> CognitiveSystem:
-    """Factory function to create configured cognitive system"""
+    # Set up basic logging if none provided
+    if logger is None:
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
     config = CognitiveConfig(
-            project_id=project_id,
+        project_id=project_id,
         enable_background_processing=enable_background_processing
     )
-    
-    return CognitiveSystem(config=config, logger=logger)
+    return CognitiveSystem(config, logger)
 
 
 def main():
-    """Main entry point for running cognitive system as a service"""
-    import os
-    import signal
+    """Main function to run cognitive system"""
     
-    # Set up logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    logger = logging.getLogger(__name__)
-    
-    # Get configuration from environment
-    project_id = os.environ.get('GCP_PROJECT_ID', 'autotrade-453303')
-    
-    logger.info(f"Starting Cognitive System service for project: {project_id}")
-    
-    # Global shutdown flag
-    shutdown_requested = False
-    
-    def signal_handler(signum, frame):
-        nonlocal shutdown_requested
-        logger.info(f"Received signal {signum}, initiating graceful shutdown...")
-        shutdown_requested = True
-    
-    # Set up signal handlers
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
-    
-    try:
-        # Create cognitive system with minimal resource usage
-        cognitive_system = create_cognitive_system(
-            project_id=project_id,
-            enable_background_processing=False,  # Disable to save memory
-            logger=logger
-        )
+    def cognitive_logic():
+        logger = logging.getLogger(__name__)
         
-        # Skip initialization to save memory and just run minimal service
-        logger.info("Running cognitive system in minimal mode (memory-optimized)")
+        # Create and run the cognitive system
+        cognitive_system = create_cognitive_system(logger=logger)
         
-        logger.info("Cognitive system initialized successfully, entering main loop")
-        
-        # Minimal service loop - just keep alive
-        while not shutdown_requested:
-            try:
-                # Minimal operation - just stay alive and log periodically
-                time.sleep(120)  # Longer sleep to reduce CPU usage
-                logger.info("Cognitive system minimal service heartbeat")
-                    
-            except KeyboardInterrupt:
-                logger.info("Keyboard interrupt received")
-                break
-            except Exception as e:
-                logger.error(f"Error in main loop: {e}")
-                time.sleep(30)  # Brief pause before retrying
-        
-        # Minimal shutdown
-        logger.info("Shutting down cognitive system...")
-        logger.info("Cognitive system service stopped")
-        return 0
-        
-    except Exception as e:
-        logger.error(f"Fatal error in cognitive system service: {e}")
-        logger.error(traceback.format_exc())
-        return 1
+        # Keep the main thread alive if background processing is enabled
+        if cognitive_system.config.enable_background_processing:
+            logger.info("Cognitive system running in background mode...")
+            # Use the shutdown event to wait indefinitely
+            cognitive_system._shutdown_event.wait()
+        else:
+            logger.info("Cognitive system single run complete.")
+
+    # Start health server in a separate thread
+    health_port = int(os.environ.get('SERVICE_PORT', 8084))
+    health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
+    health_thread.start()
+    
+    # This will block and manage the cognitive logic
+    run_script_with_monitoring(cognitive_logic)
 
 
 if __name__ == "__main__":
-    exit(main())
+    # Set up signal handling for graceful shutdown
+    SHUTDOWN_REQUESTED = False
+    
+    def signal_handler(signum, frame):
+        global SHUTDOWN_REQUESTED
+        logging.getLogger(__name__).info(f"Received signal {signum}, shutting down...")
+        SHUTDOWN_REQUESTED = True
+        # Here you might want to signal the cognitive system to shut down
+        # For now, we rely on Kubernetes to terminate the pod
+
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    main()

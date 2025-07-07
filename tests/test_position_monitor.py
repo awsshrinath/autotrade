@@ -20,11 +20,14 @@ from runner.trade_manager import TradeRequest
 from runner.logger import create_enhanced_logger
 
 # Mock data for testing
-@patch('runner.position_monitor.create_enhanced_logger')
 class TestPositionMonitor(unittest.TestCase):
 
-    def setUp(self, mock_create_logger):
+    def setUp(self):
         """Set up a mock environment for each test."""
+        self.create_logger_patcher = patch('runner.position_monitor.create_enhanced_logger')
+        mock_create_logger = self.create_logger_patcher.start()
+        self.addCleanup(self.create_logger_patcher.stop)
+
         self.mock_config_manager = MagicMock(spec=ConfigManager)
         self.mock_config_manager.get_config.return_value = {
             "gcp": {"project_id": "test-project"},
@@ -35,7 +38,6 @@ class TestPositionMonitor(unittest.TestCase):
         self.mock_logger = MagicMock()
         mock_create_logger.return_value = self.mock_logger
 
-        self.mock_logger = MagicMock()
         self.mock_firestore = MagicMock()
         self.mock_kite_manager = MagicMock()
         self.mock_portfolio_manager = MagicMock()

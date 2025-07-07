@@ -23,6 +23,8 @@ import sys
 import traceback
 import signal
 import pytz
+from runner.health_server import start_health_server, run_script_with_monitoring
+import threading
 
 # Add project paths
 sys.path.insert(0, '/app')
@@ -238,4 +240,13 @@ def main():
         print("👋 Lightweight Runner shutdown complete")
 
 if __name__ == "__main__":
-    main()
+    def trading_logic():
+        main()
+
+    # Start health server in a separate thread
+    health_port = int(os.environ.get('SERVICE_PORT', 8080))
+    health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
+    health_thread.start()
+    
+    # This will block and manage the trading logic
+    run_script_with_monitoring(trading_logic)

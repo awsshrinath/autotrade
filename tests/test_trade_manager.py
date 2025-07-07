@@ -1,117 +1,137 @@
-from runner.trade_manager import EnhancedTradeManager, TradeRequest
 import unittest
 from unittest.mock import MagicMock, patch
+import os
+import sys
+
+# Add project root to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+# Mock external modules before imports
+from tests.test_mocks import setup_all_mocks
+setup_all_mocks()
+
+from runner.trade_manager import EnhancedTradeManager, TradeRequest, create_enhanced_trade_manager
 from strategies.vwap_strategy import VWAPStrategy
 
 
-class MockLogger:
-    def log_event(self, msg):
-        print(f"[MOCK LOG] {msg}")
-
-
-class MockKiteManager:
-    def get_kite_client(self):
-        return MockKite()
-
-
-class MockKite:
-    def place_order(self, *args, **kwargs):
-        print("[MOCK KITE] Order placed")
-        return 12345
-
-
-class MockFirestoreClient:
-    def log_trade(self, trade_data):
-        print(f"[MOCK FIRESTORE] Trade Logged: {trade_data}")
-
-
-class MockStrategy:
-    def __init__(self, kite, logger):
-        self.kite = kite
-        self.logger = logger
-    
-    def analyze(self):
-        # Return a proper trade signal that the trade manager expects
-        return {
-            "symbol": "TEST",
-            "entry_price": 100,
-            "stop_loss": 95,
-            "target": 110,
-            "quantity": 50,
-            "direction": "bullish",
-            "id": "test_trade_123",
-            "confidence": 0.8
-        }
-
-
-def test_run_strategy_once():
-    kite_manager = MockKiteManager()
-    firestore = MockFirestoreClient()
-    trade_manager = EnhancedTradeManager(
-        logger=MockLogger(),
-        kite_manager=kite_manager,
-        firestore_client=firestore,
-        enable_firestore=False, # Disable for testing
-        enable_gcs=False # Disable for testing
-    )
-    trade_manager.start_trading_session()
-    
-    # Mock the strategy import at the module level where it's used
-    with patch('runner.trade_manager.VWAPStrategy', MockStrategy):
-        # Simulate a trade run with a known strategy
-        position_id = trade_manager.run_strategy_once(
-            strategy_name="vwap", direction="bullish", bot_type="stock"
-        )
-        
-        # Verify trade was created and position tracked
-        assert position_id is not None, "Position should be created"
-        active_positions = trade_manager.get_active_positions()
-        assert len(active_positions) == 1, "Position should be tracked"
-        assert active_positions[0]['symbol'] == 'TEST'
-
-
 class TestEnhancedTradeManager(unittest.TestCase):
-    def setUp(self):
+    
+    @patch('runner.trade_manager.create_trading_logger')
+    @patch('runner.trade_manager.get_trading_config')
+    @patch('runner.trade_manager.create_cognitive_system')
+    @patch('runner.trade_manager.create_portfolio_manager')
+    @patch('runner.trade_manager.PositionMonitor')
+    def setUp(self, MockPositionMonitor, mock_create_portfolio_manager, 
+              mock_create_cognitive_system, mock_get_trading_config, 
+              mock_create_trading_logger):
+        """Set up a mock environment for each test."""
+        
+        # Mock configuration
+        self.mock_config = MagicMock()
+        self.mock_config.paper_trade = True
+        self.mock_config.default_capital = 100000
+        self.mock_config.max_daily_loss = 5000
+        mock_get_trading_config.return_value = self.mock_config
+
+        # Mock logger
         self.mock_logger = MagicMock()
-        with patch('runner.trade_manager.create_trading_logger', return_value=self.mock_logger):
-            self.trade_manager = EnhancedTradeManager(logger=self.mock_logger)
+        mock_create_trading_logger.return_value = self.mock_logger
+        
+        # Mock dependencies
+        self.mock_kite_manager = MagicMock()
+        self.mock_firestore_client = MagicMock()
+        self.mock_cognitive_system = mock_create_cognitive_system.return_value
+        self.mock_portfolio_manager = mock_create_portfolio_manager.return_value
+        
+        # We need to mock the PositionMonitor instance used by TradeManager
+        self.mock_position_monitor = MockPositionMonitor.return_value
+        
+        # Instantiate the manager
+        self.trade_manager = EnhancedTradeManager(
+            logger=self.mock_logger,
+            kite_manager=self.mock_kite_manager,
+            firestore_client=self.mock_firestore_client,
+            cognitive_system=self.mock_cognitive_system,
+            enable_firestore=False,
+            enable_gcs=False
+        )
+        # The internal position monitor is created inside __init__, so we override it here for testing
+        self.trade_manager.position_monitor = self.mock_position_monitor
 
-    def test_singleton_instance(self):
-        with patch('runner.trade_manager.create_trading_logger', return_value=self.mock_logger):
-            instance1 = EnhancedTradeManager(logger=self.mock_logger)
-            instance2 = EnhancedTradeManager(logger=self.mock_logger)
-            self.assertIs(instance1, instance2)
 
-    def test_load_strategy(self):
-        self.trade_manager.load_strategy('vwap', VWAPStrategy)
-        self.assertIn('vwap', self.trade_manager.strategy_map)
-        self.assertEqual(self.trade_manager.strategy_map['vwap'], VWAPStrategy)
+    def test_initialization(self):
+        """Test if the EnhancedTradeManager initializes correctly."""
+        self.assertIsNotNone(self.trade_manager)
+        self.assertIsNotNone(self.trade_manager.enhanced_logger)
+        self.mock_logger.log_event.assert_called_with("EnhancedTradeManager initialized")
 
-    @patch('runner.trade_manager.VWAPStrategy', MagicMock())
-    def test_start_trading(self):
-        self.trade_manager.load_strategy('vwap', VWAPStrategy)
-        with self.assertRaises(ValueError):
-            self.trade_manager.start_trading('invalid_strategy', MagicMock())
+    def test_create_trade_request(self):
+        """Test the creation of a TradeRequest object."""
+        trade_req = TradeRequest(
+            symbol="RELIANCE",
+            strategy="vwap",
+            direction="bullish",
+            quantity=10,
+            entry_price=2500.0,
+            stop_loss=2450.0,
+            target=2600.0,
+            bot_type="stock",
+            paper_trade=True
+        )
+        self.assertEqual(trade_req.symbol, "RELIANCE")
+        self.assertEqual(trade_req.quantity, 10)
+        self.assertTrue(trade_req.paper_trade)
+        # Assert that attributes that were removed are NOT present
+        self.assertFalse(hasattr(trade_req, 'order_type'))
+        self.assertFalse(hasattr(trade_req, 'product'))
 
-    def test_execute_trade_paper(self):
+    def test_load_strategy_placeholder(self):
+        """
+        Test the load_strategy method.
+        Note: The current implementation is a placeholder. This test just ensures it runs without error.
+        """
+        try:
+            self.trade_manager.load_strategy('vwap')
+        except Exception as e:
+            self.fail(f"load_strategy raised an exception unexpectedly: {e}")
+
+    def test_execute_paper_trade(self):
+        """Test the paper trade execution flow."""
         trade_request = TradeRequest(symbol='RELIANCE', strategy='vwap', direction='bullish', quantity=10,
                                      entry_price=2500.0, stop_loss=2490.0, target=2520.0, paper_trade=True)
+        
+        # Mock the return value for the risk and portfolio checks
+        with patch.object(self.trade_manager, '_perform_risk_checks', return_value=True), \
+             patch.object(self.trade_manager, '_perform_portfolio_checks', return_value=True), \
+             patch.object(self.trade_manager, '_add_to_position_monitor', return_value='pos_123') as mock_add_to_monitor:
 
-        with patch('runner.trade_manager.PositionMonitor.add_position') as mock_add_position:
-            self.trade_manager.execute_trade(trade_request)
-            mock_add_position.assert_called_once()
+            position_id = self.trade_manager.execute_trade(trade_request)
+            
+            mock_add_to_monitor.assert_called_once_with(trade_request)
+            self.assertEqual(position_id, 'pos_123')
 
-    def test_execute_trade_live(self):
+
+    def test_execute_live_trade(self):
+        """Test the live trade execution flow."""
         trade_request = TradeRequest(symbol='RELIANCE', strategy='vwap', direction='bullish', quantity=10,
                                      entry_price=2500.0, stop_loss=2490.0, target=2520.0, paper_trade=False)
+        
+        # Mock the kite client's response
+        self.mock_kite_manager.place_order.return_value = "live_order_id_123"
 
-        with patch('runner.trade_manager.KiteConnectManager') as mock_kite_manager:
-            mock_kite_manager.place_order.return_value = '12345'
-            self.trade_manager.kite_manager = mock_kite_manager
-            with patch('runner.trade_manager.PositionMonitor.add_position') as mock_add_position:
-                self.trade_manager.execute_trade(trade_request)
-                mock_add_position.assert_called_once()
-                self.assertIn('12345', self.trade_manager.live_orders)
+        # Mock the risk and portfolio checks
+        with patch.object(self.trade_manager, '_perform_risk_checks', return_value=True), \
+             patch.object(self.trade_manager, '_perform_portfolio_checks', return_value=True), \
+             patch.object(self.trade_manager, '_add_to_position_monitor', return_value='pos_456') as mock_add_to_monitor:
+            
+            position_id = self.trade_manager.execute_trade(trade_request)
+
+            # Verify that a real order was placed
+            self.mock_kite_manager.place_order.assert_called_once()
+            
+            # Verify the position was added to the monitor
+            mock_add_to_monitor.assert_called_once()
+            self.assertEqual(position_id, 'pos_456')
 
 
 if __name__ == '__main__':

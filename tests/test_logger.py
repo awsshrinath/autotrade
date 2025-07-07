@@ -3,150 +3,97 @@ Test Script for Enhanced Logging System
 Validates comprehensive logging with Firestore and GCS bucket integration
 """
 
-import time
-import datetime
-import json
-import os
-from typing import Dict, Any
 import unittest
 from unittest.mock import MagicMock, patch
+import time
+import os
+import sys
 
-from runner.logger import (
-    EnhancedLogger, LogLevel, LogCategory, create_enhanced_logger
-)
+# Add project root to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# Mock external modules before imports
+from tests.test_mocks import setup_all_mocks
+setup_all_mocks()
 
-class TestLogger(unittest.TestCase):
-    def setUp(self):
-        # We need to patch the actual client used by the logger's dependencies
-        self.mock_firestore_client = MagicMock()
-        self.patcher = patch('google.cloud.firestore.Client', return_value=self.mock_firestore_client)
-        self.patcher.start()
-            
-        self.logger = None
+from runner.enhanced_logging.core_logger import TradingLogger, LogLevel, LogCategory, LogEntry
+from runner.enhanced_logging.log_types import TradeLogData
 
-    def tearDown(self):
-        if self.logger:
-            self.logger.shutdown()
-        self.patcher.stop()
+@patch('threading.Thread') # Prevent background thread from starting during tests
+@patch('runner.enhanced_logging.core_logger.GCSLogger')
+@patch('runner.enhanced_logging.core_logger.FirestoreLogger')
+class TestTradingLogger(unittest.TestCase):
+
+    def setUp(self, MockFirestoreLogger, MockGCSLogger, MockThread):
+        """Set up a mock environment for each test."""
+        # Mock the logger backends
+        self.mock_firestore_logger = MockFirestoreLogger.return_value
+        self.mock_gcs_logger = MockGCSLogger.return_value
+        
+        # Instantiate the logger with mocked dependencies
+        self.logger = TradingLogger(
+            session_id="test_session",
+            bot_type="test_bot",
+            project_id="test-project",
+            enable_firestore=True,
+            enable_gcs=True
+        )
 
     def test_initialization(self):
-        self.logger = create_enhanced_logger(session_id="test_init", enable_gcs=False, enable_firestore=False)
+        """Test if the TradingLogger initializes correctly."""
         self.assertIsNotNone(self.logger)
-        self.assertEqual(self.logger.session_id, "test_init")
-        self.assertTrue(self.logger.performance_metrics['logs_written'] > 0)
+        self.assertEqual(self.logger.session_id, "test_session")
+        self.assertTrue(self.logger.enable_firestore)
+        self.assertTrue(self.logger.enable_gcs)
+        # The init log should call the system event logger
+        self.logger.log_system_event.assert_called_with(
+            'Trading logger initialized for test_bot', 
+            {'session_id': 'test_session', 'bot_type': 'test_bot', 'firestore_enabled': True, 'gcs_enabled': True}
+        )
 
-    def test_log_event_levels(self):
-        self.logger = create_enhanced_logger(session_id="test_levels", enable_gcs=False, enable_firestore=False)
-        
-        with patch.object(self.logger, '_write_to_local_file') as mock_write:
-            self.logger.log_event("Debug message", LogLevel.DEBUG, LogCategory.SYSTEM)
-            mock_write.assert_called()
-            self.assertEqual(mock_write.call_args[0][0].level, LogLevel.DEBUG)
-
-            self.logger.log_event("Info message", LogLevel.INFO, LogCategory.SYSTEM)
-            self.assertEqual(mock_write.call_args[0][0].level, LogLevel.INFO)
-
-            self.logger.log_event("Warning message", LogLevel.WARNING, LogCategory.SYSTEM)
-            self.assertEqual(mock_write.call_args[0][0].level, LogLevel.WARNING)
-
-            self.logger.log_event("Error message", LogLevel.ERROR, LogCategory.SYSTEM)
-            self.assertEqual(mock_write.call_args[0][0].level, LogLevel.ERROR)
-
-            self.logger.log_event("Critical message", LogLevel.CRITICAL, LogCategory.SYSTEM)
-            self.assertEqual(mock_write.call_args[0][0].level, LogLevel.CRITICAL)
-
-    def test_log_trade_execution(self):
-        self.logger = create_enhanced_logger(session_id="test_trade", enable_gcs=False, enable_firestore=False)
-        trade_data = {
-            "trade_id": "trade123", "symbol": "RELIANCE", "order_type": "MARKET", 
-            "quantity": 10, "price": 2500.0, "direction": "buy"
-        }
-        
-        with patch.object(self.logger, '_write_to_local_file') as mock_write:
-            self.logger.log_trade_execution(trade_data, success=True)
-            mock_write.assert_called()
-            entry = mock_write.call_args[0][0]
-            self.assertEqual(entry.category, LogCategory.TRADE)
-            self.assertEqual(entry.data['trade_id'], "trade123")
-            self.assertTrue(entry.data['success'])
-
-        failed_trade_data = {
-            "trade_id": "trade456", "symbol": "TCS", "order_type": "LIMIT",
-            "quantity": 5, "price": 3200.0, "direction": "sell", "error": "Insufficient funds"
-        }
-        with patch.object(self.logger, '_write_to_local_file') as mock_write:
-            self.logger.log_trade_execution(failed_trade_data, success=False)
-            mock_write.assert_called()
-            entry = mock_write.call_args[0][0]
-            self.assertFalse(entry.data['success'])
-            self.assertIn('error', entry.data)
-
-    def test_log_position_update(self):
-        self.logger = create_enhanced_logger(session_id="test_position", enable_gcs=False, enable_firestore=False)
-        position_data = {
-            "position_id": "pos123", "symbol": "RELIANCE", "quantity": 10,
-            "pnl": 150.0, "status": "open"
-        }
-        with patch.object(self.logger, '_write_to_local_file') as mock_write:
-            self.logger.log_position_update(position_data, update_type="added")
-            mock_write.assert_called()
-            entry = mock_write.call_args[0][0]
-            self.assertEqual(entry.category, LogCategory.POSITION)
-            self.assertEqual(entry.data['update_type'], "added")
-
-            self.logger.log_position_update(position_data, update_type="price_update")
-            entry = mock_write.call_args[0][0]
-            self.assertEqual(entry.data['update_type'], "price_update")
+    def test_log_system_event(self):
+        """Test logging of a system event."""
+        with patch.object(self.logger, '_route_log') as mock_route_log:
+            self.logger.log_system_event("System started", {"component": "test"})
             
-    def test_log_error_method(self):
-        self.logger = create_enhanced_logger(session_id="test_error_method", enable_gcs=False, enable_firestore=False)
-        try:
-            1 / 0
-        except Exception as e:
-            with patch.object(self.logger, '_write_to_local_file') as mock_write:
-                self.logger.log_error(e, context={"location": "test_method"})
-                mock_write.assert_called()
-                entry = mock_write.call_args[0][0]
-                self.assertEqual(entry.level, LogLevel.ERROR)
-                self.assertEqual(entry.category, LogCategory.ERROR)
-                self.assertIn("ZeroDivisionError", entry.data['error_message'])
-                self.assertIn("traceback", entry.data)
+            mock_route_log.assert_called_once()
+            call_args = mock_route_log.call_args[0][0]
+            self.assertIsInstance(call_args, LogEntry)
+            self.assertEqual(call_args.message, "System started")
+            self.assertEqual(call_args.level, LogLevel.INFO)
+            self.assertEqual(call_args.category, LogCategory.SYSTEM)
+
+    def test_log_trade_entry(self):
+        """Test logging of a trade entry."""
+        trade_data = TradeLogData(symbol="RELIANCE", quantity=10, price=2500.0, action="BUY")
+        with patch.object(self.logger, '_route_log') as mock_route_log:
+            self.logger.log_trade_entry(trade_data)
+            mock_route_log.assert_called_once()
+            entry = mock_route_log.call_args[0][0]
+            self.assertEqual(entry.category, LogCategory.TRADE)
+            self.assertEqual(entry.data['symbol'], "RELIANCE")
+
+    def test_log_error(self):
+        """Test logging of an error."""
+        with patch.object(self.logger, '_route_log') as mock_route_log:
+            try:
+                1 / 0
+            except Exception as e:
+                self.logger.log_error(e, context={"location": "testing"})
+            
+            mock_route_log.assert_called_once()
+            entry = mock_route_log.call_args[0][0]
+            self.assertEqual(entry.level, LogLevel.ERROR)
+            self.assertEqual(entry.category, LogCategory.ERROR)
+            self.assertIn("division by zero", entry.data['error_message'])
+            self.assertIn("traceback", entry.data)
 
     def test_shutdown(self):
-        self.logger = create_enhanced_logger(session_id="test_shutdown", enable_gcs=False, enable_firestore=False)
-        with patch.object(self.logger, '_flush_buffers') as mock_flush:
+        """Test the shutdown method."""
+        with patch.object(self.logger, 'flush_all') as mock_flush:
             self.logger.shutdown()
             mock_flush.assert_called_once()
-    
-    def test_daily_summary_creation(self):
-        self.logger = create_enhanced_logger(session_id="test_summary", enable_gcs=False, enable_firestore=False)
-        # Log some events to create a summary from
-        self.logger.log_trade_execution({"pnl": 100}, success=True)
-        self.logger.log_trade_execution({"pnl": -50}, success=True)
-        self.logger.log_error(ValueError("Test error"))
-
-        summary = self.logger.create_daily_summary()
-        self.assertIn("Daily Trading Summary", summary)
-        self.assertIn("Total Trades: 2", summary)
-        self.assertIn("Total PNL: 50.00", summary)
-        self.assertIn("Errors Logged: 1", summary)
 
 
-def main():
-    """Main test function"""
-    print("🚀 Enhanced Logging System Validation")
-    print("Testing comprehensive logging with Firestore and GCS integration")
-    print()
-    
-    # Check environment
-    print("🔍 Environment Check:")
-    print(f"GCP_PROJECT_ID: {os.getenv('GCP_PROJECT_ID', 'Not set')}")
-    print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT', 'prod')}")
-    print()
-    
-    unittest.main()
-
-
-if __name__ == "__main__":
-    main() 
+if __name__ == '__main__':
+    unittest.main() 

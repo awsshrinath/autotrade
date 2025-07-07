@@ -27,7 +27,7 @@ spec:
           limits:
             cpu: "250m"
             memory: "512Mi"
-        command: ["python", "-u", "runner/main_runner.py", "--service", "monitoring"]
+        command: ["python", "-u", "runner/monitoring_runner.py"]
         readinessProbe:
           httpGet:
             path: /health
