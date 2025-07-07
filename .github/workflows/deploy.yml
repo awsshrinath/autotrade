@@ -138,9 +138,6 @@ jobs:
         echo "Waiting for 60 seconds for pods to initialize before checking logs..."
         sleep 60
         
-        echo "Helm release status:"
-        helm status tron-system -n gpt
-
         echo "Pod status:"
         kubectl get pods -n gpt -o wide
 
