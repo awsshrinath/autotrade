@@ -60,7 +60,7 @@ jobs:
         docker push --all-tags $IMAGE_PREFIX/options-trader
 
         docker build -t $IMAGE_PREFIX/futures-trader:$TAG -t $IMAGE_PREFIX/futures-trader:latest --build-arg RUNNER_SCRIPT=futures_trading/futures_runner.py .
-        docker push --all-tags $IMAGE_PREFIX/futures-tradergit st
+        docker push --all-tags $IMAGE_PREFIX/futures-trader
 
         docker build -t $IMAGE_PREFIX/cognitive-engine:$TAG -t $IMAGE_PREFIX/cognitive-engine:latest --build-arg RUNNER_SCRIPT=runner/cognitive_system.py .
         docker push --all-tags $IMAGE_PREFIX/cognitive-engine
