@@ -6,7 +6,7 @@ metadata:
   labels:
     app: options-trader
 spec:
-  replicas: 0 # Scales to 1 during market hours
+  replicas: 0 # Scaled up by CronJob during market hours
   selector:
     matchLabels:
       app: options-trader
@@ -22,11 +22,12 @@ spec:
         - containerPort: 8082
         resources:
           requests:
-            cpu: "1.5"
-            memory: "3Gi"
+            cpu: "200m"
+            memory: "400Mi"
           limits:
-            cpu: "2"
-            memory: "4Gi"
+            cpu: "0.5"
+            memory: "1Gi"
+        command: ["python", "-u", "options_trading/options_runner.py"]
         readinessProbe:
           httpGet:
             path: /health

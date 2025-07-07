@@ -38,4 +38,5 @@ spec:
             path: /health
             port: 8080
           initialDelaySeconds: 15
-          periodSeconds: 20 
+          periodSeconds: 20
+        command: ["python", "-u", "runner/main_runner.py"] 

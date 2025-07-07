@@ -19,14 +19,15 @@ spec:
       - name: cognitive-system
         image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/cognitive-engine:latest
         ports:
-        - containerPort: 8085
+        - containerPort: 8084
         resources:
           requests:
-            cpu: "1"
-            memory: "3Gi"
+            cpu: "200m"
+            memory: "400Mi"
           limits:
-            cpu: "1.5"
-            memory: "4Gi"
+            cpu: "0.5"
+            memory: "1Gi"
+        command: ["python", "-u", "runner/cognitive_system.py"]
         readinessProbe:
           httpGet:
             path: /health

@@ -1,11 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: market-open-scaler
+  name: options-trader-market-open-scaler
   namespace: gpt
 spec:
-  schedule: "0 8 * * 1-5" # 8:00 AM IST, Mon-Fri
-  timeZone: "Asia/Kolkata"
+  schedule: "30 3 * * 1-5" # 9:00 AM IST, Monday to Friday
   jobTemplate:
     spec:
       template:
@@ -17,18 +16,7 @@ spec:
             command:
             - "/bin/sh"
             - "-c"
-            - |
-              echo "Scaling up all services for market open..."
-              kubectl scale deployment nginx-proxy --replicas=1
-              kubectl scale deployment tron-backend --replicas=1
-              kubectl scale deployment main-runner --replicas=1
-              kubectl scale deployment frontend --replicas=1
-              kubectl scale deployment monitoring-service --replicas=1
-              kubectl scale deployment stock-trader --replicas=1
-              kubectl scale deployment options-trader --replicas=1
-              kubectl scale deployment futures-trader --replicas=1
-              kubectl scale deployment cognitive-system --replicas=1
-              echo "Market open scaling complete."
+            - "kubectl scale deployment/options-trader -n gpt --replicas=1"
           restartPolicy: OnFailure
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3

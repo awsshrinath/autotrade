@@ -118,10 +118,16 @@ def is_market_open():
     now = datetime.now(IST)
     weekday = now.weekday()
     if weekday >= 5:
-        print("[INFO] Weekend detected. Market is closed.")
+        # It's a weekend
         return False
+    
+    # Check for holidays (implementation needed)
+    # from runner.utils.trade_utils import is_holiday
+    # if is_holiday(now.date()):
+    #     return False
+
     start_time = dtime(9, 15)
-    end_time = dtime(15, 15)
+    end_time = dtime(15, 30) # Extended slightly for safety
     return start_time <= now.time() <= end_time
 
 
@@ -252,30 +258,36 @@ def run_stock_trading_bot():
             return
 
         while is_market_open() or PAPER_TRADE:
-            for symbol, strategy in strategies.items():
-                try:
+            try:
+                # Main trading loop
+                for symbol, strategy in strategies.items():
+                    # This logic needs to be more robust, but for now:
                     signals = strategy.analyze(symbol=symbol)
                     for signal in signals:
                         trade_manager.execute_trade(signal)
-                except Exception as e:
-                    logger.log_error(e, context={"symbol": symbol, "strategy": strategy.__class__.__name__, "source": "strategy_analysis"}, source="stock_trader")
 
-            if PAPER_TRADE:
-                logger.info("Paper trading mode: single run complete.")
-                break
+                if PAPER_TRADE:
+                    logger.info("Paper trading mode: single run complete.")
+                    break
+                
+                # Sleep for a minute before the next cycle
+                time.sleep(60)
             
-            time.sleep(60)
-
-    except KeyboardInterrupt:
-        logger.info("Stock trading bot stopped by user.")
+            except KeyboardInterrupt:
+                logger.info("StockTrader stopped by user.")
+                break
+            except Exception as e:
+                logger.error(f"An error occurred in the main trading loop: {e}", exc_info=True)
+                # Brief sleep to prevent rapid-fire error loops
+                time.sleep(30)
+    
     except Exception as e:
         logger.log_error(e, context={"source": "stock_trader_main", "critical": True}, source="stock_trader", urgent=True)
-        # Optional: send a notification on critical failure
-        # send_slack_notification(f"CRITICAL: Stock trading bot crashed: {e}")
+        sys.exit(1)
     finally:
-        if logger:
-            logger.log_system_event("Stock trading bot shutting down.")
-            logger.shutdown()
+        logger.log_system_event("Stock trading bot shutting down.")
+        logger.shutdown()
+
 
 def main():
     """Entry point for the script."""

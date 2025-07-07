@@ -63,10 +63,16 @@ def is_market_open():
     now = datetime.now(IST)
     weekday = now.weekday()
     if weekday >= 5:
-        print("[INFO] Weekend detected. Market is closed.")
+        # It's a weekend
         return False
+    
+    # Check for holidays (implementation needed)
+    # from runner.utils.trade_utils import is_holiday
+    # if is_holiday(now.date()):
+    #     return False
+
     start_time = dtime(9, 15)
-    end_time = dtime(15, 15)
+    end_time = dtime(15, 30) # Extended slightly for safety
     return start_time <= now.time() <= end_time
 
 
@@ -250,14 +256,17 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
 
         trader.run()
 
+        # If we are here, the market has closed. Enter a long-running idle state.
+        logger.log_system_event("Market is closed. Entering idle mode until next trading day.")
+        while True:
+            time.sleep(3600)
+
     except Exception as e:
         logger.log_error(e, context={"source": "futures_trader_main", "critical": True}, source="futures_trader", urgent=True)
-        # Optional: send a notification on critical failure
-        # send_slack_notification(f"CRITICAL: Futures trading bot crashed: {e}")
+        sys.exit(1)
     finally:
-        if logger:
-            logger.log_system_event("Futures trading bot shutting down.")
-            logger.shutdown()
+        logger.log_system_event("Futures trading bot shutting down.")
+        logger.shutdown()
 
 
 def main():

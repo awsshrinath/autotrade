@@ -22,11 +22,12 @@ spec:
         - containerPort: 8081
         resources:
           requests:
-            cpu: "1.5"
-            memory: "3Gi"
+            cpu: "250m"
+            memory: "512Mi"
           limits:
-            cpu: "2"
-            memory: "4Gi"
+            cpu: "0.5"
+            memory: "1Gi"
+        command: ["python", "-u", "stock_trading/stock_runner.py"]
         readinessProbe:
           httpGet:
             path: /health

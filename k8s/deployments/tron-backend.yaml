@@ -20,6 +20,13 @@ spec:
         image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend:latest
         ports:
         - containerPort: 8000
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "400Mi"
+          limits:
+            cpu: "0.5"
+        command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
         readinessProbe:
           httpGet:
             path: /health
