@@ -173,7 +173,7 @@ def graceful_exit_if_off_hours(kite):
             print(f"[ERROR] Exit failed for {symbol}: {e}")
 
     print("[INFO] Exit process completed. Bot will stop.")
-    exit(0)
+    # exit(0) # Removing exit call
 
 
 def get_realtime_stock_data(symbols):
@@ -285,14 +285,15 @@ def run_stock_trading_bot():
     
     except Exception as e:
         logger.log_error(e, context={"source": "stock_trader_main", "critical": True}, source="stock_trader", urgent=True)
-        sys.exit(1)
+        # sys.exit(1) # Ensure this is removed
     finally:
         logger.log_system_event("Stock trading bot shutting down.")
-        logger.shutdown()
+        # logger.shutdown() # Keep logger active
 
 
 def main():
     """Main entry point for stock runner."""
+    
     def trading_logic():
         run_stock_trading_bot()
 
@@ -301,7 +302,12 @@ def main():
     health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
     health_thread.start()
     
+    # Run the trading logic with process monitoring
     run_script_with_monitoring(trading_logic)
+
+    # Keep the main thread alive to allow the health server to run
+    while True:
+        time.sleep(1)
 
 
 if __name__ == "__main__":

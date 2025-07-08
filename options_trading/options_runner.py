@@ -159,10 +159,10 @@ def run_options_trader(strategy_name: str, paper_trade: bool = False):
 
     except Exception as e:
         logger.log_error(e, context={"source": "options_trader_main", "critical": True}, source="options_trader", urgent=True)
-        sys.exit(1)
+        # sys.exit(1) # Removing this to allow health server to continue running
     finally:
         logger.log_system_event("Options trading bot shutting down.")
-        logger.shutdown()
+        # logger.shutdown() # Commenting out to keep logger active
 
 
 def main():
@@ -184,6 +184,10 @@ def main():
     health_thread.start()
     
     run_script_with_monitoring(trading_logic)
+
+    # Keep the main thread alive to allow the health server to run
+    while True:
+        time.sleep(1)
 
 
 if __name__ == "__main__":

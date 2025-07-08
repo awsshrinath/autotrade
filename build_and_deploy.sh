@@ -12,7 +12,7 @@ REPO_LOCATION="asia-south1-docker.pkg.dev"
 REPO_NAME="tron-system"
 
 # Define the services to build and push
-SERVICES=("gpt-runner" "stock-trader" "options-trader" "futures-trader")
+SERVICES=("gpt-runner" "stock-trader" "options-trader" "futures-trader" "cognitive-system" "monitoring-service")
 
 # Generate a unique version tag using the current date and a timestamp
 VERSION_TAG="v$(date +%Y%m%d)-$(date +%H%M%S)"
@@ -58,7 +58,9 @@ helm upgrade --install tron-system helm/ -n gpt \\
     --set mainRunner.image.tag=$VERSION_TAG \\
     --set stockTrader.image.tag=$VERSION_TAG \\
     --set optionsTrader.image.tag=$VERSION_TAG \\
-    --set futuresTrader.image.tag=$VERSION_TAG
+    --set futuresTrader.image.tag=$VERSION_TAG \\
+    --set cognitiveSystem.image.tag=$VERSION_TAG \\
+    --set monitoringService.image.tag=$VERSION_TAG
 
 echo "✅ Helm deployment initiated!"
 echo "-----------------------------------"

@@ -158,7 +158,7 @@ def main():
     
     if logger is None:
         print("❌ Cannot proceed without basic logger")
-        sys.exit(1)
+        # sys.exit(1) # Removing exit to allow health server to run
     
     print(f"📅 Today's date: {today_date}")
     print(f"🆔 Session ID: {session_id}")
@@ -248,5 +248,9 @@ if __name__ == "__main__":
     health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
     health_thread.start()
     
-    # This will block and manage the trading logic
+    # Run the trading logic with process monitoring
     run_script_with_monitoring(trading_logic)
+
+    # Keep the main thread alive to allow the health server to run
+    while True:
+        time.sleep(1)

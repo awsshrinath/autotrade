@@ -110,7 +110,7 @@ def graceful_exit_if_off_hours(kite):
         except Exception as e:
             print(f"[ERROR] Exit failed for {trade['symbol']}: {e}")
     print("[INFO] All open trades handled. Exiting bot.")
-    exit(0)
+    # exit(0) # Removing exit call to keep the script running for health checks
 
 
 def get_realtime_futures_data(kite):
@@ -266,29 +266,36 @@ def run_futures_trader(strategy_name: str, paper_trade: bool = False):
 
     except Exception as e:
         logger.log_error(e, context={"source": "futures_trader_main", "critical": True}, source="futures_trader", urgent=True)
-        sys.exit(1)
+        # sys.exit(1) # Ensure this is removed or commented out
+
     finally:
         logger.log_system_event("Futures trading bot shutting down.")
-        logger.shutdown()
-
+        # logger.shutdown() # Keep logger active
 
 def main():
-    """
-    Main entry point for the futures trader.
-    Starts the health server and runs the trading logic in a separate thread.
-    """
-    # Define the target function for the trading logic
+    """Main entry point for futures runner."""
+    import argparse
+    parser = argparse.ArgumentParser(description="Futures Trading Bot")
+    parser.add_argument("strategy", nargs='?', default="orb", help="Name of the strategy to run (e.g., orb)")
+    parser.add_argument("--paper", action="store_true", help="Run in paper trading mode")
+    args = parser.parse_args()
+
+    paper_trade_mode = args.paper or PAPER_TRADE
+    
     def trading_logic():
-        run_futures_trader("ORB", paper_trade=PAPER_TRADE)
+        run_futures_trader(strategy_name=args.strategy, paper_trade=paper_trade_mode)
 
     # Start health server in a separate thread
     health_port = int(os.environ.get('SERVICE_PORT', 8083))
     health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
     health_thread.start()
-
-    # Run the trading logic with monitoring
-    # This will block and manage the trading script
+    
     run_script_with_monitoring(trading_logic)
+
+    # Keep the main thread alive to allow the health server to run
+    while True:
+        time.sleep(1)
+
 
 if __name__ == "__main__":
     main()
