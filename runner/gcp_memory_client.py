@@ -29,9 +29,7 @@ def get_k8s_gcp_client(project_id: str = "autotrade-453303") -> 'GCPMemoryClient
     """
     logging.info(f"Initializing GCP Memory Client for project: {project_id}")
     return GCPMemoryClient(
-        project_id=project_id,
-        bucket_name="tron-trade-logs",
-        firestore_collection="cognitive_memory"
+        project_id=project_id
     )
 
 # Try importing OpenAI for embeddings, fallback to sentence-transformers

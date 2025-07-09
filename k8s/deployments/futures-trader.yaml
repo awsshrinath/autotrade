@@ -22,7 +22,7 @@ spec:
         - containerPort: 8083
         resources:
           requests:
-            cpu: "200m"
+            cpu: "100m"
             memory: "400Mi"
           limits:
             cpu: "0.5"

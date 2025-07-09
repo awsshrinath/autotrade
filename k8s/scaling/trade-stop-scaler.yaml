@@ -14,22 +14,20 @@ spec:
           containers:
           - name: kubectl-scaler
             image: bitnami/kubectl:latest
+            command:
+              - "/bin/sh"
+              - "-c"
+              - >
+                kubectl scale deployment/options-trader -n gpt --replicas=0;
+                kubectl scale deployment/futures-trader -n gpt --replicas=0;
+                kubectl scale deployment/stock-trader -n gpt --replicas=0;
             resources:
               requests:
                 cpu: "50m"
-                memory: "64Mi"
+                memory: "100Mi"
               limits:
                 cpu: "100m"
-                memory: "128Mi"
-            command:
-            - "/bin/sh"
-            - "-c"
-            - |
-              echo "Scaling down trading pods for market close..."
-              kubectl scale deployment stock-trader --replicas=0
-              kubectl scale deployment options-trader --replicas=0
-              kubectl scale deployment futures-trader --replicas=0
-              echo "Trading pod scaling down complete."
+                memory: "200Mi"
           restartPolicy: OnFailure
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
