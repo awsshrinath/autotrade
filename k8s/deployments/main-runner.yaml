@@ -39,4 +39,9 @@ spec:
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 20
-        command: ["python", "-u", "runner/main_runner.py"] 
+        env:
+        - name: RUNNER_SCRIPT
+          value: "runner/main_runner.py"
+        - name: SERVICE_PORT
+          value: "8080"
+        command: ["python", "-u", "runner/health_server.py"] 

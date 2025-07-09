@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: pre-market-scaler
+  name: trade-stop-scaler
   namespace: gpt
 spec:
-  schedule: "15 8 * * 1-5" # 8:15 AM IST, Monday to Friday
+  schedule: "35 15 * * 1-5" # 3:35 PM IST, Mon-Fri
   timeZone: "Asia/Kolkata"
   jobTemplate:
     spec:
@@ -25,14 +25,11 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              echo "Scaling up support services for pre-market..."
-              kubectl scale deployment nginx-proxy --replicas=1
-              kubectl scale deployment tron-backend --replicas=1
-              kubectl scale deployment main-runner --replicas=1
-              kubectl scale deployment frontend --replicas=1
-              kubectl scale deployment monitoring-service --replicas=1
-              kubectl scale deployment cognitive-system --replicas=1
-              echo "Pre-market scaling complete."
+              echo "Scaling down trading pods for market close..."
+              kubectl scale deployment stock-trader --replicas=0
+              kubectl scale deployment options-trader --replicas=0
+              kubectl scale deployment futures-trader --replicas=0
+              echo "Trading pod scaling down complete."
           restartPolicy: OnFailure
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3

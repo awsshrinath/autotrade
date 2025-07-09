@@ -11,6 +11,7 @@ import threading
 import time
 import traceback
 import sys
+import os
 
 # Add project paths
 sys.path.insert(0, '/app')
@@ -593,27 +594,23 @@ def create_cognitive_system(project_id: str = None,
 def main():
     """Main function to run cognitive system"""
     
-    def cognitive_logic():
-        logger = logging.getLogger(__name__)
-        
-        # Create and run the cognitive system
-        cognitive_system = create_cognitive_system(logger=logger)
-        
-        # Keep the main thread alive if background processing is enabled
-        if cognitive_system.config.enable_background_processing:
-            logger.info("Cognitive system running in background mode...")
-            # Use the shutdown event to wait indefinitely
-            cognitive_system._shutdown_event.wait()
-        else:
-            logger.info("Cognitive system single run complete.")
-
     # Start health server in a separate thread
     health_port = int(os.environ.get('SERVICE_PORT', 8084))
     health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
     health_thread.start()
     
-    # This will block and manage the cognitive logic
-    run_script_with_monitoring(cognitive_logic)
+    logger = logging.getLogger(__name__)
+    
+    # Create and run the cognitive system
+    cognitive_system = create_cognitive_system(logger=logger)
+    
+    # Keep the main thread alive if background processing is enabled
+    if cognitive_system.config.enable_background_processing:
+        logger.info("Cognitive system running in background mode...")
+        # Use the shutdown event to wait indefinitely
+        cognitive_system._shutdown_event.wait()
+    else:
+        logger.info("Cognitive system single run complete.")
 
 
 if __name__ == "__main__":

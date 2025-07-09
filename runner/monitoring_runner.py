@@ -53,17 +53,13 @@ def run_monitoring_service():
 
 def main():
     """Main entry point for the monitoring service runner."""
-    
-    def monitoring_logic():
-        run_monitoring_service()
 
     # Start health server in a separate thread
-    health_port = int(os.environ.get('SERVICE_PORT', 8085))
+    health_port = int(os.environ.get('SERVICE_PORT', 8086))
     health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
     health_thread.start()
-    
-    # Run the monitoring logic with process monitoring
-    run_script_with_monitoring(monitoring_logic)
+
+    run_monitoring_service()
 
 if __name__ == "__main__":
     main() 

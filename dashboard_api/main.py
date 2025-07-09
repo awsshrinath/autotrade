@@ -94,6 +94,11 @@ async def trade_summary_strategy():
 async def read_root():
     return {"message": "Welcome to the Tron Dashboard API"}
 
+@app.get("/health", tags=["Health Check"])
+async def health_check():
+    """Simple health check endpoint for Kubernetes probes."""
+    return {"status": "ok"}
+
 # For running the app directly during development
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 

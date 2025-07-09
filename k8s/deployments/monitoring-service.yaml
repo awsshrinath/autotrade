@@ -19,7 +19,7 @@ spec:
       - name: monitoring-service
         image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/gpt-runner:latest
         ports:
-        - containerPort: 8085
+        - containerPort: 8086
         resources:
           requests:
             cpu: "100m"
@@ -27,16 +27,21 @@ spec:
           limits:
             cpu: "250m"
             memory: "512Mi"
-        command: ["python", "-u", "runner/monitoring_runner.py"]
         readinessProbe:
           httpGet:
             path: /health
-            port: 8085
+            port: 8086
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
-            port: 8085
+            port: 8086
           initialDelaySeconds: 15
-          periodSeconds: 20 
+          periodSeconds: 20
+        env:
+        - name: RUNNER_SCRIPT
+          value: "runner/monitoring_runner.py"
+        - name: SERVICE_PORT
+          value: "8086"
+        command: ["python", "-u", "runner/health_server.py"] 

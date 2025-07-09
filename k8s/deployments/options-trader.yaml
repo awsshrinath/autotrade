@@ -27,7 +27,6 @@ spec:
           limits:
             cpu: "0.5"
             memory: "1Gi"
-        command: ["python", "-u", "options_trading/options_runner.py"]
         readinessProbe:
           httpGet:
             path: /health
@@ -39,4 +38,10 @@ spec:
             path: /health
             port: 8082
           initialDelaySeconds: 15
-          periodSeconds: 20 
+          periodSeconds: 20
+        env:
+        - name: RUNNER_SCRIPT
+          value: "options_trading/options_runner.py"
+        - name: SERVICE_PORT
+          value: "8082"
+        command: ["python", "-u", "runner/health_server.py"] 

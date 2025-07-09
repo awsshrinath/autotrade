@@ -208,7 +208,7 @@ def run_script_with_monitoring(script_path: str):
                 
         except Exception as e:
             error_msg = f"Error running script: {str(e)}"
-            logger.error(error_msg)
+            logger.exception(f"Exception in monitored script: {script_path}")
             retry_count += 1
             if retry_count < max_retries:
                 logger.info(f"Exception occurred, retrying in 30 seconds...")

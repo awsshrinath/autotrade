@@ -17,7 +17,14 @@ spec:
               name: market-holidays
           containers:
           - name: holiday-checker
-            image: bitnami/kubectl:latest
+            image: curlimages/curl:latest
+            resources:
+              requests:
+                cpu: "50m"
+                memory: "64Mi"
+              limits:
+                cpu: "100m"
+                memory: "128Mi"
             volumeMounts:
             - name: holiday-config-volume
               mountPath: /etc/config
