@@ -47,9 +47,9 @@ export default function RiskMonitorPage() {
   const fetchRiskData = async () => {
     try {
       const [metricsRes, alertsRes, portfolioRes] = await Promise.all([
-        fetch('http://localhost:8000/api/v1/risk/metrics'),
-        fetch('http://localhost:8000/api/v1/risk/alerts'),
-        fetch('http://localhost:8000/api/v1/risk/portfolio')
+        fetch('/api/v1/risk/metrics'),
+        fetch('/api/v1/risk/alerts'),
+        fetch('/api/v1/risk/portfolio')
       ])
 
       if (metricsRes.ok) {
@@ -76,7 +76,7 @@ export default function RiskMonitorPage() {
   // Acknowledge alert
   const acknowledgeAlert = async (alertId: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/risk/alerts/${alertId}/acknowledge`, {
+      const response = await fetch(`/api/v1/risk/alerts/${alertId}/acknowledge`, {
         method: 'POST'
       })
       if (response.ok) {
@@ -92,7 +92,7 @@ export default function RiskMonitorPage() {
   // Toggle alert notifications
   const toggleAlerts = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/risk/alerts/toggle', {
+      const response = await fetch('/api/v1/risk/alerts/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: !alertsEnabled })

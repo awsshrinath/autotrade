@@ -61,9 +61,9 @@ export default function SystemHealthPage() {
   const fetchHealthData = async () => {
     try {
       const [servicesRes, metricsRes, resourcesRes] = await Promise.all([
-        fetch('http://localhost:8000/api/v1/system/health/services'),
-        fetch('http://localhost:8000/api/v1/system/health/metrics'),
-        fetch('http://localhost:8000/api/v1/system/health/resources')
+        fetch('/api/v1/system/health/services'),
+        fetch('/api/v1/system/health/metrics'),
+        fetch('/api/v1/system/health/resources')
       ])
 
       if (servicesRes.ok) {
@@ -92,7 +92,7 @@ export default function SystemHealthPage() {
   // Restart service
   const restartService = async (serviceName: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/system/health/services/${serviceName}/restart`, {
+      const response = await fetch(`/api/v1/system/health/services/${serviceName}/restart`, {
         method: 'POST'
       })
       if (response.ok) {

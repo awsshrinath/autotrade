@@ -62,9 +62,9 @@ export default function PnLAnalysisPage() {
     try {
       setLoading(true)
       const [pnlRes, strategyRes, metricsRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/v1/analytics/pnl/daily?timeframe=${timeframe}`),
-        fetch(`http://localhost:8000/api/v1/analytics/pnl/strategy?timeframe=${timeframe}`),
-        fetch(`http://localhost:8000/api/v1/analytics/metrics?timeframe=${timeframe}`)
+        fetch(`/api/v1/analytics/pnl/daily?timeframe=${timeframe}`),
+        fetch(`/api/v1/analytics/pnl/strategy?timeframe=${timeframe}`),
+        fetch(`/api/v1/analytics/metrics?timeframe=${timeframe}`)
       ])
 
       if (pnlRes.ok) {
@@ -90,7 +90,7 @@ export default function PnLAnalysisPage() {
 
   const exportData = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/analytics/export?timeframe=${timeframe}`)
+      const response = await fetch(`/api/v1/analytics/export?timeframe=${timeframe}`)
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)

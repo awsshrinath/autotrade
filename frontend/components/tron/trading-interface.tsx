@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../ui/badge'
 import { TrendingUp, TrendingDown, DollarSign, Target, StopCircle } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { useToast } from '../ui/use-toast'
 
 interface TradeFormData {
   symbol: string
@@ -35,6 +36,7 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
   })
   const [loading, setLoading] = useState(false)
   const [lastTrade, setLastTrade] = useState<any>(null)
+  const { toast } = useToast();
 
   const strategies = [
     { value: 'manual', label: 'Manual Trading' },
@@ -74,7 +76,7 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
         strategy: formData.strategy
       }
 
-      const response = await fetch('http://localhost:8000/api/v1/trade/manual', {
+      const response = await fetch('/api/v1/trade/manual', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -43,7 +43,7 @@ export default function LiveTradesPage() {
   // Fetch live positions
   const fetchPositions = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/trade/positions/live')
+      const response = await fetch('/api/v1/trade/positions/live')
       if (response.ok) {
         const data = await response.json()
         setPositions(data.positions || [])
@@ -58,7 +58,7 @@ export default function LiveTradesPage() {
   // Fetch recent trades
   const fetchRecentTrades = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/trade/recent?limit=10')
+      const response = await fetch('/api/v1/trade/recent?limit=10')
       if (response.ok) {
         const data = await response.json()
         setRecentTrades(data.trades || [])
@@ -71,7 +71,7 @@ export default function LiveTradesPage() {
   // Emergency Controls
   const closeAllPositions = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/trade/emergency/close-all', {
+      const response = await fetch('/api/v1/trade/emergency/close-all', {
         method: 'POST'
       })
       if (response.ok) {
@@ -86,7 +86,7 @@ export default function LiveTradesPage() {
 
   const moveAllToBreakeven = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/trade/emergency/breakeven', {
+      const response = await fetch('/api/v1/trade/emergency/breakeven', {
         method: 'POST'
       })
       if (response.ok) {
@@ -101,7 +101,7 @@ export default function LiveTradesPage() {
 
   const closePosition = async (positionId: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/trade/position/${positionId}/close`, {
+      const response = await fetch(`/api/v1/trade/position/${positionId}/close`, {
         method: 'POST'
       })
       if (response.ok) {

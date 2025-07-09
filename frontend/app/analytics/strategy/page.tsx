@@ -58,9 +58,9 @@ export default function StrategyPerformancePage() {
     try {
       setLoading(true)
       const [strategiesRes, performanceRes, comparisonRes] = await Promise.all([
-        fetch('http://localhost:8000/api/v1/strategy/all'),
-        fetch(`http://localhost:8000/api/v1/strategy/performance?timeframe=${timeframe}`),
-        fetch('http://localhost:8000/api/v1/strategy/comparison')
+        fetch('/api/v1/strategy/all'),
+        fetch(`/api/v1/strategy/performance?timeframe=${timeframe}`),
+        fetch('/api/v1/strategy/comparison')
       ])
 
       if (strategiesRes.ok) {
@@ -87,7 +87,7 @@ export default function StrategyPerformancePage() {
   // Toggle strategy status
   const toggleStrategy = async (strategyName: string, action: 'start' | 'pause' | 'stop') => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/strategy/${strategyName}/${action}`, {
+      const response = await fetch(`/api/v1/strategy/${strategyName}/${action}`, {
         method: 'POST'
       })
       if (response.ok) {
