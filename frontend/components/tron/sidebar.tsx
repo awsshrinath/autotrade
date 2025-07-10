@@ -101,7 +101,7 @@ export default function Sidebar() {
                   <NavItem href="/system/trades" icon={Activity}>
                     Live Trades
                   </NavItem>
-                  <NavItem href="/system/cognitive" icon={Brain}>
+                  <NavItem href="/cognitive/insights" icon={Brain}>
                     Cognitive Insights
                   </NavItem>
                   <NavItem href="/system/health" icon={Cpu}>

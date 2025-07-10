@@ -1,8 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo, useMemo, useCallback } from "react"
 import Link from "next/link"
-import { Brain, Loader2 } from "lucide-react"
+import { Brain, AlertTriangle } from "lucide-react"
+import { SkeletonAnalyticsCard, SkeletonMetric } from "@/components/ui/skeleton"
+import { useApiError } from "@/components/error-context"
+import apiClient from "@/lib/api-error-handler"
 
 interface CognitiveSummary {
   thought_summary: {
@@ -17,45 +20,68 @@ interface CognitiveSummary {
   }
 }
 
-export default function AIMetricsCard() {
+const AIMetricsCard = memo(() => {
   const [data, setData] = useState<CognitiveSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { handleApiError } = useApiError()
+
+  const fetchCognitiveSummary = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const result = await apiClient.get<CognitiveSummary>('/api/cognitive/summary', {
+        retry: {
+          maxRetries: 2,
+          retryDelay: 1000,
+          exponentialBackoff: true,
+          retryCondition: (error) => error.status >= 500 || error.status === 0
+        }
+      })
+      
+      setData(result)
+    } catch (e: any) {
+      handleApiError(e, 'AI Metrics')
+      setError('Failed to load AI metrics')
+    } finally {
+      setLoading(false)
+    }
+  }, [handleApiError])
 
   useEffect(() => {
-    const fetchCognitiveSummary = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch("/api/cognitive/summary")
-        if (!response.ok) {
-          throw new Error("Failed to fetch")
-        }
-        const result: CognitiveSummary = await response.json()
-        setData(result)
-      } catch (e: any) {
-        setError(e.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchCognitiveSummary()
-  }, [])
-  
-  const renderContent = () => {
+  }, [fetchCognitiveSummary])
+
+  const renderContent = useMemo(() => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <SkeletonAnalyticsCard />
+            <SkeletonAnalyticsCard />
+          </div>
+          <div className="space-y-3">
+            <SkeletonMetric />
+            <SkeletonMetric />
+          </div>
         </div>
       )
     }
 
     if (error || !data) {
       return (
-        <div className="text-center text-red-500">
-          <p>Error loading AI metrics.</p>
-          <p className="text-xs">{error}</p>
+        <div className="text-center py-8">
+          <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-3" />
+          <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+            Unable to load AI metrics
+          </p>
+          <button 
+            onClick={fetchCognitiveSummary}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       )
     }
@@ -63,56 +89,66 @@ export default function AIMetricsCard() {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-zinc-50 dark:bg-zinc-900/70 p-4 rounded-lg border border-zinc-100 dark:border-zinc-800">
-            <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+          <div className="bg-zinc-50 dark:bg-zinc-900/70 padding-card-sm rounded-lg border border-zinc-100 dark:border-zinc-800 shadow-card transition-smooth hover:bg-zinc-100 dark:hover:bg-zinc-900/90">
+            <div className="text-heading-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">
               {data.thought_summary.total_thoughts.toLocaleString()}
             </div>
-            <div className="text-xs text-zinc-600 dark:text-zinc-400">Total Thoughts</div>
+            <div className="text-caption text-zinc-600 dark:text-zinc-400">Total Thoughts</div>
           </div>
-          <div className="bg-zinc-50 dark:bg-zinc-900/70 p-4 rounded-lg border border-zinc-100 dark:border-zinc-800">
-            <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+          <div className="bg-zinc-50 dark:bg-zinc-900/70 padding-card-sm rounded-lg border border-zinc-100 dark:border-zinc-800 shadow-card transition-smooth hover:bg-zinc-100 dark:hover:bg-zinc-900/90">
+            <div className="text-heading-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">
               {data.memory_summary.total_memories.toLocaleString()}
             </div>
-            <div className="text-xs text-zinc-600 dark:text-zinc-400">Total Memories</div>
+            <div className="text-caption text-zinc-600 dark:text-zinc-400">Total Memories</div>
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div>
-            <div className="flex items-center justify-between text-xs mb-1">
+            <div className="flex items-center justify-between text-caption mb-2">
               <span className="text-zinc-600 dark:text-zinc-400">Memory Utilization</span>
-              <span className="text-zinc-900 dark:text-zinc-100">{data.memory_summary.utilization_pct.toFixed(1)}%</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-medium">{data.memory_summary.utilization_pct.toFixed(1)}%</span>
             </div>
-            <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-600 dark:bg-blue-400 rounded-full" style={{ width: `${data.memory_summary.utilization_pct}%` }} />
+            <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 rounded-full transition-all duration-700 ease-out" 
+                style={{ width: `${Math.min(data.memory_summary.utilization_pct, 100)}%` }} 
+              />
             </div>
           </div>
 
           <div>
-            <div className="flex items-center justify-between text-xs mb-1">
+            <div className="flex items-center justify-between text-caption mb-2">
               <span className="text-zinc-600 dark:text-zinc-400">Confidence Level</span>
-              <span className="text-zinc-900 dark:text-zinc-100">{data.system_status.confidence_level.toFixed(1)}%</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-medium">{data.system_status.confidence_level.toFixed(1)}%</span>
             </div>
-            <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-              <div className="h-full bg-purple-600 dark:bg-purple-400 rounded-full" style={{ width: `${data.system_status.confidence_level}%` }} />
+            <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500 rounded-full transition-all duration-700 ease-out" 
+                style={{ width: `${Math.min(data.system_status.confidence_level, 100)}%` }} 
+              />
             </div>
           </div>
         </div>
       </div>
     )
-  }
+  }, [loading, error, data, fetchCognitiveSummary])
 
   return (
-    <Link href="/analytics">
-      <div className="bg-white dark:bg-[#0F0F12] rounded-xl p-6 flex flex-col border border-gray-200 dark:border-[#1F1F23] h-full">
-      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-left flex items-center gap-2">
-        <Brain className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-50" />
-        AI Thought & Memory
-      </h2>
-      <div className="flex-grow">
-        {renderContent()}
+    <Link href="/cognitive/insights">
+      <div className="bg-white dark:bg-[#0F0F12] rounded-xl padding-card flex flex-col border border-gray-200 dark:border-[#1F1F23] h-full shadow-card transition-smooth hover:shadow-card-hover">
+        <h2 className="text-heading-md text-gray-900 dark:text-white mb-6 text-left flex items-center gap-3">
+          <Brain className="w-4 h-4 text-zinc-900 dark:text-zinc-50" />
+          AI Thought & Memory
+        </h2>
+        <div className="flex-grow">
+          {renderContent}
+        </div>
       </div>
-    </div>
     </Link>
   )
-}
+})
+
+AIMetricsCard.displayName = 'AIMetricsCard'
+
+export default AIMetricsCard

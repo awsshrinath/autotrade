@@ -35,15 +35,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (authStatus === "true" && userData) {
           setUser(JSON.parse(userData))
           setIsAuthenticated(true)
-          // If user is authenticated and on login page, redirect to dashboard
+          // If user is authenticated and on login page, redirect to intended destination
           if (pathname === "/login") {
-            router.push("/dashboard")
+            const redirectPath = localStorage.getItem("redirectPath")
+            if (redirectPath && redirectPath !== "/login") {
+              localStorage.removeItem("redirectPath")
+              router.push(redirectPath)
+            } else {
+              router.push("/dashboard")
+            }
           }
         } else {
           setUser(null)
           setIsAuthenticated(false)
-          // Only redirect to login if not already on login page and not on home page
-          if (pathname !== "/login" && pathname !== "/") {
+          // More selective redirect logic to prevent 404s
+          const publicPaths = ["/", "/login"]
+          const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+          
+          if (!isPublicPath) {
+            // Store the attempted path for redirect after login
+            localStorage.setItem("redirectPath", pathname)
             router.push("/login")
           }
         }

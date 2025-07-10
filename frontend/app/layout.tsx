@@ -3,8 +3,14 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth/auth-provider"
+import { CriticalErrorBoundary } from "@/components/error-boundary"
+import { ErrorProvider } from "@/components/error-context"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+})
 
 export const metadata = {
   title: "Tron Dashboard",
@@ -20,9 +26,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+        <CriticalErrorBoundary>
+          <ErrorProvider>
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+              <AuthProvider>{children}</AuthProvider>
+            </ThemeProvider>
+          </ErrorProvider>
+        </CriticalErrorBoundary>
       </body>
     </html>
   )

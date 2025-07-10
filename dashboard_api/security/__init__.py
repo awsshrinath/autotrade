@@ -1,0 +1,1 @@
+# Security module for dashboard API authentication and authorization 
