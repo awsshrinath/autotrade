@@ -5,7 +5,7 @@ import asyncio
 import os
 import json
 from openai import AsyncOpenAI
-import aioredis
+# import aioredis  # Temporarily disabled due to compatibility issues
 from functools import wraps
 
 from .log_service import LogService, get_log_service

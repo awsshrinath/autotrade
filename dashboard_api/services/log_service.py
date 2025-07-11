@@ -80,14 +80,23 @@ class LogService:
 
     def _initialize_gcp_clients(self):
         """Initialize GCP clients with comprehensive authentication methods."""
+        # Check if Google Cloud services are disabled
+        if os.getenv("DISABLE_GCS", "").lower() == "true" and os.getenv("DISABLE_FIRESTORE", "").lower() == "true":
+            logger.info("Google Cloud services disabled via environment variables")
+            self.gcs_client = None
+            self.firestore_db = None
+            return
+            
         try:
             # Method 1: Try service account key file
             service_account_key = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
             if service_account_key:
                 if os.path.isfile(service_account_key):
                     credentials = service_account.Credentials.from_service_account_file(service_account_key)
-                    self.gcs_client = storage.Client(credentials=credentials, project=self.project_id)
-                    self.firestore_db = firestore.Client(credentials=credentials, project=self.project_id)
+                    if os.getenv("DISABLE_GCS", "").lower() != "true":
+                        self.gcs_client = storage.Client(credentials=credentials, project=self.project_id)
+                    if os.getenv("DISABLE_FIRESTORE", "").lower() != "true":
+                        self.firestore_db = firestore.Client(credentials=credentials, project=self.project_id)
                     logger.info("GCP clients initialized using service account key file")
                     return
                 else:
@@ -96,8 +105,10 @@ class LogService:
                     try:
                         key_data = json.loads(service_account_key)
                         credentials = service_account.Credentials.from_service_account_info(key_data)
-                        self.gcs_client = storage.Client(credentials=credentials, project=self.project_id)
-                        self.firestore_db = firestore.Client(credentials=credentials, project=self.project_id)
+                        if os.getenv("DISABLE_GCS", "").lower() != "true":
+                            self.gcs_client = storage.Client(credentials=credentials, project=self.project_id)
+                        if os.getenv("DISABLE_FIRESTORE", "").lower() != "true":
+                            self.firestore_db = firestore.Client(credentials=credentials, project=self.project_id)
                         logger.info("GCP clients initialized using service account key JSON")
                         return
                     except json.JSONDecodeError:
@@ -106,15 +117,19 @@ class LogService:
             # Method 2: Try environment credentials
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
             if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-                self.gcs_client = storage.Client(project=self.project_id)
-                self.firestore_db = firestore.Client(project=self.project_id)
+                if os.getenv("DISABLE_GCS", "").lower() != "true":
+                    self.gcs_client = storage.Client(project=self.project_id)
+                if os.getenv("DISABLE_FIRESTORE", "").lower() != "true":
+                    self.firestore_db = firestore.Client(project=self.project_id)
                 logger.info("GCP clients initialized using environment credentials")
                 return
             
             # Method 3: Try default credentials (Cloud Run, GCE, local gcloud)
             try:
-                self.gcs_client = storage.Client(project=self.project_id)
-                self.firestore_db = firestore.Client(project=self.project_id)
+                if os.getenv("DISABLE_GCS", "").lower() != "true":
+                    self.gcs_client = storage.Client(project=self.project_id)
+                if os.getenv("DISABLE_FIRESTORE", "").lower() != "true":
+                    self.firestore_db = firestore.Client(project=self.project_id)
                 logger.info("GCP clients initialized using default credentials")
                 return
             except Exception as e:
