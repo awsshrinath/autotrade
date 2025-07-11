@@ -59,7 +59,11 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
 
   const handleSubmitTrade = async () => {
     if (!formData.symbol || !formData.quantity) {
-      alert('Please fill in all required fields')
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      })
       return
     }
 
@@ -87,7 +91,10 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
       if (response.ok) {
         const result = await response.json()
         setLastTrade(result)
-        alert(`Trade submitted successfully! Order ID: ${result.order_id}`)
+        toast({
+          title: "Trade Submitted Successfully!",
+          description: `Order ID: ${result.order_id}`,
+        })
         
         // Reset form
         setFormData({
@@ -103,11 +110,19 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
         }
       } else {
         const error = await response.json()
-        alert(`Trade failed: ${error.detail || 'Unknown error'}`)
+        toast({
+          title: "Trade Failed",
+          description: error.detail || 'Unknown error',
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Trade submission error:', error)
-      alert('Failed to submit trade')
+      toast({
+        title: "Trade Failed",
+        description: "Failed to submit trade",
+        variant: "destructive"
+      })
     } finally {
       setLoading(false)
     }

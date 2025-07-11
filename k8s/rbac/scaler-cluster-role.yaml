@@ -4,7 +4,7 @@ metadata:
   name: cronjob-scaler-role
 rules:
 - apiGroups: ["apps"]
-  resources: ["deployments"]
+  resources: ["deployments", "deployments/scale"]
   verbs: ["get", "list", "patch", "update", "watch"]
 - apiGroups: ["batch"]
   resources: ["jobs", "cronjobs"]
