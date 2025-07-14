@@ -72,18 +72,96 @@ async def system_status():
 
 @app.get("/api/system/health")
 async def system_health():
-    service = system_service.get_system_service()
-    return await service.get_system_health()
+    """Get system health with frontend-compatible format."""
+    try:
+        service = system_service.get_system_service()
+        raw_health = await service.get_system_health()
+        
+        # Transform to match frontend expectations
+        return {
+            "status": raw_health.get('status', 'unknown'),
+            "services": raw_health.get('components', []),
+            "overall_status": raw_health.get('overall_status', 'unknown'),
+            "uptime_hours": raw_health.get('uptime_hours', 0),
+            "last_check": raw_health.get('last_check'),
+            "timestamp": raw_health.get('timestamp')
+        }
+    except Exception as e:
+        # Fallback response with expected format
+        return {
+            "status": "error", 
+            "services": [
+                {"name": "System Check", "status": "error"}
+            ],
+            "overall_status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get("/api/system/metrics")
 async def system_metrics():
-    service = system_service.get_system_service()
-    return service.get_system_metrics()
+    """Get system metrics with frontend-compatible format."""
+    try:
+        service = system_service.get_system_service()
+        raw_metrics = service.get_system_metrics()
+        
+        # Add active_trades field that frontend expects
+        trade_service = real_trade_service.get_trade_service()
+        active_positions = await trade_service.get_live_positions()
+        active_trades = len(active_positions)
+        
+        # Transform to match frontend expectations
+        return {
+            "cpu_usage": raw_metrics.get('cpu_usage', 0),
+            "memory_usage": raw_metrics.get('memory_usage', 0),
+            "active_trades": active_trades,
+            "disk_usage": raw_metrics.get('disk_usage', 0),
+            "network_connections": raw_metrics.get('network_connections', 0),
+            "timestamp": raw_metrics.get('timestamp'),
+            "api_response_time_ms": raw_metrics.get('api_response_time_ms', 0)
+        }
+    except Exception as e:
+        # Fallback response with expected format
+        return {
+            "cpu_usage": 0,
+            "memory_usage": 0,
+            "active_trades": 0,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get("/api/cognitive/summary")
 async def cognitive_summary():
-    service = cognitive_service.get_cognitive_service()
-    return await service.get_cognitive_summary()
+    """Get cognitive AI insights summary."""
+    try:
+        service = cognitive_service.get_cognitive_service()
+        raw_summary = await service.get_cognitive_summary()
+        
+        # Transform to match frontend expectations
+        return {
+            "summary": f"System is {raw_summary.get('status', 'unknown')} with {raw_summary.get('confidence_score', 0):.1f}% confidence",
+            "key_insights": [
+                f"AI models active: {raw_summary.get('ai_models_active', 0)}",
+                f"Insights generated: {raw_summary.get('insights_generated', 0)}",
+                f"Market sentiment: {raw_summary.get('market_sentiment', 'unknown')}"
+            ],
+            "confidence_score": raw_summary.get('confidence_score', 0),
+            "timestamp": raw_summary.get('timestamp'),
+            "status": raw_summary.get('status', 'unknown')
+        }
+    except Exception as e:
+        # Fallback response with expected format
+        return {
+            "summary": f"Cognitive system encountered an error: {str(e)}",
+            "key_insights": [
+                "System is in fallback mode",
+                "Real-time data processing active",
+                "Error monitoring enabled"
+            ],
+            "confidence_score": 5.0,
+            "timestamp": datetime.now().isoformat(),
+            "status": "error"
+        }
 
 @app.get("/api/cognitive/health")
 async def cognitive_health():
@@ -559,9 +637,26 @@ async def system_health_metrics():
 @app.get("/api/v1/trade/positions/live")
 async def trade_positions_live():
     """Get live trading positions."""
-    service = real_trade_service.get_trade_service()
-    positions = await service.get_live_positions()
-    return {"positions": positions}
+    try:
+        service = real_trade_service.get_trade_service()
+        positions = await service.get_live_positions()
+        
+        # Transform to match frontend expectations
+        return {
+            "positions": positions,
+            "total_positions": len(positions),
+            "data_source": "live_trading_api",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        # Fallback response with expected format
+        return {
+            "positions": [],
+            "total_positions": 0,
+            "data_source": "error_fallback",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get("/api/v1/trade/recent")
 async def trade_recent(limit: int = 10):
