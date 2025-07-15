@@ -86,7 +86,7 @@ export default function StrategyPerformancePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeframe])
 
   // Toggle strategy status
   const toggleStrategy = async (strategyName: string, action: 'start' | 'pause' | 'stop') => {
@@ -98,7 +98,7 @@ export default function StrategyPerformancePage() {
       console.error('Failed to toggle strategy:', error)
       console.warn(handleApiError(error, 'Strategy control'))
     }
-  }, [timeframe])
+  }
 
   useEffect(() => {
     fetchStrategyData()

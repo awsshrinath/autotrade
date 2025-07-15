@@ -89,7 +89,7 @@ export default function PnLAnalysisPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeframe])
 
   const exportData = async () => {
     try {
@@ -109,7 +109,7 @@ export default function PnLAnalysisPage() {
       console.error('Failed to export data:', error)
       console.warn(handleApiError(error, 'Data export'))
     }
-  }, [timeframe])
+  }
 
   useEffect(() => {
     fetchPnLData()
