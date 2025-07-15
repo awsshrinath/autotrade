@@ -25,7 +25,7 @@ class ApiClient {
   private baseURL: string = ''
 
   constructor(baseURL: string = '') {
-    this.baseURL = baseURL
+    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
   }
 
   private async sleep(ms: number): Promise<void> {
@@ -46,7 +46,7 @@ class ApiClient {
     const {
       retry = {},
       timeout = 10000,
-      useFallback = true,
+      useFallback = process.env.NEXT_PUBLIC_ENV !== 'production',
       ...fetchOptions
     } = options
 

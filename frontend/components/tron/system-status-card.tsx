@@ -33,7 +33,7 @@ const SystemStatusCard = memo(() => {
           maxRetries: 2,
           retryDelay: 1000,
           exponentialBackoff: true,
-          retryCondition: (error) => error.status >= 500 || error.status === 0
+          retryCondition: (error) => (error.status && error.status >= 500) || error.status === 0
         }
       })
       

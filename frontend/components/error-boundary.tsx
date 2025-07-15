@@ -156,7 +156,7 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
               <CardTitle className="text-red-900 dark:text-red-100">Page Error</CardTitle>
               <CardDescription className="text-red-700 dark:text-red-300">
-                This page encountered an error and couldn't load properly.
+                This page encountered an error and couldn&apos;t load properly.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

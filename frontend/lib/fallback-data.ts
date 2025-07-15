@@ -1,5 +1,6 @@
-// Fallback data providers for when APIs are unavailable
+// Fallback data providers for when APIs are unavailable (DEVELOPMENT ONLY)
 // This ensures the UI can still display meaningful content during network issues
+// NOTE: Fallback data is disabled in production mode to ensure only real data is shown
 
 export interface SystemStatus {
   status: string

@@ -14,8 +14,8 @@ import logging
 import json
 
 # Set environment variables for production mode
-os.environ["DISABLE_GCS"] = "true"
-os.environ["DISABLE_FIRESTORE"] = "true" 
+os.environ["DISABLE_GCS"] = "false"
+os.environ["DISABLE_FIRESTORE"] = "false" 
 os.environ["GCP_PROJECT_ID"] = "autotrade-453303"
 os.environ["PAPER_TRADE"] = "true"
 

@@ -99,7 +99,6 @@ export default function SystemHealthPage() {
       
       alert(`${serviceName} restart initiated`)
       fetchHealthData()
-      }
     } catch (error) {
       console.error('Failed to restart service:', error)
       alert('Failed to restart service')

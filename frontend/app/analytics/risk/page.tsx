@@ -96,8 +96,7 @@ export default function RiskMonitorPage() {
     try {
       const options = { useFallback: false } // Never use fallback for alert settings
       await apiClient.post('/api/v1/risk/alerts/toggle', { enabled: !alertsEnabled }, options)
-        setAlertsEnabled(!alertsEnabled)
-      }
+      setAlertsEnabled(!alertsEnabled)
     } catch (error) {
       console.error('Failed to toggle alerts:', error)
     }
