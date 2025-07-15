@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { TrendingUp, TrendingDown, DollarSign, Calendar, Download } from 'lucide-react'
 import { cn } from '../../../lib/utils'
+import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
 interface PnLData {
   date: string
@@ -61,28 +62,31 @@ export default function PnLAnalysisPage() {
   const fetchPnLData = async () => {
     try {
       setLoading(true)
-      const [pnlRes, strategyRes, metricsRes] = await Promise.all([
-        fetch(`/api/v1/analytics/pnl/daily?timeframe=${timeframe}`),
-        fetch(`/api/v1/analytics/pnl/strategy?timeframe=${timeframe}`),
-        fetch(`/api/v1/analytics/metrics?timeframe=${timeframe}`)
+      
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const [pnlData, strategyData, metricsData] = await Promise.all([
+        apiClient.get<{pnl_data: PnLData[]}>(`/api/v1/analytics/pnl/daily?timeframe=${timeframe}`, options),
+        apiClient.get<{strategies: StrategyPnL[]}>(`/api/v1/analytics/pnl/strategy?timeframe=${timeframe}`, options),
+        apiClient.get<{metrics: PerformanceMetrics}>(`/api/v1/analytics/metrics?timeframe=${timeframe}`, options)
       ])
 
-      if (pnlRes.ok) {
-        const data = await pnlRes.json()
-        setPnlData(data.pnl_data || [])
-      }
-
-      if (strategyRes.ok) {
-        const data = await strategyRes.json()
-        setStrategyData(data.strategies || [])
-      }
-
-      if (metricsRes.ok) {
-        const data = await metricsRes.json()
-        setMetrics(data.metrics)
-      }
+      setPnlData(pnlData.pnl_data || [])
+      setStrategyData(strategyData.strategies || [])
+      setMetrics(metricsData.metrics)
+      
     } catch (error) {
       console.error('Failed to fetch P&L data:', error)
+      
+      // In production mode, show appropriate error message and reset data
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Analytics'))
+        setPnlData([])
+        setStrategyData([])
+        setMetrics(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -90,20 +94,21 @@ export default function PnLAnalysisPage() {
 
   const exportData = async () => {
     try {
-      const response = await fetch(`/api/v1/analytics/export?timeframe=${timeframe}`)
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `pnl_analysis_${timeframe}.csv`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      }
+      // Use enhanced API client for export functionality
+      const options = { useFallback: false } // Never use fallback for exports
+      const response = await apiClient.get<Blob>(`/api/v1/analytics/export?timeframe=${timeframe}`, options)
+      
+      const url = window.URL.createObjectURL(response)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `pnl_analysis_${timeframe}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
     } catch (error) {
       console.error('Failed to export data:', error)
+      console.warn(handleApiError(error, 'Data export'))
     }
   }
 

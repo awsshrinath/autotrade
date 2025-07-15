@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs'
 import { Brain, TrendingUp, TrendingDown, AlertTriangle, Target, Activity, Zap, BarChart3, RefreshCw, FileText, Trash2 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
+import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
 interface TradeInsight {
   id: string
@@ -122,13 +123,20 @@ export default function CognitiveInsightsPage() {
 
   const fetchCognitiveStatus = async () => {
     try {
-      const response = await fetch('/api/cognitive/status')
-      if (response.ok) {
-        const data = await response.json()
-        setCognitiveStatus(data)
-      }
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const data = await apiClient.get<CognitiveStatus>('/api/v1/cognitive/summary', options)
+      setCognitiveStatus(data)
     } catch (error) {
       console.error('Failed to fetch cognitive status:', error)
+      
+      // In production mode, show appropriate error message
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Cognitive analysis'))
+        setCognitiveStatus(null)
+      }
     }
   }
 
@@ -140,32 +148,21 @@ export default function CognitiveInsightsPage() {
         ...(logSource !== 'all' && { source: logSource })
       })
       
-      const response = await fetch(`/api/cognitive/logs/summary?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        setLogSummary(data)
-      } else {
-        // Fallback mock data if API not available
-        setLogSummary({
-          summary: "System running smoothly with minor trading activity. No critical errors detected in the selected timeframe.",
-          key_insights: [
-            "Trading bot executed 12 successful trades",
-            "Risk management parameters functioning correctly", 
-            "Market data feed stable with 99.8% uptime",
-            "Memory usage within normal parameters"
-          ],
-          error_count: 0,
-          warning_count: 2,
-          timestamp: new Date().toISOString(),
-          log_sources: ["gcs", "firestore"],
-          recommendations: [
-            "Consider adjusting position sizes based on volatility",
-            "Monitor memory usage during high-frequency trading periods"
-          ]
-        })
-      }
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const data = await apiClient.get<LogSummary>(`/api/v1/cognitive/logs/summary?${params}`, options)
+      setLogSummary(data)
+      
     } catch (error) {
       console.error('Failed to fetch log summary:', error)
+      
+      // In production mode, show appropriate error message
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Log analysis'))
+        setLogSummary(null)
+      }
     } finally {
       setSummaryLoading(false)
     }
@@ -174,27 +171,22 @@ export default function CognitiveInsightsPage() {
   const fetchMarketSentiment = async () => {
     try {
       setSentimentLoading(true)
-      const response = await fetch('/api/cognitive/market/sentiment')
-      if (response.ok) {
-        const data = await response.json()
-        setMarketSentiment(data)
-      } else {
-        // Fallback mock data
-        setMarketSentiment({
-          sentiment: "bullish",
-          confidence: 0.73,
-          factors: [
-            "Strong earnings reports from major indices",
-            "Positive economic indicators",
-            "Increased institutional buying",
-            "Technical breakout patterns observed"
-          ],
-          timestamp: new Date().toISOString(),
-          recommendation: "Consider increasing position sizes with proper risk management"
-        })
-      }
+      
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const data = await apiClient.get<MarketSentiment>('/api/v1/cognitive/market/sentiment', options)
+      setMarketSentiment(data)
+      
     } catch (error) {
       console.error('Failed to fetch market sentiment:', error)
+      
+      // In production mode, show appropriate error message
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Market sentiment analysis'))
+        setMarketSentiment(null)
+      }
     } finally {
       setSentimentLoading(false)
     }
@@ -202,13 +194,14 @@ export default function CognitiveInsightsPage() {
 
   const clearCache = async () => {
     try {
-      const response = await fetch('/api/cognitive/cache/clear', { method: 'POST' })
-      if (response.ok) {
-        // Refresh data after clearing cache
-        await Promise.all([fetchCognitiveStatus(), fetchLogSummary(), fetchMarketSentiment()])
-      }
+      const options = { useFallback: false } // Never use fallback for cache actions
+      await apiClient.post('/api/v1/cognitive/cache/clear', {}, options)
+      
+      // Refresh data after clearing cache
+      await Promise.all([fetchCognitiveStatus(), fetchLogSummary(), fetchMarketSentiment()])
     } catch (error) {
       console.error('Failed to clear cache:', error)
+      console.warn(handleApiError(error, 'Cache management'))
     }
   }
 

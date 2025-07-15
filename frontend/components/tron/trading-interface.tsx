@@ -10,6 +10,7 @@ import { Badge } from '../ui/badge'
 import { TrendingUp, TrendingDown, DollarSign, Target, StopCircle } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useToast } from '../ui/use-toast'
+import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
 interface TradeFormData {
   symbol: string
@@ -80,47 +81,36 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
         strategy: formData.strategy
       }
 
-      const response = await fetch('/api/v1/trade/manual', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+      // Use enhanced API client with production error handling
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: false } // Never use fallback for trade submissions
+      
+      const result = await apiClient.post<any>('/api/v1/trade/manual', payload, options)
+      
+      setLastTrade(result)
+      toast({
+        title: "Trade Submitted Successfully!",
+        description: `Order ID: ${result.order_id}`,
+      })
+      
+      // Reset form
+      setFormData({
+        symbol: '',
+        side: 'BUY',
+        quantity: 0,
+        orderType: 'MARKET',
+        strategy: 'manual'
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        setLastTrade(result)
-        toast({
-          title: "Trade Submitted Successfully!",
-          description: `Order ID: ${result.order_id}`,
-        })
-        
-        // Reset form
-        setFormData({
-          symbol: '',
-          side: 'BUY',
-          quantity: 0,
-          orderType: 'MARKET',
-          strategy: 'manual'
-        })
-
-        if (onTradeSubmit) {
-          onTradeSubmit(formData)
-        }
-      } else {
-        const error = await response.json()
-        toast({
-          title: "Trade Failed",
-          description: error.detail || 'Unknown error',
-          variant: "destructive"
-        })
+      if (onTradeSubmit) {
+        onTradeSubmit(formData)
       }
     } catch (error) {
       console.error('Trade submission error:', error)
+      const errorMessage = handleApiError(error, 'Trade submission')
       toast({
         title: "Trade Failed",
-        description: "Failed to submit trade",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {

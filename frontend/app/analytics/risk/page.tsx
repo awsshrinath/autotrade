@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/button'
 import { Progress } from '../../../components/ui/progress'
 import { AlertTriangle, Shield, TrendingDown, Activity, Bell, BellOff } from 'lucide-react'
 import { cn } from '../../../lib/utils'
+import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
 interface RiskMetric {
   name: string
@@ -46,28 +47,30 @@ export default function RiskMonitorPage() {
   // Fetch risk data
   const fetchRiskData = async () => {
     try {
-      const [metricsRes, alertsRes, portfolioRes] = await Promise.all([
-        fetch('/api/v1/risk/metrics'),
-        fetch('/api/v1/risk/alerts'),
-        fetch('/api/v1/risk/portfolio')
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const [metricsData, alertsData, portfolioData] = await Promise.all([
+        apiClient.get<{metrics: RiskMetric[]}>('/api/v1/risk/metrics', options),
+        apiClient.get<{alerts: RiskAlert[]}>('/api/v1/risk/alerts', options),
+        apiClient.get<PortfolioRisk>('/api/v1/risk/portfolio', options)
       ])
 
-      if (metricsRes.ok) {
-        const data = await metricsRes.json()
-        setRiskMetrics(data.metrics || [])
-      }
-
-      if (alertsRes.ok) {
-        const data = await alertsRes.json()
-        setAlerts(data.alerts || [])
-      }
-
-      if (portfolioRes.ok) {
-        const data = await portfolioRes.json()
-        setPortfolioRisk(data)
-      }
+      setRiskMetrics(metricsData.metrics || [])
+      setAlerts(alertsData.alerts || [])
+      setPortfolioRisk(portfolioData)
+      
     } catch (error) {
       console.error('Failed to fetch risk data:', error)
+      
+      // In production mode, show appropriate error message and reset data
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Risk monitoring'))
+        setRiskMetrics([])
+        setAlerts([])
+        setPortfolioRisk(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -76,28 +79,23 @@ export default function RiskMonitorPage() {
   // Acknowledge alert
   const acknowledgeAlert = async (alertId: string) => {
     try {
-      const response = await fetch(`/api/v1/risk/alerts/${alertId}/acknowledge`, {
-        method: 'POST'
-      })
-      if (response.ok) {
-        setAlerts(prev => prev.map(alert => 
-          alert.id === alertId ? { ...alert, acknowledged: true } : alert
-        ))
-      }
+      const options = { useFallback: false } // Never use fallback for alert actions
+      await apiClient.post(`/api/v1/risk/alerts/${alertId}/acknowledge`, {}, options)
+      
+      setAlerts(prev => prev.map(alert => 
+        alert.id === alertId ? { ...alert, acknowledged: true } : alert
+      ))
     } catch (error) {
       console.error('Failed to acknowledge alert:', error)
+      console.warn(handleApiError(error, 'Alert acknowledgment'))
     }
   }
 
   // Toggle alert notifications
   const toggleAlerts = async () => {
     try {
-      const response = await fetch('/api/v1/risk/alerts/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: !alertsEnabled })
-      })
-      if (response.ok) {
+      const options = { useFallback: false } // Never use fallback for alert settings
+      await apiClient.post('/api/v1/risk/alerts/toggle', { enabled: !alertsEnabled }, options)
         setAlertsEnabled(!alertsEnabled)
       }
     } catch (error) {

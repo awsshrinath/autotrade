@@ -8,6 +8,7 @@ import AIMetricsCard from "./ai-metrics-card"
 import SystemHealthCard from "./system-health-card"
 import { SkeletonCard, SkeletonAnalyticsCard, SkeletonButton } from "@/components/ui/skeleton"
 import { ComponentErrorBoundary } from "@/components/error-boundary"
+import apiClient, { handleApiError } from "@/lib/api-error-handler"
 
 // --- Data Interfaces ---
 interface PnlSummary {
@@ -33,19 +34,16 @@ const Content = memo(() => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const [pnlRes, riskRes, strategyRes] = await Promise.all([
-        fetch("/api/trade/summary/daily"),
-        fetch("/api/trade/summary/positions"),
-        fetch("/api/trade/summary/strategy"),
-      ])
       
-      if (!pnlRes.ok || !riskRes.ok || !strategyRes.ok) {
-          throw new Error("Failed to fetch analytics data")
-      }
-
-      const pnl = await pnlRes.json()
-      const risk = await riskRes.json()
-      const strategy = await strategyRes.json()
+      // Use enhanced API client with fallback data disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const [pnl, risk, strategy] = await Promise.all([
+        apiClient.get<PnlSummary>("/api/v1/analytics/pnl/daily", options),
+        apiClient.get<RiskSummary>("/api/v1/trade/positions/live", options),
+        apiClient.get<StrategySummary>("/api/v1/strategy/all", options),
+      ])
 
       setPnlData(pnl)
       setRiskData(risk)
@@ -53,6 +51,15 @@ const Content = memo(() => {
 
     } catch (error) {
       console.error("Error fetching analytics data:", error)
+      
+      // In production mode, show appropriate error message
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Analytics'))
+        // Reset data to null to show "N/A" in UI
+        setPnlData(null)
+        setRiskData(null)
+        setStrategyData(null)
+      }
     } finally {
       setLoading(false)
     }

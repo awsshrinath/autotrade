@@ -9,6 +9,7 @@ import { Progress } from '../../../components/ui/progress'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { TrendingUp, TrendingDown, Activity, Target, Shield, Zap } from 'lucide-react'
 import { cn } from '../../../lib/utils'
+import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
 interface Strategy {
   name: string
@@ -57,28 +58,31 @@ export default function StrategyPerformancePage() {
   const fetchStrategyData = async () => {
     try {
       setLoading(true)
-      const [strategiesRes, performanceRes, comparisonRes] = await Promise.all([
-        fetch('/api/v1/strategy/all'),
-        fetch(`/api/v1/strategy/performance?timeframe=${timeframe}`),
-        fetch('/api/v1/strategy/comparison')
+      
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const [strategiesData, performanceData, comparisonData] = await Promise.all([
+        apiClient.get<{strategies: Strategy[]}>('/api/v1/strategy/all', options),
+        apiClient.get<{performance: StrategyPerformance[]}>(`/api/v1/strategy/performance?timeframe=${timeframe}`, options),
+        apiClient.get<{comparison: StrategyComparison[]}>('/api/v1/strategy/comparison', options)
       ])
 
-      if (strategiesRes.ok) {
-        const data = await strategiesRes.json()
-        setStrategies(data.strategies || [])
-      }
-
-      if (performanceRes.ok) {
-        const data = await performanceRes.json()
-        setPerformanceData(data.performance || [])
-      }
-
-      if (comparisonRes.ok) {
-        const data = await comparisonRes.json()
-        setComparisonData(data.comparison || [])
-      }
+      setStrategies(strategiesData.strategies || [])
+      setPerformanceData(performanceData.performance || [])
+      setComparisonData(comparisonData.comparison || [])
+      
     } catch (error) {
       console.error('Failed to fetch strategy data:', error)
+      
+      // In production mode, show appropriate error message and reset data
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'Strategy analysis'))
+        setStrategies([])
+        setPerformanceData([])
+        setComparisonData([])
+      }
     } finally {
       setLoading(false)
     }
@@ -87,14 +91,12 @@ export default function StrategyPerformancePage() {
   // Toggle strategy status
   const toggleStrategy = async (strategyName: string, action: 'start' | 'pause' | 'stop') => {
     try {
-      const response = await fetch(`/api/v1/strategy/${strategyName}/${action}`, {
-        method: 'POST'
-      })
-      if (response.ok) {
-        fetchStrategyData()
-      }
+      const options = { useFallback: false } // Never use fallback for strategy actions
+      await apiClient.post(`/api/v1/strategy/${strategyName}/${action}`, {}, options)
+      fetchStrategyData()
     } catch (error) {
       console.error('Failed to toggle strategy:', error)
+      console.warn(handleApiError(error, 'Strategy control'))
     }
   }
 

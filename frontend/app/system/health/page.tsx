@@ -8,6 +8,7 @@ import { Progress } from '../../../components/ui/progress'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { CheckCircle, AlertCircle, XCircle, Server, Database, Cloud, Cpu, MemoryStick, HardDrive, Wifi, RefreshCw } from 'lucide-react'
 import { cn } from '../../../lib/utils'
+import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
 interface ServiceStatus {
   name: string
@@ -60,30 +61,31 @@ export default function SystemHealthPage() {
   // Fetch system health data
   const fetchHealthData = async () => {
     try {
-      const [servicesRes, metricsRes, resourcesRes] = await Promise.all([
-        fetch('/api/v1/system/health/services'),
-        fetch('/api/v1/system/health/metrics'),
-        fetch('/api/v1/system/health/resources')
+      // Use enhanced API client with fallback disabled in production
+      const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
+      const options = { useFallback: !isProduction }
+      
+      const [servicesData, metricsData, resourcesData] = await Promise.all([
+        apiClient.get<{services: ServiceStatus[]}>('/api/v1/system/health/services', options),
+        apiClient.get<{metrics: SystemMetric[]}>('/api/v1/system/health/metrics', options),
+        apiClient.get<{resources: ResourceUsage}>('/api/v1/system/health/resources', options)
       ])
 
-      if (servicesRes.ok) {
-        const data = await servicesRes.json()
-        setServices(data.services || [])
-      }
-
-      if (metricsRes.ok) {
-        const data = await metricsRes.json()
-        setMetrics(data.metrics || [])
-      }
-
-      if (resourcesRes.ok) {
-        const data = await resourcesRes.json()
-        setResources(data.resources)
-      }
-
+      setServices(servicesData.services || [])
+      setMetrics(metricsData.metrics || [])
+      setResources(resourcesData.resources)
       setLastUpdate(new Date())
+      
     } catch (error) {
       console.error('Failed to fetch health data:', error)
+      
+      // In production mode, show appropriate error message and reset data
+      if (process.env.NEXT_PUBLIC_ENV === 'production') {
+        console.warn(handleApiError(error, 'System health monitoring'))
+        setServices([])
+        setMetrics([])
+        setResources(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -92,12 +94,11 @@ export default function SystemHealthPage() {
   // Restart service
   const restartService = async (serviceName: string) => {
     try {
-      const response = await fetch(`/api/v1/system/health/services/${serviceName}/restart`, {
-        method: 'POST'
-      })
-      if (response.ok) {
-        alert(`${serviceName} restart initiated`)
-        fetchHealthData()
+      const options = { useFallback: false } // Never use fallback for service actions
+      await apiClient.post(`/api/v1/system/health/services/${serviceName}/restart`, {}, options)
+      
+      alert(`${serviceName} restart initiated`)
+      fetchHealthData()
       }
     } catch (error) {
       console.error('Failed to restart service:', error)
