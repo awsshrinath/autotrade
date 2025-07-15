@@ -20,7 +20,7 @@ interface CognitiveSummary {
   }
 }
 
-const AIMetricsCard = memo(() => {
+function AIMetricsCard() {
   const [data, setData] = useState<CognitiveSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +42,7 @@ const AIMetricsCard = memo(() => {
       
       setData(result)
     } catch (e: unknown) {
-      handleApiError(e, 'AI Metrics')
+      handleApiError(e as Error | { message?: string; status?: number }, 'AI Metrics')
       setError('Failed to load AI metrics')
     } finally {
       setLoading(false)
@@ -112,11 +112,10 @@ const AIMetricsCard = memo(() => {
             <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 rounded-full transition-all duration-700 ease-out" 
-                style={{ width: `${Math.min(data.memory_summary.utilization_pct, 100)}%` }} 
+                style={{ width: `${Math.min(data.memory_summary.utilization_pct, 100)}%` }}
               />
             </div>
           </div>
-
           <div>
             <div className="flex items-center justify-between text-caption mb-2">
               <span className="text-zinc-600 dark:text-zinc-400">Confidence Level</span>
@@ -125,14 +124,14 @@ const AIMetricsCard = memo(() => {
             <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500 rounded-full transition-all duration-700 ease-out" 
-                style={{ width: `${Math.min(data.system_status.confidence_level, 100)}%` }} 
+                style={{ width: `${Math.min(data.system_status.confidence_level, 100)}%` }}
               />
             </div>
           </div>
         </div>
       </div>
     )
-  }, [loading, error, data, fetchCognitiveSummary])
+  }, [data, loading, error, fetchCognitiveSummary])
 
   return (
     <Link href="/cognitive/insights">
@@ -147,8 +146,6 @@ const AIMetricsCard = memo(() => {
       </div>
     </Link>
   )
-})
+}
 
-AIMetricsCard.displayName = 'AIMetricsCard'
-
-export default AIMetricsCard
+export default memo(AIMetricsCard)
