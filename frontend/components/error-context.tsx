@@ -85,7 +85,7 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({
     }
 
     return id
-  }, [maxNotifications, dismissNotification])
+  }, [maxNotifications])
 
   const showError = useCallback((title: string, message: string, options?: Partial<ErrorNotification>) => {
     return addNotification('error', title, message, options)
