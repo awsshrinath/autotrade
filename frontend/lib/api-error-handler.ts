@@ -194,26 +194,26 @@ export async function fetchWithRetry<T>(
 }
 
 // Convenience methods for common error scenarios
-export function isNetworkError(error: any): boolean {
+export function isNetworkError(error: ApiError | Error | { status?: number; code?: string }): boolean {
   return !error.status || error.code === 'NETWORK_ERROR' || error.code === 'TIMEOUT'
 }
 
-export function isServerError(error: any): boolean {
+export function isServerError(error: ApiError | Error | { status?: number }): boolean {
   return error.status >= 500
 }
 
-export function isClientError(error: any): boolean {
+export function isClientError(error: ApiError | Error | { status?: number }): boolean {
   return error.status >= 400 && error.status < 500
 }
 
-export function getErrorMessage(error: any): string {
+export function getErrorMessage(error: ApiError | Error | { message?: string; status?: number }): string {
   if (error.message) return error.message
   if (error.status) return `HTTP ${error.status}`
   return 'An unexpected error occurred'
 }
 
 // Enhanced error boundary integration
-export function handleApiError(error: any, context: string = 'API'): string {
+export function handleApiError(error: ApiError | Error | { message?: string; status?: number }, context: string = 'API'): string {
   const message = getErrorMessage(error)
   
   if (isNetworkError(error)) {

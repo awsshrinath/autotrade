@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs'
-import { Brain, TrendingUp, TrendingDown, AlertTriangle, Target, Activity, Zap, BarChart3, RefreshCw, FileText, Trash2 } from 'lucide-react'
+import { Brain, TrendingUp, AlertTriangle, Target, Activity, Zap, RefreshCw, FileText, Trash2 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
@@ -88,8 +88,8 @@ export default function CognitiveInsightsPage() {
   const [logSummary, setLogSummary] = useState<LogSummary | null>(null)
   const [marketSentiment, setMarketSentiment] = useState<MarketSentiment | null>(null)
   const [cognitiveStatus, setCognitiveStatus] = useState<CognitiveStatus | null>(null)
-  const [summary, setSummary] = useState<CognitiveSummary | null>(null)
-  const [health, setHealth] = useState<CognitiveHealth | null>(null)
+  const [summary] = useState<CognitiveSummary | null>(null)
+  const [health] = useState<CognitiveHealth | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
@@ -121,7 +121,7 @@ export default function CognitiveInsightsPage() {
     { value: 'kubernetes', label: 'Kubernetes Logs' }
   ]
 
-  const fetchCognitiveStatus = async () => {
+  const fetchCognitiveStatus = useCallback(async () => {
     try {
       // Use enhanced API client with fallback disabled in production
       const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
@@ -138,9 +138,9 @@ export default function CognitiveInsightsPage() {
         setCognitiveStatus(null)
       }
     }
-  }
+  }, [])
 
-  const fetchLogSummary = async () => {
+  const fetchLogSummary = useCallback(async () => {
     try {
       setSummaryLoading(true)
       const params = new URLSearchParams({
@@ -166,9 +166,9 @@ export default function CognitiveInsightsPage() {
     } finally {
       setSummaryLoading(false)
     }
-  }
+  }, [selectedTimeframe, logSource])
 
-  const fetchMarketSentiment = async () => {
+  const fetchMarketSentiment = useCallback(async () => {
     try {
       setSentimentLoading(true)
       
@@ -190,9 +190,9 @@ export default function CognitiveInsightsPage() {
     } finally {
       setSentimentLoading(false)
     }
-  }
+  }, [])
 
-  const clearCache = async () => {
+  const clearCache = useCallback(async () => {
     try {
       const options = { useFallback: false } // Never use fallback for cache actions
       await apiClient.post('/api/v1/cognitive/cache/clear', {}, options)
@@ -203,9 +203,9 @@ export default function CognitiveInsightsPage() {
       console.error('Failed to clear cache:', error)
       console.warn(handleApiError(error, 'Cache management'))
     }
-  }
+  }, [fetchCognitiveStatus, fetchLogSummary, fetchMarketSentiment])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -259,7 +259,7 @@ export default function CognitiveInsightsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchCognitiveStatus, fetchLogSummary, fetchMarketSentiment, selectedTimeframe, selectedType])
 
   const refreshData = async () => {
     setRefreshing(true)
@@ -269,7 +269,7 @@ export default function CognitiveInsightsPage() {
 
   useEffect(() => {
     fetchData()
-  }, [selectedTimeframe, selectedType, logSource])
+  }, [selectedTimeframe, selectedType, logSource, fetchData])
 
   const getSignalColor = (signal: string) => {
     switch (signal.toLowerCase()) {

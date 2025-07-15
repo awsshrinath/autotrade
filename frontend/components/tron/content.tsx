@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, memo, useCallback, useMemo } from "react"
+import { useState, useEffect, memo, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Activity, Brain, Cpu, LineChart, Shield, BarChart2, Loader2 } from "lucide-react"
+import { Activity, Brain, Cpu, LineChart, Shield, BarChart2 } from "lucide-react"
 import SystemStatusCard from "./system-status-card"
 import AIMetricsCard from "./ai-metrics-card"
 import SystemHealthCard from "./system-health-card"
-import { SkeletonCard, SkeletonAnalyticsCard, SkeletonButton } from "@/components/ui/skeleton"
+import { SkeletonAnalyticsCard } from "@/components/ui/skeleton"
 import { ComponentErrorBoundary } from "@/components/error-boundary"
 import apiClient, { handleApiError } from "@/lib/api-error-handler"
 

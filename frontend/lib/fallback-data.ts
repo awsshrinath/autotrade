@@ -129,7 +129,6 @@ class FallbackDataProvider {
   getAnalyticsData() {
     const days = 30
     const dailyPnL = []
-    const performanceMetrics = []
 
     for (let i = days; i >= 0; i--) {
       const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
@@ -177,7 +176,7 @@ class FallbackDataProvider {
 export const fallbackData = FallbackDataProvider.getInstance()
 
 // Utility function to check if we should use fallback data
-export function shouldUseFallback(error: any): boolean {
+export function shouldUseFallback(error: Error | { status?: number; message?: string }): boolean {
   // FALLBACK DATA COMPLETELY DISABLED - always return false
   return false
 }
@@ -192,7 +191,7 @@ export async function withFallback<T>(
     fallbackDelay?: number
   } = {}
 ): Promise<{ data: T; isFallback: boolean }> {
-  const { retries = 2, timeout = 5000, fallbackDelay = 1000 } = options
+  const { timeout = 5000, fallbackDelay = 1000 } = options
 
   try {
     // Try the actual API call with timeout
@@ -202,10 +201,11 @@ export async function withFallback<T>(
 
     const data = await Promise.race([apiCall(), timeoutPromise])
     return { data, isFallback: false }
-  } catch (error: any) {
-    console.warn('API call failed, using fallback data:', error.message)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.warn('API call failed, using fallback data:', errorMessage)
     
-    if (shouldUseFallback(error)) {
+    if (shouldUseFallback(error as Error | { status?: number; message?: string })) {
       // Add a small delay to simulate network call for UX consistency
       await new Promise(resolve => setTimeout(resolve, fallbackDelay))
       return { data: fallbackData(), isFallback: true }

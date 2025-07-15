@@ -13,8 +13,7 @@ import {
   Video,
   Mail,
   Github,
-  AlertCircle,
-  CheckCircle
+  AlertCircle
 } from "lucide-react"
 
 export default function HelpPage() {
@@ -154,7 +153,7 @@ export default function HelpPage() {
     </div>
   )
 
-  const QuickActionCard = ({ action }: { action: { title: string; description: string; icon: React.ComponentType<any>; action: string } }) => {
+  const QuickActionCard = ({ action }: { action: { title: string; description: string; icon: React.ComponentType<{ className?: string }>; action: string } }) => {
     const IconComponent = action.icon
     return (
       <Card className="bg-white dark:bg-[#0F0F12] border-gray-200 dark:border-[#1F1F23] hover:shadow-lg transition-shadow cursor-pointer">

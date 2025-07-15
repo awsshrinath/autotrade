@@ -85,7 +85,7 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({
     }
 
     return id
-  }, [maxNotifications])
+  }, [maxNotifications, dismissNotification])
 
   const showError = useCallback((title: string, message: string, options?: Partial<ErrorNotification>) => {
     return addNotification('error', title, message, options)
@@ -227,7 +227,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onDis
 export const useApiError = () => {
   const { showError, showWarning } = useError()
 
-  const handleApiError = useCallback((error: any, context?: string) => {
+  const handleApiError = useCallback((error: Error | { message?: string; status?: number }, context?: string) => {
     const contextPrefix = context ? `${context}: ` : ''
     
     if (error && typeof error === 'object') {

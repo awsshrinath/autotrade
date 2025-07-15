@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
 import { Progress } from '../../../components/ui/progress'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
-import { TrendingUp, TrendingDown, Activity, Target, Shield, Zap } from 'lucide-react'
+import { Activity, Target, Shield } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
@@ -55,7 +55,7 @@ export default function StrategyPerformancePage() {
   ]
 
   // Fetch strategy data
-  const fetchStrategyData = async () => {
+  const fetchStrategyData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -98,11 +98,11 @@ export default function StrategyPerformancePage() {
       console.error('Failed to toggle strategy:', error)
       console.warn(handleApiError(error, 'Strategy control'))
     }
-  }
+  }, [timeframe])
 
   useEffect(() => {
     fetchStrategyData()
-  }, [timeframe])
+  }, [timeframe, fetchStrategyData])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -136,9 +136,9 @@ export default function StrategyPerformancePage() {
     }).format(amount)
   }
 
-  const formatPercentage = (percentage: number) => {
-    return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
-  }
+  // const formatPercentage = (percentage: number) => {
+  //   return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
+  // }
 
   const filteredPerformanceData = selectedStrategy === 'all' 
     ? performanceData 

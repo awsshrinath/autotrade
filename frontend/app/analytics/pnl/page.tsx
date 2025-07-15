@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, memo, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card'
 import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Download } from 'lucide-react'
+import { TrendingUp, TrendingDown, Download } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import apiClient, { handleApiError } from '@/lib/api-error-handler'
 
@@ -59,7 +58,7 @@ export default function PnLAnalysisPage() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']
 
   // Fetch P&L data
-  const fetchPnLData = async () => {
+  const fetchPnLData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -110,11 +109,11 @@ export default function PnLAnalysisPage() {
       console.error('Failed to export data:', error)
       console.warn(handleApiError(error, 'Data export'))
     }
-  }
+  }, [timeframe])
 
   useEffect(() => {
     fetchPnLData()
-  }, [timeframe])
+  }, [timeframe, fetchPnLData])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {

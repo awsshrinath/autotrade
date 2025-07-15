@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../../components/ui/badge'
 import { Button } from '../../../components/ui/button'
 import { Progress } from '../../../components/ui/progress'
-import { AlertTriangle, Shield, TrendingDown, Activity, Bell, BellOff } from 'lucide-react'
+import { AlertTriangle, Shield, Activity, Bell, BellOff } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import apiClient, { handleApiError } from '@/lib/api-error-handler'
 

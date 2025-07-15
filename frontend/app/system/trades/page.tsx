@@ -6,7 +6,7 @@ import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { AlertTriangle, TrendingUp, TrendingDown, X, Target, Pause, RefreshCw } from 'lucide-react'
 import { cn } from '../../../lib/utils'
-import { SkeletonAnalyticsCard, SkeletonList, SkeletonDashboard } from '../../../components/ui/skeleton'
+import { SkeletonAnalyticsCard, SkeletonDashboard } from '../../../components/ui/skeleton'
 import { useApiError } from '../../../components/error-context'
 import apiClient from '../../../lib/api-error-handler'
 
@@ -89,7 +89,7 @@ export default function LiveTradesPage() {
       setError(null)
       
       await Promise.all([fetchPositions(), fetchRecentTrades()])
-    } catch (error: unknown) {
+    } catch (err: unknown) {
       setError('Failed to load trading data')
     } finally {
       setLoading(false)
