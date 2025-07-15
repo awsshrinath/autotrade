@@ -39,7 +39,7 @@ const SystemStatusCard = memo(() => {
       
       setData(result)
     } catch (e: unknown) {
-      handleApiError(e, 'System Status')
+      handleApiError(e as Error | { message?: string; status?: number }, 'System Status')
       setError('Failed to load system status')
     } finally {
       setLoading(false)

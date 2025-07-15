@@ -90,15 +90,24 @@ class ApiClient {
         const data = await response.json()
         return data
       } catch (error: unknown) {
-        lastError = error as ApiError
+        // Use type guard for error
+        if (typeof error === 'object' && error !== null && 'status' in error) {
+          lastError = error as ApiError
+        } else {
+          lastError = new Error('Unknown error') as ApiError
+        }
 
         // Don't retry on client errors (4xx) except 408 (timeout)
-        if (error.status >= 400 && error.status < 500 && error.status !== 408) {
+        if (
+          typeof error === 'object' && error !== null && 'status' in error &&
+          typeof (error as any).status === 'number' &&
+          (error as any).status >= 400 && (error as any).status < 500 && (error as any).status !== 408
+        ) {
           break
         }
 
-                 // Check if we should retry
-         if (attempt < maxRetries && lastError && retryCondition(lastError)) {
+        // Check if we should retry
+        if (attempt < maxRetries && lastError && retryCondition(lastError)) {
           const delay = exponentialBackoff 
             ? retryDelay * Math.pow(2, attempt)
             : retryDelay
@@ -182,7 +191,7 @@ export async function fetchWithRetry<T>(
     const data = await apiClient.get<T>(url, options)
     return { data, isFallback: false }
   } catch (error: unknown) {
-    if (shouldUseFallback(error)) {
+    if (typeof error === 'object' && error !== null && shouldUseFallback(error as ApiError)) {
       const fallbackResult = apiClient['getFallbackData']<T>(url)
       if (fallbackResult) {
         notifyFallbackUsage(url)
@@ -195,20 +204,34 @@ export async function fetchWithRetry<T>(
 
 // Convenience methods for common error scenarios
 export function isNetworkError(error: ApiError | Error | { status?: number; code?: string }): boolean {
-  return !error.status || error.code === 'NETWORK_ERROR' || error.code === 'TIMEOUT'
+  if (typeof error === 'object' && error !== null) {
+    if ('status' in error && typeof (error as any).status === 'number') {
+      if (!(error as any).status) return true
+    }
+    if ('code' in error && ((error as any).code === 'NETWORK_ERROR' || (error as any).code === 'TIMEOUT')) {
+      return true
+    }
+  }
+  return false
 }
 
 export function isServerError(error: ApiError | Error | { status?: number }): boolean {
-  return error.status >= 500
+  return typeof error === 'object' && error !== null && 'status' in error && typeof (error as any).status === 'number' && (error as any).status >= 500
 }
 
 export function isClientError(error: ApiError | Error | { status?: number }): boolean {
-  return error.status >= 400 && error.status < 500
+  return typeof error === 'object' && error !== null && 'status' in error && typeof (error as any).status === 'number' && (error as any).status >= 400 && (error as any).status < 500
 }
 
 export function getErrorMessage(error: ApiError | Error | { message?: string; status?: number }): string {
-  if (error.message) return error.message
-  if (error.status) return `HTTP ${error.status}`
+  if (typeof error === 'object' && error !== null) {
+    if ('message' in error && typeof (error as any).message === 'string') {
+      return (error as any).message
+    }
+    if ('status' in error && typeof (error as any).status === 'number') {
+      return `HTTP ${(error as any).status}`
+    }
+  }
   return 'An unexpected error occurred'
 }
 
@@ -223,12 +246,12 @@ export function handleApiError(error: ApiError | Error | { message?: string; sta
   if (isServerError(error)) {
     return `${context} service temporarily unavailable. Please try again later.`
   }
-  
+
   if (isClientError(error)) {
     return `${context} request failed: ${message}`
   }
-  
+
   return `${context} error: ${message}`
 }
 
-export default apiClient 
+export default apiClient
