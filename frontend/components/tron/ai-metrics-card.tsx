@@ -41,7 +41,7 @@ const AIMetricsCard = memo(() => {
       })
       
       setData(result)
-    } catch (e: any) {
+    } catch (e: unknown) {
       handleApiError(e, 'AI Metrics')
       setError('Failed to load AI metrics')
     } finally {

@@ -36,7 +36,7 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
     strategy: 'manual'
   })
   const [loading, setLoading] = useState(false)
-  const [lastTrade, setLastTrade] = useState<any>(null)
+  const [lastTrade, setLastTrade] = useState<Record<string, unknown> | null>(null)
   const { toast } = useToast();
 
   const strategies = [
@@ -51,7 +51,7 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
     'NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'INFY', 'HDFC', 'SBIN', 'ITC'
   ]
 
-  const handleInputChange = (field: keyof TradeFormData, value: any) => {
+  const handleInputChange = (field: keyof TradeFormData, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -85,7 +85,7 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
       const isProduction = process.env.NEXT_PUBLIC_ENV === 'production'
       const options = { useFallback: false } // Never use fallback for trade submissions
       
-      const result = await apiClient.post<any>('/api/v1/trade/manual', payload, options)
+      const result = await apiClient.post<Record<string, unknown>>('/api/v1/trade/manual', payload, options)
       
       setLastTrade(result)
       toast({
@@ -355,20 +355,24 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
           </Button>
 
           {/* Last Trade Result */}
-          {lastTrade && (
-            <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-green-600">Trade Submitted Successfully</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 text-sm">
-                  <div>Order ID: <span className="font-medium">{lastTrade.order_id}</span></div>
-                  <div>Status: <span className="font-medium">{lastTrade.status}</span></div>
-                  <div>Timestamp: <span className="font-medium">{new Date(lastTrade.timestamp).toLocaleString()}</span></div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {lastTrade && typeof lastTrade === 'object' && lastTrade !== null &&
+            'order_id' in lastTrade && 'status' in lastTrade && 'timestamp' in lastTrade && (() => {
+              const { order_id, status, timestamp } = lastTrade as { order_id: string; status: string; timestamp: string };
+              return (
+                <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg text-green-600">Trade Submitted Successfully</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1 text-sm">
+                      <div>Order ID: <span className="font-medium">{order_id}</span></div>
+                      <div>Status: <span className="font-medium">{status}</span></div>
+                      <div>Timestamp: <span className="font-medium">{new Date(timestamp).toLocaleString()}</span></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
         </CardContent>
       </Card>
     </div>

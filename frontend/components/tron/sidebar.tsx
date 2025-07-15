@@ -20,7 +20,7 @@ export default function Sidebar() {
     children,
   }: {
     href: string
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     children: React.ReactNode
   }) {
     return (

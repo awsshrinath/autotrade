@@ -128,18 +128,25 @@ export default function PnLAnalysisPage() {
     return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: unknown[]; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border rounded-lg p-3 shadow-lg">
           <p className="font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className={cn("text-sm", 
-              entry.value >= 0 ? "text-green-600" : "text-red-600"
-            )}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
+          {(payload as unknown[] | undefined)?.map((entry: unknown, index) => {
+            // Type guard for entry
+            if (typeof entry === 'object' && entry !== null && 'name' in entry && 'value' in entry) {
+              const e = entry as { name: string; value: number };
+              return (
+                <p key={index} className={cn("text-sm", 
+                  e.value >= 0 ? "text-green-600" : "text-red-600"
+                )}>
+                  {e.name}: {formatCurrency(e.value)}
+                </p>
+              );
+            }
+            return null;
+          })}
         </div>
       )
     }

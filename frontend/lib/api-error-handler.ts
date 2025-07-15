@@ -126,41 +126,9 @@ class ApiClient {
   }
 
   private getFallbackData<T>(url: string): T | null {
-    try {
-      // Map API endpoints to fallback data methods
-      if (url.includes('/api/system/health')) {
-        return fallbackData.getSystemStatus() as T
-      }
-      
-      if (url.includes('/api/cognitive/summary')) {
-        return fallbackData.getCognitiveSummary() as T
-      }
-      
-      if (url.includes('/api/system/metrics')) {
-        return fallbackData.getSystemMetrics() as T
-      }
-      
-      if (url.includes('/api/v1/trade/positions/live')) {
-        return fallbackData.getPositions() as T
-      }
-      
-      if (url.includes('/api/v1/trade/recent')) {
-        return fallbackData.getRecentTrades() as T
-      }
-
-      if (url.includes('/api/analytics')) {
-        return fallbackData.getAnalyticsData() as T
-      }
-
-      if (url.includes('/api/health')) {
-        return fallbackData.getHealthData() as T
-      }
-
-      return null
-    } catch (error) {
-      console.warn('Failed to generate fallback data:', error)
-      return null
-    }
+    // FALLBACK DATA COMPLETELY DISABLED
+    // Always return null so that components show "No data available"
+    return null
   }
 
   async get<T>(url: string, options: RequestOptions = {}): Promise<T> {

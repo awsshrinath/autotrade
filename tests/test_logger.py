@@ -19,16 +19,22 @@ setup_all_mocks()
 from runner.enhanced_logging.core_logger import TradingLogger, LogLevel, LogCategory, LogEntry
 from runner.enhanced_logging.log_types import TradeLogData
 
-@patch('threading.Thread') # Prevent background thread from starting during tests
-@patch('runner.enhanced_logging.core_logger.GCSLogger')
-@patch('runner.enhanced_logging.core_logger.FirestoreLogger')
 class TestTradingLogger(unittest.TestCase):
 
-    def setUp(self, MockFirestoreLogger, MockGCSLogger, MockThread):
+    def setUp(self):
         """Set up a mock environment for each test."""
         # Mock the logger backends
-        self.mock_firestore_logger = MockFirestoreLogger.return_value
-        self.mock_gcs_logger = MockGCSLogger.return_value
+        self.firestore_patcher = patch('runner.enhanced_logging.core_logger.FirestoreLogger')
+        self.gcs_patcher = patch('runner.enhanced_logging.core_logger.GCSLogger')
+        self.thread_patcher = patch('threading.Thread')
+        
+        self.mock_firestore_logger_class = self.firestore_patcher.start()
+        self.mock_gcs_logger_class = self.gcs_patcher.start()
+        self.mock_thread_class = self.thread_patcher.start()
+        
+        self.mock_firestore_logger = self.mock_firestore_logger_class.return_value
+        self.mock_gcs_logger = self.mock_gcs_logger_class.return_value
+        self.mock_thread = self.mock_thread_class.return_value
         
         # Instantiate the logger with mocked dependencies
         self.logger = TradingLogger(
@@ -38,6 +44,12 @@ class TestTradingLogger(unittest.TestCase):
             enable_firestore=True,
             enable_gcs=True
         )
+
+    def tearDown(self):
+        """Clean up after each test."""
+        self.firestore_patcher.stop()
+        self.gcs_patcher.stop()
+        self.thread_patcher.stop()
 
     def test_initialization(self):
         """Test if the TradingLogger initializes correctly."""

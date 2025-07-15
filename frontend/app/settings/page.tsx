@@ -8,12 +8,6 @@ import {
   Settings, 
   User, 
   Shield, 
-  Bell, 
-  Palette,
-  Monitor,
-  Globe,
-  Database,
-  Key,
   Save,
   RefreshCw
 } from "lucide-react"
@@ -53,7 +47,7 @@ export default function SettingsPage() {
     },
     {
       title: "System Configuration",
-      icon: Database,
+      icon: Shield,
       settings: [
         {
           name: "API Endpoints",
@@ -95,7 +89,14 @@ export default function SettingsPage() {
     }
   ]
 
-  const SettingItem = ({ setting }: { setting: any }) => (
+  interface Setting {
+    name: string;
+    description: string;
+    value: string | number | boolean;
+    type: string;
+    action?: () => void;
+  }
+  const SettingItem = ({ setting }: { setting: Setting }) => (
     <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-[#1F1F23] last:border-0">
       <div className="flex-1">
         <h4 className="text-body-medium font-semibold text-gray-900 dark:text-white">
@@ -133,7 +134,7 @@ export default function SettingsPage() {
         {setting.type === "input" && (
           <input
             type="text"
-            defaultValue={setting.value}
+            defaultValue={String(setting.value)}
             className="w-20 px-2 py-1 text-sm border border-gray-200 dark:border-[#1F1F23] rounded bg-white dark:bg-[#0F0F12] text-gray-900 dark:text-white"
           />
         )}

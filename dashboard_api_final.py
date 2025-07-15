@@ -13,11 +13,12 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import logging
 
-# Set environment variables for production mode
+# Set environment variables for paper trading mode with real data
 os.environ["DISABLE_GCS"] = "false"
 os.environ["DISABLE_FIRESTORE"] = "false" 
 os.environ["GCP_PROJECT_ID"] = "autotrade-453303"
 os.environ["PAPER_TRADE"] = "true"
+os.environ["ENABLE_REAL_DATA"] = "true"
 
 # Add project root to Python path
 project_root = os.path.dirname(os.path.abspath(__file__))

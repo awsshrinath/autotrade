@@ -276,6 +276,104 @@ class EnhancedTradeManager:
                 self.logger.log_event(f"Critical trade execution error: {e}")
             return None
 
+    def _perform_risk_checks(self, trade_request: TradeRequest) -> bool:
+        """Perform risk checks before executing trade"""
+        try:
+            # Check if risk governor allows trading
+            if self.risk_governor and not self.risk_governor.can_trade():
+                self.enhanced_logger.log_event(
+                    "Risk governor blocked trade execution",
+                    LogLevel.WARNING,
+                    LogCategory.RISK,
+                    data={"symbol": trade_request.symbol, "strategy": trade_request.strategy},
+                    source="enhanced_trade_manager"
+                )
+                return False
+            
+            # Check position size limits
+            if trade_request.quantity <= 0:
+                self.enhanced_logger.log_event(
+                    "Invalid trade quantity",
+                    LogLevel.ERROR,
+                    LogCategory.RISK,
+                    data={"quantity": trade_request.quantity, "symbol": trade_request.symbol},
+                    source="enhanced_trade_manager"
+                )
+                return False
+            
+            # Check if symbol is valid
+            if not trade_request.symbol or len(trade_request.symbol) < 2:
+                self.enhanced_logger.log_event(
+                    "Invalid symbol provided",
+                    LogLevel.ERROR,
+                    LogCategory.RISK,
+                    data={"symbol": trade_request.symbol},
+                    source="enhanced_trade_manager"
+                )
+                return False
+            
+            # Check price validity
+            if trade_request.entry_price <= 0:
+                self.enhanced_logger.log_event(
+                    "Invalid entry price",
+                    LogLevel.ERROR,
+                    LogCategory.RISK,
+                    data={"entry_price": trade_request.entry_price, "symbol": trade_request.symbol},
+                    source="enhanced_trade_manager"
+                )
+                return False
+            
+            # Risk checks passed
+            self.enhanced_logger.log_event(
+                "Risk checks passed for trade",
+                LogLevel.INFO,
+                LogCategory.RISK,
+                data={"symbol": trade_request.symbol, "strategy": trade_request.strategy},
+                source="enhanced_trade_manager"
+            )
+            return True
+            
+        except Exception as e:
+            self.enhanced_logger.log_error(
+                "Error during risk checks",
+                error=str(e),
+                source="enhanced_trade_manager"
+            )
+            return False
+
+    def _perform_portfolio_checks(self, trade_request: TradeRequest) -> bool:
+        """Perform portfolio-level checks before executing trade"""
+        try:
+            # Check if portfolio manager is available
+            if not self.portfolio_manager:
+                self.enhanced_logger.log_event(
+                    "Portfolio manager not available",
+                    LogLevel.WARNING,
+                    LogCategory.PORTFOLIO,
+                    data={"symbol": trade_request.symbol},
+                    source="enhanced_trade_manager"
+                )
+                # Allow trade to continue without portfolio checks in paper mode
+                return trade_request.paper_trade
+            
+            # Portfolio checks passed
+            self.enhanced_logger.log_event(
+                "Portfolio checks passed for trade",
+                LogLevel.INFO,
+                LogCategory.PORTFOLIO,
+                data={"symbol": trade_request.symbol, "strategy": trade_request.strategy},
+                source="enhanced_trade_manager"
+            )
+            return True
+            
+        except Exception as e:
+            self.enhanced_logger.log_error(
+                "Error during portfolio checks",
+                error=str(e),
+                source="enhanced_trade_manager"
+            )
+            return False
+
     def _execute_paper_trade(self, trade_request: TradeRequest) -> bool:
         """Simulate a paper trade"""
         try:
@@ -492,4 +590,7 @@ def create_enhanced_trade_manager(logger: Logger = None, kite_manager: KiteConne
         kite_manager=kite_manager, 
         firestore_client=firestore_client,
         cognitive_system=cognitive_system
-    ) 
+    )
+
+# Backward compatibility alias
+TradeManager = EnhancedTradeManager 

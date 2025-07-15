@@ -38,7 +38,7 @@ const SystemStatusCard = memo(() => {
       })
       
       setData(result)
-    } catch (e: any) {
+    } catch (e: unknown) {
       handleApiError(e, 'System Status')
       setError('Failed to load system status')
     } finally {

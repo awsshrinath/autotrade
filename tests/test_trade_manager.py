@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, ANY
 import os
 import sys
 
@@ -63,7 +63,14 @@ class TestEnhancedTradeManager(unittest.TestCase):
         """Test if the EnhancedTradeManager initializes correctly."""
         self.assertIsNotNone(self.trade_manager)
         self.assertIsNotNone(self.trade_manager.enhanced_logger)
-        self.mock_logger.log_event.assert_called_with("EnhancedTradeManager initialized")
+        # Check that the enhanced logger was called with the expected message
+        self.mock_logger.log_event.assert_called_with(
+            "EnhancedTradeManager initialized with comprehensive logging",
+            ANY,  # LogLevel.INFO
+            ANY,  # LogCategory.SYSTEM
+            data=ANY,  # data dictionary
+            source='enhanced_trade_manager'
+        )
 
     def test_create_trade_request(self):
         """Test the creation of a TradeRequest object."""

@@ -126,7 +126,7 @@ export default function HelpPage() {
     }
   ]
 
-  const HelpItem = ({ item }: { item: any }) => (
+  const HelpItem = ({ item }: { item: { title: string; description: string; type: string; status: string } }) => (
     <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-[#1F1F23] rounded-lg hover:bg-gray-50 dark:hover:bg-[#1A1A1F] transition-colors cursor-pointer">
       <div className="flex-1">
         <div className="flex items-center gap-3">
@@ -154,7 +154,7 @@ export default function HelpPage() {
     </div>
   )
 
-  const QuickActionCard = ({ action }: { action: any }) => {
+  const QuickActionCard = ({ action }: { action: { title: string; description: string; icon: React.ComponentType<any>; action: string } }) => {
     const IconComponent = action.icon
     return (
       <Card className="bg-white dark:bg-[#0F0F12] border-gray-200 dark:border-[#1F1F23] hover:shadow-lg transition-shadow cursor-pointer">

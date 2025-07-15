@@ -163,26 +163,9 @@ class RangeReversalStrategy(BaseStrategy):
         if isinstance(market_data, dict) and "candles" in market_data:
             return market_data["candles"].get(symbol, [])
         
-        # Mock candle data for testing
-        import random
-        base_price = 17500 if "NIFTY" in symbol else 45000
-        candles = []
-        
-        for i in range(25):
-            # Generate range-bound price action
-            price_variation = random.uniform(-0.02, 0.02)  # 2% variation
-            open_price = base_price * (1 + price_variation)
-            close_price = open_price * (1 + random.uniform(-0.01, 0.01))
-            high_price = max(open_price, close_price) * (1 + random.uniform(0, 0.005))
-            low_price = min(open_price, close_price) * (1 - random.uniform(0, 0.005))
-            
-            candles.append({
-                "open": round(open_price, 2),
-                "high": round(high_price, 2),
-                "low": round(low_price, 2),
-                "close": round(close_price, 2),
-                "volume": random.randint(100000, 500000)
-            })
+        # Note: Real market data should be used here instead of mock data
+        # For paper trading, use actual market candle data from data provider
+        candles = []  # Should be populated with real market data
         
         return candles
 

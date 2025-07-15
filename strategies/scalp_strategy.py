@@ -86,16 +86,9 @@ def pick_simple_strike(index_name, direction, current_price=None, premium_range=
     import random
     estimated_premium = random.uniform(premium_range[0], premium_range[1])
     
-    # Generate mock candle data
-    candles = []
-    for i in range(15):
-        base = estimated_premium * (1 + random.uniform(-0.1, 0.1))
-        candles.append({
-            "high": base * 1.02,
-            "low": base * 0.98,
-            "close": base,
-            "volume": random.randint(1000, 5000)
-        })
+    # Note: Real market data should be used here instead of mock data
+    # For paper trading, use actual market candle data from data provider
+    candles = []  # Should be populated with real market data
     
     return {
         "symbol": symbol,

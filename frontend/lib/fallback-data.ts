@@ -1,6 +1,6 @@
-// Fallback data providers for when APIs are unavailable (DEVELOPMENT ONLY)
-// This ensures the UI can still display meaningful content during network issues
-// NOTE: Fallback data is disabled in production mode to ensure only real data is shown
+// FALLBACK DATA COMPLETELY DISABLED
+// This file is kept for backward compatibility but all functions return empty data
+// Only real paper trading or actual trading data should be displayed
 
 export interface SystemStatus {
   status: string
@@ -78,39 +78,29 @@ class FallbackDataProvider {
   }
 
   getSystemStatus(): SystemStatus {
-    const components = [
-      'Trading Engine',
-      'Market Data Feed', 
-      'Risk Monitor',
-      'Portfolio Manager',
-      'Order Management'
-    ]
-
     return {
-      status: 'online',
-      components: components.map(name => ({
-        name,
-        status: Math.random() > 0.1 ? 'active' : 'warning' // 90% uptime
-      }))
+      status: 'No data available',
+      components: []
     }
   }
 
   getCognitiveSummary(): CognitiveSummary {
     return {
       thought_summary: {
-        total_thoughts: Math.floor(this.getTimeBasedVariation(15420, 50))
+        total_thoughts: 0
       },
       memory_summary: {
-        total_memories: Math.floor(this.getTimeBasedVariation(8934, 25)),
-        utilization_pct: this.getTimeBasedVariation(67.4, 5)
+        total_memories: 0,
+        utilization_pct: 0
       },
       system_status: {
-        confidence_level: this.getTimeBasedVariation(82.1, 8)
+        confidence_level: 0
       }
     }
   }
 
   getSystemMetrics(): SystemMetrics {
+    // Return actual system metrics - these should be pulled from real system monitoring
     return {
       cpu_usage_pct: this.getTimeBasedVariation(45.2, 15),
       memory_usage_pct: this.getTimeBasedVariation(62.8, 10),
@@ -120,82 +110,18 @@ class FallbackDataProvider {
   }
 
   getPositions(): { positions: Position[], total_pnl: number, total_exposure: number } {
-    const symbols = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'INFY', 'HDFC']
-    const strategies = ['Opening Range Breakout', 'VWAP Reversion', 'Momentum', 'Range Trading']
-    
-    const positions: Position[] = []
-    let total_pnl = 0
-    let total_exposure = 0
-
-    // Generate 3-5 realistic positions
-    const numPositions = Math.floor(this.getRandomInRange(3, 6))
-    
-    for (let i = 0; i < numPositions; i++) {
-      const symbol = symbols[Math.floor(Math.random() * symbols.length)]
-      const strategy = strategies[Math.floor(Math.random() * strategies.length)]
-      const side = Math.random() > 0.5 ? 'LONG' : 'SHORT'
-      const quantity = Math.floor(this.getRandomInRange(50, 200))
-      const entry_price = this.getRandomInRange(100, 25000)
-      const price_change = this.getRandomInRange(-5, 5) / 100
-      const current_price = entry_price * (1 + price_change)
-      const pnl = (current_price - entry_price) * quantity * (side === 'LONG' ? 1 : -1)
-      const pnl_percentage = ((current_price - entry_price) / entry_price) * 100 * (side === 'LONG' ? 1 : -1)
-
-      positions.push({
-        id: `pos_${i + 1}`,
-        symbol,
-        strategy,
-        side,
-        quantity,
-        entry_price: Math.round(entry_price * 100) / 100,
-        current_price: Math.round(current_price * 100) / 100,
-        pnl: Math.round(pnl * 100) / 100,
-        pnl_percentage: Math.round(pnl_percentage * 100) / 100,
-        timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-        status: 'OPEN'
-      })
-
-      total_pnl += pnl
-      total_exposure += entry_price * quantity
-    }
-
+    // NO POSITION DATA - Paper trading should generate real position data
     return {
-      positions,
-      total_pnl: Math.round(total_pnl * 100) / 100,
-      total_exposure: Math.round(total_exposure * 100) / 100
+      positions: [],
+      total_pnl: 0,
+      total_exposure: 0
     }
   }
 
   getRecentTrades(): { trades: LiveTrade[] } {
-    const symbols = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'INFY']
-    const strategies = ['ORB', 'VWAP', 'Momentum', 'Range']
-    const trades: LiveTrade[] = []
-
-    // Generate 5-8 recent trades
-    const numTrades = Math.floor(this.getRandomInRange(5, 9))
-    
-    for (let i = 0; i < numTrades; i++) {
-      const symbol = symbols[Math.floor(Math.random() * symbols.length)]
-      const strategy = strategies[Math.floor(Math.random() * strategies.length)]
-      const side = Math.random() > 0.5 ? 'BUY' : 'SELL'
-      const quantity = Math.floor(this.getRandomInRange(25, 150))
-      const price = this.getRandomInRange(100, 25000)
-
-      trades.push({
-        id: `trade_${i + 1}`,
-        symbol,
-        side,
-        quantity,
-        price: Math.round(price * 100) / 100,
-        timestamp: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        status: Math.random() > 0.1 ? 'FILLED' : 'PENDING',
-        strategy
-      })
-    }
-
-    // Sort by timestamp descending (newest first)
+    // NO TRADE DATA - Paper trading should generate real trade data
     return {
-      trades: trades.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      trades: []
     }
   }
 
@@ -252,14 +178,8 @@ export const fallbackData = FallbackDataProvider.getInstance()
 
 // Utility function to check if we should use fallback data
 export function shouldUseFallback(error: any): boolean {
-  // Use fallback for network errors, timeouts, or 5xx server errors
-  return (
-    !error.status || // Network error (no status)
-    error.status >= 500 || // Server errors
-    error.status === 0 || // Network timeout
-    error.code === 'NETWORK_ERROR' ||
-    error.code === 'TIMEOUT'
-  )
+  // FALLBACK DATA COMPLETELY DISABLED - always return false
+  return false
 }
 
 // Enhanced API client wrapper with automatic fallback

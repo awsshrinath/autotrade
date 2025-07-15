@@ -49,7 +49,7 @@ export default function LiveTradesPage() {
   // Fetch live positions
   const fetchPositions = useCallback(async () => {
     try {
-      const data = await apiClient.get<any>('/api/v1/trade/positions/live', {
+      const data = await apiClient.get<{ positions: Position[]; total_pnl: number; total_exposure: number; }>('/api/v1/trade/positions/live', {
         retry: {
           maxRetries: 2,
           retryDelay: 1000,
@@ -59,7 +59,7 @@ export default function LiveTradesPage() {
       setPositions(data.positions || [])
       setTotalPnL(data.total_pnl || 0)
       setTotalExposure(data.total_exposure || 0)
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Positions')
       throw error
     }
@@ -68,7 +68,7 @@ export default function LiveTradesPage() {
   // Fetch recent trades
   const fetchRecentTrades = useCallback(async () => {
     try {
-      const data = await apiClient.get<any>('/api/v1/trade/recent?limit=10', {
+      const data = await apiClient.get<{ trades: LiveTrade[] }>('/api/v1/trade/recent?limit=10', {
         retry: {
           maxRetries: 2,
           retryDelay: 1000,
@@ -76,7 +76,7 @@ export default function LiveTradesPage() {
         }
       })
       setRecentTrades(data.trades || [])
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Recent Trades')
       throw error
     }
@@ -89,7 +89,7 @@ export default function LiveTradesPage() {
       setError(null)
       
       await Promise.all([fetchPositions(), fetchRecentTrades()])
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to load trading data')
     } finally {
       setLoading(false)
@@ -103,7 +103,7 @@ export default function LiveTradesPage() {
       await apiClient.post('/api/v1/trade/emergency/close-all')
       alert('All positions closed successfully')
       fetchPositions()
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Close All Positions')
       alert('Failed to close positions')
     }
@@ -114,7 +114,7 @@ export default function LiveTradesPage() {
       await apiClient.post('/api/v1/trade/emergency/breakeven')
       alert('All positions moved to breakeven')
       fetchPositions()
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Move to Breakeven')
       alert('Failed to move to breakeven')
     }
@@ -124,7 +124,7 @@ export default function LiveTradesPage() {
     try {
       await apiClient.post(`/api/v1/trade/position/${positionId}/close`)
       fetchPositions()
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleApiError(error, 'Close Position')
     }
   }, [fetchPositions, handleApiError])

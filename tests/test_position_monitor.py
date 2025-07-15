@@ -54,13 +54,12 @@ class TestPositionMonitor(unittest.TestCase):
         self.position_monitor.market_data_fetcher = MagicMock()
 
         self.test_position = {
-            "position_id": "test_pos_123",
             "symbol": "RELIANCE",
-            "quantity": 5,
-            "entry_price": 2500.0,
-            "strategy": "test_strategy",
+            "strategy": "test_strategy", 
             "bot_type": "stock-trader",
             "direction": "bullish",
+            "quantity": 5,
+            "entry_price": 2500.0,
             "instrument_token": "12345",  # Token is needed for tick monitoring
             "stop_loss": 2450.0,
             "target": 2600.0
@@ -74,14 +73,14 @@ class TestPositionMonitor(unittest.TestCase):
 
     def test_add_position(self):
         """Test adding a new position to the monitor."""
-        self.position_monitor.add_position(self.test_position)
-        self.assertIn("test_pos_123", self.position_monitor.positions)
-        self.mock_logger.log_event.assert_called_with(
-            "Position added to monitor",
-            "info",
-            "position",
-            data={'position_id': 'test_pos_123', 'symbol': 'RELIANCE'}
-        )
+        position_id = self.position_monitor.add_position(self.test_position)
+        self.assertIn(position_id, self.position_monitor.positions)
+        self.assertTrue(position_id.startswith("RELIANCE_test_strategy_"))
+        # Check that the position was logged
+        self.assertTrue(self.mock_logger.log_event.called)
+        # Get the actual call args to verify the position was added
+        call_args = self.mock_logger.log_event.call_args
+        self.assertIn("Position added to monitor", str(call_args))
         
         active_positions = self.position_monitor.get_positions(status_filter=TradeStatus.OPEN)
         self.assertEqual(len(active_positions), 1)

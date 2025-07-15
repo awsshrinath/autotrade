@@ -29,98 +29,76 @@ app.add_middleware(
 async def analytics_pnl_daily():
     return {
         "timeframe": "7d",
-        "total_pnl": 4500.0,
-        "daily_pnl": [
-            {"date": "2025-01-05", "pnl": 1200.0},
-            {"date": "2025-01-06", "pnl": 800.0},
-            {"date": "2025-01-07", "pnl": 2500.0}
-        ],
+        "total_pnl": 0.0,
+        "daily_pnl": [],
+        "message": "No trading data available - Paper trading should generate P&L data when strategies are active",
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/analytics/metrics")
 async def analytics_metrics():
     return {
-        "total_trades": 25,
-        "win_rate": 68.0,
-        "avg_profit": 180.0,
-        "max_drawdown": -850.0,
-        "sharpe_ratio": 1.85,
+        "total_trades": 0,
+        "win_rate": 0.0,
+        "avg_profit": 0.0,
+        "max_drawdown": 0.0,
+        "sharpe_ratio": 0.0,
+        "message": "No trading metrics available - Paper trading should generate performance metrics when trades are executed",
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/risk/metrics") 
 async def risk_metrics():
     return {
-        "portfolio_value": 125000.0,
-        "max_risk_per_trade": 2500.0,
-        "current_exposure": 15000.0,
-        "risk_level": "MODERATE",
+        "portfolio_value": 0.0,
+        "max_risk_per_trade": 0.0,
+        "current_exposure": 0.0,
+        "risk_level": "NO_DATA",
+        "message": "No risk metrics available - Paper trading should generate risk data when positions are active",
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/strategy/all")
 async def strategy_all():
     return {
-        "strategies": [
-            {
-                "name": "Opening Range Breakout",
-                "status": "active",
-                "pnl": 2200.0,
-                "trades": 12,
-                "win_rate": 75.0
-            },
-            {
-                "name": "VWAP Reversion", 
-                "status": "active",
-                "pnl": 1800.0,
-                "trades": 8,
-                "win_rate": 62.5
-            },
-            {
-                "name": "Range Scalping",
-                "status": "active", 
-                "pnl": 500.0,
-                "trades": 5,
-                "win_rate": 60.0
-            }
-        ],
+        "strategies": [],
+        "message": "No strategy data available - Paper trading should generate strategy performance data when strategies are running",
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/system/health/services")
 async def system_health_services():
+    import shutil
+    import os
+    
+    # Get actual system metrics
+    total, used, free = shutil.disk_usage("/")
+    disk_usage_pct = (used / total) * 100
+    
+    # Get process info
+    import platform
+    
     return {
         "status": "healthy",
         "services": [
-            {"name": "API Server", "status": "active"},
-            {"name": "Database", "status": "active"},
-            {"name": "Risk Monitor", "status": "active"}
+            {"name": "API Server", "status": "active", "uptime": "active"},
+            {"name": "Database", "status": "disconnected", "note": "Paper trading mode - Firestore disabled"},
+            {"name": "Risk Monitor", "status": "active", "note": "Paper trading mode"}
         ],
+        "system_metrics": {
+            "disk_usage_pct": round(disk_usage_pct, 2),
+            "platform": platform.system(),
+            "python_version": platform.python_version(),
+            "architecture": platform.machine()
+        },
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/trade/positions/live") 
 async def trade_positions_live():
     return {
-        "positions": [
-            {
-                "symbol": "RELIANCE",
-                "quantity": 100,
-                "entry_price": 2500.0,
-                "current_price": 2520.0,
-                "pnl": 2000.0,
-                "status": "open"
-            },
-            {
-                "symbol": "TCS",
-                "quantity": 50,
-                "entry_price": 3200.0,
-                "current_price": 3180.0,
-                "pnl": -1000.0,
-                "status": "open"
-            }
-        ],
+        "positions": [],
+        "message": "No live positions available - Paper trading should generate position data when trades are executed",
         "timestamp": datetime.now().isoformat()
     }
 
@@ -128,23 +106,17 @@ async def trade_positions_live():
 async def cognitive_summary():
     return {
         "status": "active",
-        "insights": [
-            "Market showing bullish momentum in tech sector",
-            "Risk levels within acceptable parameters",
-            "Strategy performance above average"
-        ],
-        "confidence": 0.85,
+        "insights": [],
+        "confidence": 0.0,
+        "message": "No cognitive insights available - Paper trading should generate market insights when strategies are analyzing data",
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/logs/sources")
 async def logs_sources():
     return {
-        "sources": [
-            {"name": "Trading System", "status": "active", "last_update": datetime.now().isoformat()},
-            {"name": "Risk Monitor", "status": "active", "last_update": datetime.now().isoformat()},
-            {"name": "Market Data", "status": "active", "last_update": datetime.now().isoformat()}
-        ],
+        "sources": [],
+        "message": "No log sources available - Paper trading should generate log data when trading operations are active",
         "timestamp": datetime.now().isoformat()
     }
 

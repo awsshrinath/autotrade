@@ -67,48 +67,6 @@ class RealTradeService:
             self.firestore_client = None
             self.portfolio_manager = None
 
-    def _get_mock_data_if_needed(self, data_type: str = "trades"):
-        """Return sample data when database is not available (for demo purposes)."""
-        if data_type == "trades":
-            return [
-                {
-                    "trade_id": "DEMO_001",
-                    "symbol": "RELIANCE",
-                    "status": "open",
-                    "side": "buy",
-                    "quantity": 100,
-                    "entry_price": 2500.0,
-                    "current_price": 2520.0,
-                    "pnl": 2000.0,
-                    "market_value": 252000.0,
-                    "margin_used": 50400.0,
-                    "timestamp": datetime.now().isoformat()
-                },
-                {
-                    "trade_id": "DEMO_002", 
-                    "symbol": "TCS",
-                    "status": "closed",
-                    "side": "buy",
-                    "quantity": 50,
-                    "entry_price": 3200.0,
-                    "exit_price": 3250.0,
-                    "pnl": 2500.0,
-                    "market_value": 162500.0,
-                    "timestamp": datetime.now().isoformat()
-                }
-            ]
-        elif data_type == "daily_summary":
-            return {
-                "total_pnl": 4500.0,
-                "total_trades": 15,
-                "winning_trades": 9,
-                "losing_trades": 6,
-                "largest_win": 3500.0,
-                "largest_loss": -1200.0,
-                "strategy": "demo_strategy"
-            }
-        
-        return []
 
     async def get_daily_summary(self) -> Dict[str, Any]:
         """Get daily trading summary from actual trading data."""
@@ -444,22 +402,14 @@ class RealTradeService:
                             strategy_stats[strategy_name]['wins'] += bot_data.get('winning_trades', 0)
                             total_strategies += 1
                 
-                # If no real data, use demo data
+                # If no real data, fetch from paper trading data
                 if not strategy_stats:
-                    strategy_stats = {
-                        "Opening Range Breakout": {"pnl": 2500.0, "trades": 8, "wins": 5},
-                        "VWAP Reversion": {"pnl": 1200.0, "trades": 5, "wins": 3},
-                        "Range Scalping": {"pnl": 800.0, "trades": 2, "wins": 1}
-                    }
-                    total_strategies = 3
+                    strategy_stats = await self._get_paper_trading_strategies()
+                    total_strategies = len(strategy_stats)
             else:
-                # Use demo data when database is not available
-                strategy_stats = {
-                    "Opening Range Breakout": {"pnl": 2500.0, "trades": 8, "wins": 5},
-                    "VWAP Reversion": {"pnl": 1200.0, "trades": 5, "wins": 3},
-                    "Range Scalping": {"pnl": 800.0, "trades": 2, "wins": 1}
-                }
-                total_strategies = 3
+                # When database is not available, fetch from paper trading data
+                strategy_stats = await self._get_paper_trading_strategies()
+                total_strategies = len(strategy_stats)
             
             # Find top performing strategy
             top_strategy_name = "None"
@@ -478,21 +428,85 @@ class RealTradeService:
                 'timestamp': datetime.now().isoformat()
             }
         except Exception as e:
-            # Return demo data structure for frontend
+            # Return empty data structure when there's an error
             return {
                 'top_strategy': {
-                    'name': 'Opening Range Breakout'
+                    'name': 'No data available'
                 },
-                'active_strategies': 3,
-                'total_bots': 3,
-                'strategy_details': {
-                    "Opening Range Breakout": {"pnl": 2500.0, "trades": 8, "wins": 5},
-                    "VWAP Reversion": {"pnl": 1200.0, "trades": 5, "wins": 3},
-                    "Range Scalping": {"pnl": 800.0, "trades": 2, "wins": 1}
-                },
+                'active_strategies': 0,
+                'total_bots': 0,
+                'strategy_details': {},
                 'error': str(e),
                 'timestamp': datetime.now().isoformat()
             }
+    
+    async def _get_paper_trading_strategies(self) -> Dict[str, Any]:
+        """
+        Get paper trading strategy data from various sources.
+        """
+        strategy_stats = {}
+        
+        try:
+            # Check for paper trading log files
+            log_files = [
+                "logs/paper_trading.log",
+                "logs/strategy_performance.log",
+                "data/strategy_stats.json"
+            ]
+            
+            for log_file in log_files:
+                if os.path.exists(log_file):
+                    try:
+                        if log_file.endswith('.json'):
+                            import json
+                            with open(log_file, 'r') as f:
+                                data = json.load(f)
+                            strategy_stats.update(data.get('strategies', {}))
+                        else:
+                            # Parse log file for strategy data
+                            with open(log_file, 'r') as f:
+                                lines = f.readlines()
+                            
+                            for line in lines[-100:]:  # Last 100 lines
+                                if 'strategy' in line.lower() and 'pnl' in line.lower():
+                                    # Extract strategy info from log line
+                                    parts = line.strip().split()
+                                    for i, part in enumerate(parts):
+                                        if part.lower() == 'strategy':
+                                            strategy_name = parts[i+1] if i+1 < len(parts) else 'Unknown'
+                                            if strategy_name not in strategy_stats:
+                                                strategy_stats[strategy_name] = {
+                                                    'pnl': 0,
+                                                    'trades': 0,
+                                                    'wins': 0
+                                                }
+                                            strategy_stats[strategy_name]['trades'] += 1
+                                            
+                    except Exception as e:
+                        print(f"⚠️ Error parsing {log_file}: {e}")
+            
+            # If no strategy data found, check for active strategy processes
+            if not strategy_stats:
+                try:
+                    import subprocess
+                    result = subprocess.run(['pgrep', '-f', 'python.*strategy'], 
+                                          capture_output=True, text=True)
+                    if result.returncode == 0:
+                        # Found running strategy processes
+                        strategy_stats = {
+                            'ScalpStrategy': {'pnl': 0, 'trades': 0, 'wins': 0},
+                            'RangeReversalStrategy': {'pnl': 0, 'trades': 0, 'wins': 0},
+                            'MomentumStrategy': {'pnl': 0, 'trades': 0, 'wins': 0}
+                        }
+                        print("📊 Found active strategy processes")
+                except Exception as e:
+                    print(f"⚠️ Error checking processes: {e}")
+            
+            return strategy_stats
+            
+        except Exception as e:
+            print(f"❌ Error getting paper trading strategies: {e}")
+            return {}
 
 # Dependency Injection
 _trade_service_instance = None
