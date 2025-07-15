@@ -54,7 +54,7 @@ const SystemHealthCard = memo(() => {
       
       setData(result)
     } catch (e: unknown) {
-      handleApiError(e, 'System Metrics')
+      handleApiError(e as Error | { message?: string; status?: number }, 'System Metrics')
       setError('Failed to load system metrics')
     } finally {
       setLoading(false)
