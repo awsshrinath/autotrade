@@ -235,7 +235,7 @@ export const useApiError = () => {
       if ('message' in error && 'status' in error) {
         showError(
           `${contextPrefix}Request Failed`,
-          error.message,
+          error.message || 'Unknown error occurred',
           {
             action: error.status >= 500 ? {
               label: 'Retry',
@@ -247,7 +247,7 @@ export const useApiError = () => {
       }
       
       // Handle network errors
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === 'TypeError' && error.message && error.message.includes('fetch')) {
         showError(
           `${contextPrefix}Connection Error`,
           'Unable to connect to the server. Please check your internet connection.',
