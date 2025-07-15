@@ -54,7 +54,7 @@ const Content = memo(() => {
       
       // In production mode, show appropriate error message
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Analytics'))
+        console.warn(handleApiError(error as Error, 'Analytics'))
         // Reset data to null to show "N/A" in UI
         setPnlData(null)
         setRiskData(null)

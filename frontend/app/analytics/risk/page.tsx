@@ -66,7 +66,7 @@ export default function RiskMonitorPage() {
       
       // In production mode, show appropriate error message and reset data
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Risk monitoring'))
+        console.warn(handleApiError(error as Error, 'Risk monitoring'))
         setRiskMetrics([])
         setAlerts([])
         setPortfolioRisk(null)
@@ -87,7 +87,7 @@ export default function RiskMonitorPage() {
       ))
     } catch (error) {
       console.error('Failed to acknowledge alert:', error)
-      console.warn(handleApiError(error, 'Alert acknowledgment'))
+      console.warn(handleApiError(error as Error, 'Alert acknowledgment'))
     }
   }
 

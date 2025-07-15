@@ -81,7 +81,7 @@ export default function PnLAnalysisPage() {
       
       // In production mode, show appropriate error message and reset data
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Analytics'))
+        console.warn(handleApiError(error as Error, 'Analytics'))
         setPnlData([])
         setStrategyData([])
         setMetrics(null)
@@ -107,7 +107,7 @@ export default function PnLAnalysisPage() {
       document.body.removeChild(a)
     } catch (error) {
       console.error('Failed to export data:', error)
-      console.warn(handleApiError(error, 'Data export'))
+      console.warn(handleApiError(error as Error, 'Data export'))
     }
   }
 

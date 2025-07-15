@@ -78,7 +78,7 @@ export default function StrategyPerformancePage() {
       
       // In production mode, show appropriate error message and reset data
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Strategy analysis'))
+        console.warn(handleApiError(error as Error, 'Strategy analysis'))
         setStrategies([])
         setPerformanceData([])
         setComparisonData([])
@@ -96,7 +96,7 @@ export default function StrategyPerformancePage() {
       fetchStrategyData()
     } catch (error) {
       console.error('Failed to toggle strategy:', error)
-      console.warn(handleApiError(error, 'Strategy control'))
+      console.warn(handleApiError(error as Error, 'Strategy control'))
     }
   }
 

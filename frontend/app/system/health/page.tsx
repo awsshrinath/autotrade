@@ -81,7 +81,7 @@ export default function SystemHealthPage() {
       
       // In production mode, show appropriate error message and reset data
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'System health monitoring'))
+        console.warn(handleApiError(error as Error, 'System health monitoring'))
         setServices([])
         setMetrics([])
         setResources(null)

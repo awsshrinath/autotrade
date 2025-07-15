@@ -134,7 +134,7 @@ export default function CognitiveInsightsPage() {
       
       // In production mode, show appropriate error message
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Cognitive analysis'))
+        console.warn(handleApiError(error as Error, 'Cognitive analysis'))
         setCognitiveStatus(null)
       }
     }
@@ -160,7 +160,7 @@ export default function CognitiveInsightsPage() {
       
       // In production mode, show appropriate error message
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Log analysis'))
+        console.warn(handleApiError(error as Error, 'Log analysis'))
         setLogSummary(null)
       }
     } finally {
@@ -184,7 +184,7 @@ export default function CognitiveInsightsPage() {
       
       // In production mode, show appropriate error message
       if (process.env.NEXT_PUBLIC_ENV === 'production') {
-        console.warn(handleApiError(error, 'Market sentiment analysis'))
+        console.warn(handleApiError(error as Error, 'Market sentiment analysis'))
         setMarketSentiment(null)
       }
     } finally {
@@ -201,7 +201,7 @@ export default function CognitiveInsightsPage() {
       await Promise.all([fetchCognitiveStatus(), fetchLogSummary(), fetchMarketSentiment()])
     } catch (error) {
       console.error('Failed to clear cache:', error)
-      console.warn(handleApiError(error, 'Cache management'))
+      console.warn(handleApiError(error as Error, 'Cache management'))
     }
   }, [fetchCognitiveStatus, fetchLogSummary, fetchMarketSentiment])
 

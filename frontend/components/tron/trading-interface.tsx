@@ -107,7 +107,7 @@ export default function TradingInterface({ onTradeSubmit }: TradingInterfaceProp
       }
     } catch (error) {
       console.error('Trade submission error:', error)
-      const errorMessage = handleApiError(error, 'Trade submission')
+      const errorMessage = handleApiError(error as Error, 'Trade submission')
       toast({
         title: "Trade Failed",
         description: errorMessage,
