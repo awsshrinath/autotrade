@@ -1,10 +1,10 @@
 // Enhanced API client with error handling, retry logic, and fallback data integration
-import { withFallback, shouldUseFallback, notifyFallbackUsage, fallbackData } from './fallback-data'
+import { shouldUseFallback, notifyFallbackUsage } from './fallback-data'
 
 export interface ApiError extends Error {
   status?: number
   code?: string
-  data?: any
+  data?: unknown
 }
 
 export interface RetryOptions {
@@ -89,7 +89,7 @@ class ApiClient {
 
         const data = await response.json()
         return data
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error as ApiError
 
         // Don't retry on client errors (4xx) except 408 (timeout)
@@ -125,7 +125,7 @@ class ApiClient {
      throw lastError || new Error('Request failed')
   }
 
-  private getFallbackData<T>(url: string): T | null {
+  private getFallbackData<T>(_url: string): T | null {
     // FALLBACK DATA COMPLETELY DISABLED
     // Always return null so that components show "No data available"
     return null
@@ -138,7 +138,7 @@ class ApiClient {
     })
   }
 
-  async post<T>(url: string, data?: any, options: RequestOptions = {}): Promise<T> {
+  async post<T>(url: string, data?: unknown, options: RequestOptions = {}): Promise<T> {
     return this.makeRequest<T>(url, {
       ...options,
       method: 'POST',
@@ -146,7 +146,7 @@ class ApiClient {
     })
   }
 
-  async put<T>(url: string, data?: any, options: RequestOptions = {}): Promise<T> {
+  async put<T>(url: string, data?: unknown, options: RequestOptions = {}): Promise<T> {
     return this.makeRequest<T>(url, {
       ...options,
       method: 'PUT',
@@ -161,7 +161,7 @@ class ApiClient {
     })
   }
 
-  async patch<T>(url: string, data?: any, options: RequestOptions = {}): Promise<T> {
+  async patch<T>(url: string, data?: unknown, options: RequestOptions = {}): Promise<T> {
     return this.makeRequest<T>(url, {
       ...options,
       method: 'PATCH',
@@ -181,7 +181,7 @@ export async function fetchWithRetry<T>(
   try {
     const data = await apiClient.get<T>(url, options)
     return { data, isFallback: false }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (shouldUseFallback(error)) {
       const fallbackResult = apiClient['getFallbackData']<T>(url)
       if (fallbackResult) {

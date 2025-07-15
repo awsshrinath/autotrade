@@ -176,7 +176,7 @@ class FallbackDataProvider {
 export const fallbackData = FallbackDataProvider.getInstance()
 
 // Utility function to check if we should use fallback data
-export function shouldUseFallback(error: Error | { status?: number; message?: string }): boolean {
+export function shouldUseFallback(_error: Error | { status?: number; message?: string }): boolean {
   // FALLBACK DATA COMPLETELY DISABLED - always return false
   return false
 }
