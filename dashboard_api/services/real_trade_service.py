@@ -128,12 +128,16 @@ class RealTradeService:
                         
                         positions = recovery_data.get('positions', [])
                         for pos in positions:
-                            if pos.get('status') == 'closed':
-                                total_trades += 1
-                                pnl = pos.get('realized_pnl', 0)
-                                if pnl > 0:
-                                    winning_trades += 1
-                                total_pnl += pnl
+                            # Count all positions (open and closed) for total trades
+                            total_trades += 1
+                            # For daily summary, include both realized and unrealized PnL
+                            realized_pnl = pos.get('realized_pnl', 0)
+                            unrealized_pnl = pos.get('unrealized_pnl', 0)
+                            total_position_pnl = realized_pnl + unrealized_pnl
+                            
+                            if total_position_pnl > 0:
+                                winning_trades += 1
+                            total_pnl += total_position_pnl
                         
                         print(f"📊 Recovery file - Trades: {total_trades}, PnL: ₹{total_pnl}")
                 
@@ -202,7 +206,9 @@ class RealTradeService:
                             recovery_data = json.load(f)
                         
                         for pos in recovery_data.get('positions', []):
-                            if pos.get('status') == 'open':
+                            # Check for open status using multiple formats
+                            status = str(pos.get('status', '')).upper()
+                            if 'OPEN' in status or status == 'OPEN':
                                 positions.append(pos)
                         
                         if positions:
