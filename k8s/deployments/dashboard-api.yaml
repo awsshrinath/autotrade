@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-api
+  namespace: gpt
+  labels:
+    app: dashboard-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard-api
+  template:
+    metadata:
+      labels:
+        app: dashboard-api
+    spec:
+      containers:
+      - name: dashboard-api
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend:latest
+        command: ["python3", "/app/dashboard_api_production.py"]
+        ports:
+        - containerPort: 8001
+        env:
+        - name: DISABLE_GCS
+          value: "false"
+        - name: DISABLE_FIRESTORE
+          value: "false"
+        - name: GCP_PROJECT_ID
+          value: "autotrade-453303"
+        - name: PAPER_TRADE
+          value: "true"
+        - name: ENABLE_REAL_DATA
+          value: "true"
+        resources:
+          requests:
+            cpu: "0.5"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-api
+  namespace: gpt
+spec:
+  selector:
+    app: dashboard-api
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
