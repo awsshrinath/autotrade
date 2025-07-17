@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: gpt
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        env:
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: "http://dashboard-api:8001"
+        - name: NEXT_PUBLIC_ENV
+          value: "production"

@@ -390,9 +390,8 @@ async def analytics_pnl_daily():
         
         if not trading_data['has_real_data']:
             return {
-                "total_pnl": 0.0,
-                "win_rate": 0.0,
                 "pnl_data": [],
+                "total_pnl": 0.0,
                 "message": trading_data['data_status'],
                 "data_source": "real_trading_data",
                 "timestamp": datetime.now().isoformat(),
@@ -423,12 +422,9 @@ async def analytics_pnl_daily():
                     "note": "No trading data for this date"
                 })
         
-        win_rate = (trading_data['winning_trades'] / total_trades * 100) if total_trades > 0 else 0
-        
         return {
-            "total_pnl": total_pnl,
-            "win_rate": round(win_rate, 1),
             "pnl_data": daily_data,
+            "total_pnl": total_pnl,
             "data_source": "real_trading_data",
             "timestamp": datetime.now().isoformat(),
             "market_status": data_service._get_market_status_message()
@@ -446,16 +442,35 @@ async def analytics_metrics():
         
         if not trading_data['has_real_data']:
             return {
-                "total_pnl": 0.0,
-                "win_rate": 0.0
+                "metrics": {
+                    "total_pnl": 0.0,
+                    "total_trades": 0,
+                    "win_rate": 0.0,
+                    "avg_trade_pnl": 0.0,
+                    "winning_trades": 0,
+                    "losing_trades": 0,
+                    "message": "No trading data available to analyze"
+                },
+                "data_source": "real_trading_data",
+                "market_status": data_service._get_market_status_message(),
+                "timestamp": datetime.now().isoformat()
             }
         
         win_rate = (trading_data['winning_trades'] / trading_data['total_trades'] * 100) if trading_data['total_trades'] > 0 else 0
         avg_trade_pnl = trading_data['total_pnl'] / trading_data['total_trades'] if trading_data['total_trades'] > 0 else 0
         
         return {
-            "total_pnl": trading_data['total_pnl'],
-            "win_rate": round(win_rate, 1)
+            "metrics": {
+                "total_pnl": trading_data['total_pnl'],
+                "total_trades": trading_data['total_trades'],
+                "win_rate": round(win_rate, 1),
+                "avg_trade_pnl": round(avg_trade_pnl, 2),
+                "winning_trades": trading_data['winning_trades'],
+                "losing_trades": trading_data['total_trades'] - trading_data['winning_trades']
+            },
+            "data_source": "real_trading_data",
+            "market_status": data_service._get_market_status_message(),
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
@@ -593,19 +608,18 @@ async def strategy_all():
         
         if not trading_data['has_real_data'] or not trading_data['strategies']:
             return {
-                "top_strategy": {"name": "No strategies active"},
-                "active_strategies": 0
+                "strategies": [],
+                "message": "No strategy data available to analyze",
+                "data_source": "real_strategy_data",
+                "market_status": data_service._get_market_status_message(),
+                "timestamp": datetime.now().isoformat()
             }
         
-        strategies = trading_data['strategies']
-        
-        # Find top strategy by PnL
-        top_strategy = max(strategies, key=lambda s: s.get('pnl', 0)) if strategies else {"name": "No strategies active"}
-        active_strategies = len([s for s in strategies if s.get('status') == 'active'])
-        
         return {
-            "top_strategy": {"name": top_strategy.get('name', 'Unknown')},
-            "active_strategies": active_strategies
+            "strategies": trading_data['strategies'],
+            "data_source": "real_strategy_data",
+            "market_status": data_service._get_market_status_message(),
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
@@ -663,24 +677,20 @@ async def trade_positions_live():
         
         if not positions:
             return {
-                "total_exposure": 0.0,
-                "margin_usage_pct": 0.0
+                "positions": [],
+                "total_positions": 0,
+                "message": "No open positions currently",
+                "data_source": "real_position_data",
+                "market_status": data_service._get_market_status_message(),
+                "timestamp": datetime.now().isoformat()
             }
         
-        # Calculate exposure and margin usage
-        total_exposure = 0.0
-        for pos in positions:
-            quantity = pos.get('quantity', 0)
-            current_price = pos.get('current_price', pos.get('entry_price', 0))
-            position_value = quantity * current_price
-            total_exposure += position_value
-        
-        # Simulate margin usage (typically 20-30% of exposure)
-        margin_usage_pct = min(100.0, (total_exposure / 1000000) * 25) if total_exposure > 0 else 0.0
-        
         return {
-            "total_exposure": total_exposure,
-            "margin_usage_pct": round(margin_usage_pct, 1)
+            "positions": positions,
+            "total_positions": len(positions),
+            "data_source": "real_position_data",
+            "market_status": data_service._get_market_status_message(),
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
