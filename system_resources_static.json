@@ -1,0 +1,13 @@
+{
+  "cpu_usage": 45.2,
+  "memory_usage": 67.8,
+  "memory_total": 16.0,
+  "memory_available": 5.1,
+  "disk_usage": 23.1,
+  "disk_total": 500.0,
+  "disk_free": 384.5,
+  "load_average": 1.2,
+  "data_source": "static_system_monitoring",
+  "message": "Static fallback data - real metrics will be available with full deployment",
+  "timestamp": "2025-07-17T05:55:00.000000"
+}

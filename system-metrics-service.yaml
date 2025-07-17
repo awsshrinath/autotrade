@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: system-metrics-service
+  namespace: gpt
+  labels:
+    app: system-metrics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: system-metrics-service
+  template:
+    metadata:
+      labels:
+        app: system-metrics-service
+    spec:
+      containers:
+      - name: system-metrics-service
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/tron-backend:latest
+        command: ["python3", "/app/real_system_metrics_service.py"]
+        env:
+        - name: PYTHONPATH
+          value: "/app"
+        ports:
+        - containerPort: 8002
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          runAsNonRoot: false
+          readOnlyRootFilesystem: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: system-metrics-service
+  namespace: gpt
+spec:
+  selector:
+    app: system-metrics-service
+  ports:
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+  type: ClusterIP

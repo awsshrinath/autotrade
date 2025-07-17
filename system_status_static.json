@@ -1,0 +1,12 @@
+{
+  "uptime": "2d 14h 32m",
+  "cpu_count": 8,
+  "cpu_freq_current": 2400.0,
+  "cpu_freq_max": 3200.0,
+  "system_load": 1.2,
+  "processes": 156,
+  "connections": 23,
+  "data_source": "static_system_status",
+  "message": "Static fallback data - real metrics will be available with full deployment",
+  "timestamp": "2025-07-17T05:55:00.000000"
+}
