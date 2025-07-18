@@ -25,7 +25,9 @@ class ApiClient {
   private baseURL: string = ''
 
   constructor(baseURL: string = '') {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
+    // Use empty string for relative URLs when no baseURL is provided
+    // This allows the frontend to work behind nginx proxy
+    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || ''
   }
 
   private async sleep(ms: number): Promise<void> {
