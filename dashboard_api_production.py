@@ -482,62 +482,8 @@ async def analytics_metrics():
         logger.error(f"❌ Analytics metrics error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Risk monitoring endpoints
-@app.get("/api/v1/risk/metrics")
-async def risk_metrics():
-    """Get risk metrics from real portfolio data only"""
-    try:
-        positions = await data_service.get_live_positions()
-        
-        if not positions:
-            return {
-                "portfolio_value": 0.0,
-                "total_exposure": 0.0,
-                "unrealized_pnl": 0.0,
-                "open_positions": 0,
-                "var_95": 0.0,
-                "max_drawdown": 0.0,
-                "message": "No open positions to analyze",
-                "data_source": "real_portfolio_data",
-                "market_status": data_service._get_market_status_message(),
-                "timestamp": datetime.now().isoformat()
-            }
-        
-        # Calculate real metrics from actual positions
-        total_exposure = 0.0
-        unrealized_pnl = 0.0
-        
-        for pos in positions:
-            quantity = pos.get('quantity', 0)
-            current_price = pos.get('current_price', 0)
-            entry_price = pos.get('entry_price', 0)
-            
-            position_value = quantity * current_price if current_price > 0 else quantity * entry_price
-            total_exposure += position_value
-            
-            # Calculate unrealized P&L
-            if current_price > 0 and entry_price > 0:
-                position_pnl = quantity * (current_price - entry_price)
-                unrealized_pnl += position_pnl
-        
-        # Use actual portfolio value or indicate no base capital data
-        portfolio_value = total_exposure + unrealized_pnl if total_exposure > 0 else 0.0
-        
-        return {
-            "portfolio_value": portfolio_value,
-            "total_exposure": total_exposure,
-            "unrealized_pnl": unrealized_pnl,
-            "open_positions": len(positions),
-            "var_95": total_exposure * 0.02 if total_exposure > 0 else 0.0,
-            "max_drawdown": abs(min(0, unrealized_pnl)),
-            "data_source": "real_portfolio_data",
-            "market_status": data_service._get_market_status_message(),
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Risk metrics error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Risk monitoring endpoints - OLD ENDPOINT REMOVED TO AVOID DUPLICATES
+# The enhanced version is located later in the file
 
 @app.get("/api/v1/risk/alerts")
 async def risk_alerts():
