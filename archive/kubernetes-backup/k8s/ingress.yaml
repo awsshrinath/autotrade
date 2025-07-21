@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tron-ingress
+  namespace: gpt
+  annotations:
+    # If you have a static IP, uncomment the following line
+    # kubernetes.io/ingress.global-static-ip-name: "your-static-ip-name"
+    # For SSL, you would use a managed certificate
+    # networking.gke.io/managed-certificates: "your-managed-cert-name"
+spec:
+  ingressClassName: "gce"
+  rules:
+  - http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nginx-proxy-service
+            port:
+              number: 80 

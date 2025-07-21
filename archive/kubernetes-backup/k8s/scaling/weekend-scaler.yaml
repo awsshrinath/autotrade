@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekend-scaler
+  namespace: gpt
+spec:
+  schedule: "0 1 * * 6" # 1:00 AM IST on Saturday
+  timeZone: "Asia/Kolkata"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cronjob-scaler
+          containers:
+          - name: kubectl-scaler
+            image: bitnami/kubectl:latest
+            resources:
+              requests:
+                cpu: "50m"
+                memory: "64Mi"
+              limits:
+                cpu: "100m"
+                memory: "128Mi"
+            command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              echo "Running weekend check. Ensuring all pods are scaled to zero."
+              kubectl scale deployment nginx-proxy --replicas=0
+              kubectl scale deployment tron-backend --replicas=0
+              kubectl scale deployment main-runner --replicas=0
+              kubectl scale deployment frontend --replicas=0
+              kubectl scale deployment monitoring-service --replicas=0
+              kubectl scale deployment stock-trader --replicas=0
+              kubectl scale deployment options-trader --replicas=0
+              kubectl scale deployment futures-trader --replicas=0
+              kubectl scale deployment cognitive-system --replicas=0
+              echo "Weekend scaling check complete."
+          restartPolicy: OnFailure
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1 

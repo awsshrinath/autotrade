@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stock-trader
+  namespace: gpt
+  labels:
+    app: stock-trader
+spec:
+  replicas: 0 # Scales to 1 during market hours
+  selector:
+    matchLabels:
+      app: stock-trader
+  template:
+    metadata:
+      labels:
+        app: stock-trader
+    spec:
+      containers:
+      - name: stock-trader
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/stock-trader:latest
+        ports:
+        - containerPort: 8081
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "0.5"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+        - name: RUNNER_SCRIPT
+          value: "stock_trading/stock_runner.py"
+        - name: SERVICE_PORT
+          value: "8081"
+        command: ["python", "-u", "runner/health_server.py"] 

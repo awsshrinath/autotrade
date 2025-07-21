@@ -4,8 +4,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
-COPY package-lock.json* ./
+COPY frontend/package.json ./
+COPY frontend/package-lock.json* ./
 
 # Install dependencies - handle React version conflicts
 RUN npm ci --legacy-peer-deps || (rm -f package-lock.json && npm install --legacy-peer-deps)
@@ -14,7 +14,7 @@ RUN npm ci --legacy-peer-deps || (rm -f package-lock.json && npm install --legac
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY frontend/ .
 
 # Build the application
 RUN npm run build

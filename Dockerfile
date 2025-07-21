@@ -24,9 +24,10 @@ COPY --from=builder /app/requirements.txt .
 # Install the pinned dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy entrypoint script first and make it executable
+# Copy entrypoint and health check scripts first and make them executable
 COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+COPY docker-healthcheck.sh /app/docker-healthcheck.sh
+RUN chmod +x /app/entrypoint.sh /app/docker-healthcheck.sh
 
 # Copy the rest of the application code
 COPY . .

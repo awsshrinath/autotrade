@@ -1,0 +1,143 @@
+# Docker Production Configuration
+# Single Instance Deployment Settings
+
+# Environment Settings
+environment: "docker"
+paper_trade: true
+
+# Capital Management
+default_capital: 100000
+max_daily_loss_pct: 2.0
+min_trade_value: 1000
+
+# Position Size Limits (as percentage of capital)
+stock_position_limit: 0.10    # 10% max per stock position
+option_position_limit: 0.05   # 5% max per options position  
+future_position_limit: 0.15   # 15% max per futures position
+
+# Risk Management
+margin_utilization_limit: 0.80  # 80% max margin utilization
+max_volatility_threshold: 0.05  # 5% volatility circuit breaker
+
+# API Settings
+api_rate_limit: 3              # requests per second
+api_timeout: 10                # seconds
+
+# Service Discovery (Docker internal networking)
+services:
+  main_runner:
+    host: "main-runner"
+    port: 8080
+    health_endpoint: "/health"
+  
+  stock_trader:
+    host: "stock-trader"
+    port: 8081
+    health_endpoint: "/health"
+    
+  options_trader:
+    host: "options-trader"
+    port: 8082
+    health_endpoint: "/health"
+    
+  futures_trader:
+    host: "futures-trader"
+    port: 8083
+    health_endpoint: "/health"
+    
+  dashboard_api:
+    host: "dashboard-api"
+    port: 8090
+    health_endpoint: "/health"
+    
+  frontend:
+    host: "frontend"
+    port: 3000
+    
+  log_aggregator:
+    host: "log-aggregator"
+    port: 8095
+    health_endpoint: "/health"
+
+# Monitoring Settings
+monitoring_interval: 30        # seconds between health checks
+backup_frequency: 300          # seconds (5 minutes)
+auto_square_off_time: "15:20"  # automatic position closure time
+
+# Logging
+log_level: "INFO"
+log_directory: "/app/logs"
+log_retention_days: 30
+
+# Strategy Configuration
+scalp_config:
+  min_price: 100
+  max_price: 120
+  sl_buffer: 30
+  target_buffer: 60
+  quantity: 75
+
+# Alert Settings (disabled for single instance)
+alerts_email_enabled: false
+alerts_slack_enabled: false
+alerts_webhook_url: ""
+
+# Offline mode
+offline_mode: false
+
+# Technical Indicators Settings
+technical_indicators:
+  rsi_period: 14
+  atr_period: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bollinger_period: 20
+  bollinger_std: 2.0
+
+# Options Settings
+options:
+  risk_free_rate: 0.06
+  default_iv: 0.20
+  max_iv: 5.0
+  min_iv: 0.01
+
+# Portfolio Settings
+portfolio:
+  max_positions: 10
+  correlation_limit: 0.7
+  diversification_threshold: 0.3
+
+# Google Cloud Platform
+gcp:
+  project_id: "autotrade-453303"
+  credentials_path: "/app/gpt-runner-sa-key.json"
+  
+# External Dependencies
+external_services:
+  firestore:
+    enabled: true
+    project_id: "autotrade-453303"
+    
+  secret_manager:
+    enabled: true
+    project_id: "autotrade-453303"
+    
+  kite_connect:
+    enabled: true
+    paper_trade: true
+
+# CORS Settings
+cors:
+  origins:
+    - "http://localhost:3000"
+    - "http://localhost:80"
+    - "http://localhost"
+
+# Health Check Configuration
+health_checks:
+  enabled: true
+  interval: 30
+  timeout: 10
+  retries: 3
+  start_period: 40

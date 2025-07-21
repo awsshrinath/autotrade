@@ -1,0 +1,150 @@
+{
+  "timestamp": "2025-06-09T10:22:35.678025",
+  "diagnostics": {
+    "python_imports": {
+      "passed": 9,
+      "failed": 2,
+      "total": 11,
+      "success_rate": 0.8181818181818182
+    },
+    "environment_variables": {
+      "set": 2,
+      "missing": 5,
+      "total": 7
+    },
+    "gcp_connectivity": {
+      "available": true,
+      "authenticated": false,
+      "firestore_accessible": false,
+      "storage_accessible": false,
+      "secret_manager_accessible": false
+    },
+    "api_connectivity": {
+      "total_tests": 3,
+      "passed": 2,
+      "failed": 1,
+      "results": {
+        "OpenAI API": "failed_401",
+        "General Internet": "success",
+        "Google (Basic connectivity)": "success"
+      }
+    },
+    "filesystem_access": {
+      "project_root_accessible": true,
+      "dashboard_directory_accessible": true,
+      "write_permissions": true,
+      "read_permissions": false
+    }
+  },
+  "issues": [
+    {
+      "type": "import_error",
+      "module": "streamlit",
+      "description": "Failed to import streamlit: No module named 'streamlit'",
+      "severity": "high"
+    },
+    {
+      "type": "import_error",
+      "module": "plotly",
+      "description": "Failed to import plotly: No module named 'plotly'",
+      "severity": "high"
+    },
+    {
+      "type": "missing_env_var",
+      "variable": "GCP_PROJECT_ID",
+      "description": "Environment variable GCP_PROJECT_ID not set",
+      "severity": "high"
+    },
+    {
+      "type": "missing_env_var",
+      "variable": "PERPLEXITY_API_KEY",
+      "description": "Environment variable PERPLEXITY_API_KEY not set",
+      "severity": "medium"
+    },
+    {
+      "type": "missing_env_var",
+      "variable": "ZERODHA_API_KEY",
+      "description": "Environment variable ZERODHA_API_KEY not set",
+      "severity": "high"
+    },
+    {
+      "type": "missing_env_var",
+      "variable": "ZERODHA_API_SECRET",
+      "description": "Environment variable ZERODHA_API_SECRET not set",
+      "severity": "high"
+    },
+    {
+      "type": "missing_env_var",
+      "variable": "GCP_SA_KEY",
+      "description": "Environment variable GCP_SA_KEY not set",
+      "severity": "high"
+    },
+    {
+      "type": "api_error",
+      "api": "OpenAI API",
+      "description": "OpenAI API returned status 401",
+      "severity": "medium"
+    },
+    {
+      "type": "production_manager_import_error",
+      "description": "ProductionManager import failed: No module named 'streamlit'",
+      "severity": "high"
+    },
+    {
+      "type": "file_read_error",
+      "file": "dashboard/main.py",
+      "description": "Cannot read dashboard/main.py: [Errno 2] No such file or directory: 'C:\\\\Users\\\\MY PC\\\\Documents\\\\GitHub\\\\Tron\\\\dashboard\\\\main.py'",
+      "severity": "medium"
+    },
+    {
+      "type": "file_read_error",
+      "file": "dashboard/components/cognitive_insights.py",
+      "description": "Cannot read dashboard/components/cognitive_insights.py: 'charmap' codec can't decode byte 0x8f in position 963: character maps to <undefined>",
+      "severity": "medium"
+    },
+    {
+      "type": "cognitive_import_error",
+      "description": "Cognitive system imports failed: No module named 'streamlit'",
+      "severity": "high"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "title": "High Priority Issues",
+      "description": "Address these issues to improve system reliability",
+      "actions": [
+        "Failed to import streamlit: No module named 'streamlit'",
+        "Failed to import plotly: No module named 'plotly'",
+        "Environment variable GCP_PROJECT_ID not set",
+        "Environment variable ZERODHA_API_KEY not set",
+        "Environment variable ZERODHA_API_SECRET not set",
+        "Environment variable GCP_SA_KEY not set",
+        "ProductionManager import failed: No module named 'streamlit'",
+        "Cognitive system imports failed: No module named 'streamlit'"
+      ]
+    },
+    {
+      "priority": "high",
+      "title": "Set Up GCP Project ID",
+      "description": "Configure GCP_PROJECT_ID environment variable",
+      "actions": [
+        "Set GCP_PROJECT_ID environment variable",
+        "Ensure GCP service account has proper permissions",
+        "Verify GCP authentication is working"
+      ]
+    },
+    {
+      "priority": "medium",
+      "title": "Multiple Issues Detected",
+      "description": "Consider systematic troubleshooting approach",
+      "actions": [
+        "Review all environment variables",
+        "Check network connectivity",
+        "Verify all dependencies are installed",
+        "Review log files for additional context"
+      ]
+    }
+  ],
+  "status": "degraded"
+}

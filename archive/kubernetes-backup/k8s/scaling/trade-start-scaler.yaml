@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: trade-start-scaler
+  namespace: gpt
+spec:
+  schedule: "10 9 * * 1-5" # 9:10 AM IST, Monday to Friday
+  timeZone: "Asia/Kolkata"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cronjob-scaler
+          containers:
+          - name: kubectl-scaler
+            image: bitnami/kubectl:latest
+            resources:
+              requests:
+                cpu: "50m"
+                memory: "64Mi"
+              limits:
+                cpu: "100m"
+                memory: "128Mi"
+            command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              echo "Scaling up trading pods for market open..."
+              kubectl scale deployment stock-trader --replicas=1
+              kubectl scale deployment options-trader --replicas=1
+              kubectl scale deployment futures-trader --replicas=1
+              echo "Trading pod scaling complete."
+          restartPolicy: OnFailure
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1 

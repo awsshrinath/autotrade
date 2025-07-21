@@ -63,6 +63,23 @@ RUNNER_SCRIPT=runner/main_runner_combined.py  # Entry point script
 ## Development Workflow
 
 ### Local Development
+
+#### Docker Development (Recommended)
+```bash
+# Quick start with Docker
+./deploy-docker.sh
+
+# Or step by step
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+#### Traditional Development
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -73,10 +90,23 @@ python options_trading/options_runner.py
 python futures_trading/futures_runner.py
 
 # Run combined runner
-python runner/main_runner_combined.py
+python runner/main_runner.py
 
 # Main entry point
 python main.py
+```
+
+#### Development Commands
+```bash
+# Test the migration setup
+python test-migration.py
+
+# Deploy with custom options
+./deploy-docker.sh deploy          # Full deployment
+./deploy-docker.sh stop            # Stop all services
+./deploy-docker.sh status          # Check service status
+./deploy-docker.sh logs [service]  # View logs
+./deploy-docker.sh update          # Update and restart
 ```
 
 ### Testing
@@ -98,17 +128,39 @@ bandit -r . -c bandit.yaml
 
 ## Deployment
 
-### Docker
-- **Multi-stage builds** for different trading bots
+### Docker Single Instance
+- **Architecture**: Single instance Docker deployment using docker-compose
+- **Multi-stage builds**: Different containers for each trading bot
 - **Base image**: `python:3.10-slim`
 - **Entry point**: Configurable via `RUNNER_SCRIPT` environment variable
-- **Health checks**: Built-in readiness probes
+- **Health checks**: Custom health check script with comprehensive monitoring
+- **Networking**: Internal Docker networking with Nginx reverse proxy
 
-### Kubernetes (GKE Autopilot)
-- **Namespace**: `gpt` for all trading components
-- **Deployments**: Separate deployments for each trading bot type
-- **Service Account**: `gpt-runner-sa` with appropriate GCP permissions
-- **Resource limits**: 512Mi memory, 250m CPU requests per pod
+### Services Architecture
+- **Main Runner**: Combined multi-asset trading bot (port 8080)
+- **Stock Trader**: Stock-specific trading logic (port 8081)
+- **Options Trader**: Options trading strategies (port 8082)
+- **Futures Trader**: Futures trading implementation (port 8083)
+- **Dashboard API**: FastAPI backend for web interface (port 8090)
+- **Frontend**: Next.js React application (port 3000)
+- **Nginx Proxy**: Reverse proxy and load balancer (port 80)
+- **Log Aggregator**: Centralized logging service (port 8095)
+
+### Quick Deployment
+```bash
+# Clone and navigate to repository
+git clone <repository-url>
+cd Tron
+
+# Ensure you have your GCP service account key
+cp /path/to/your/gcp-sa-key.json ./gpt-runner-sa-key.json
+
+# Deploy using the provided script
+./deploy-docker.sh
+
+# Or manually with docker-compose
+docker-compose up -d
+```
 
 ### CI/CD Pipeline
 1. **Continuous Integration** (`.github/workflows/ci.yml`):
@@ -118,21 +170,24 @@ bandit -r . -c bandit.yaml
    - Bandit security scanning with fail-on-high configuration
    - Pytest test execution
 
-2. **Continuous Deployment** (`.github/workflows/deploy.yaml`):
+2. **Docker Deployment** (`.github/workflows/docker-deploy.yml`):
    - Multi-image Docker builds for each trading bot
    - Google Artifact Registry push
-   - GKE cluster validation
-   - Kubernetes manifest deployment
-   - Rolling deployment updates
+   - Automated deployment package creation
+   - Health check validation
+   - Deployment instructions generation
 
 ### Infrastructure
 - **Container Registry**: Google Artifact Registry (`asia-south1-docker.pkg.dev`)
-- **Cluster**: GKE Autopilot in configurable region
+- **Deployment**: Single instance with Docker Compose
 - **Images**: 
-  - `gpt-runner` - Main combined runner
+  - `main-runner` - Main combined runner
   - `stock-trader` - Stock trading bot
   - `options-trader` - Options trading bot  
   - `futures-trader` - Futures trading bot
+  - `dashboard-api` - FastAPI backend
+  - `frontend` - Next.js frontend
+  - `log-aggregator` - Centralized logging
 
 ## Strategy System
 

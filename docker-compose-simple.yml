@@ -1,0 +1,87 @@
+services:
+  # Main Trading Runner - Combined multi-asset trading bot
+  main-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUNNER_SCRIPT: runner/main_runner.py
+    container_name: tron-main-runner
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=runner/main_runner.py
+      - SERVICE_PORT=8080
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "/app/docker-healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Dashboard API Backend (simplified - no build)
+  dashboard-api:
+    image: python:3.10-slim
+    container_name: tron-dashboard-api-simple
+    working_dir: /app
+    env_file:
+      - .env.docker
+    environment:
+      - API_PORT=8090
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8090:8090"
+    command: >
+      sh -c "
+        pip install -r requirements.txt &&
+        cd dashboard_api &&
+        python -m uvicorn main:app --host 0.0.0.0 --port 8090
+      "
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: tron-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - main-runner
+      - dashboard-api
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+volumes:
+  logs:
+    driver: local
+  data:
+    driver: local
+
+networks:
+  tron-network:
+    driver: bridge
+    name: tron-network

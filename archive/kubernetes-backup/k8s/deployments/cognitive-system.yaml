@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cognitive-system
+  namespace: gpt
+  labels:
+    app: cognitive-system
+spec:
+  replicas: 0 # Scales to 1 during market hours
+  selector:
+    matchLabels:
+      app: cognitive-system
+  template:
+    metadata:
+      labels:
+        app: cognitive-system
+    spec:
+      containers:
+      - name: cognitive-system
+        image: asia-south1-docker.pkg.dev/autotrade-453303/tron-system/cognitive-engine:latest
+        ports:
+        - containerPort: 8085
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "400Mi"
+          limits:
+            cpu: "0.5"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+        - name: SERVICE_PORT
+          value: "8085"
+        command: ["python", "-u", "runner/cognitive_system.py"] 
