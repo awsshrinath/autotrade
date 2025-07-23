@@ -1,18 +1,23 @@
 # Stage 1: The builder stage, to compile requirements
-FROM python:3.10-alpine as builder
+FROM python:3.10-slim as builder
 
 WORKDIR /app
 
 # Install build dependencies and pip-tools
-RUN apk add --no-cache --virtual .build-deps \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    musl-dev \
+    g++ \
+    build-essential \
     libffi-dev \
-    openssl-dev \
-    && pip install --no-cache-dir pip-tools
+    libssl-dev \
+    && pip install --no-cache-dir pip-tools \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy only the requirements input file
 COPY requirements.in .
+
+# Install PyTorch CPU version first (smaller and more compatible)
+RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
 
 # Compile the requirements.txt file
 RUN pip-compile requirements.in --output-file=requirements.txt --pip-args "--timeout=60"
@@ -21,15 +26,16 @@ RUN pip-compile requirements.in --output-file=requirements.txt --pip-args "--tim
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Stage 2: The final application image
-FROM python:3.10-alpine
+FROM python:3.10-slim
 
 WORKDIR /app
 
 # Install runtime dependencies only
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    && addgroup -g 1001 -S appgroup \
-    && adduser -u 1001 -S appuser -G appgroup
+    && groupadd -g 1001 appgroup \
+    && useradd -u 1001 -g appgroup -d /app -s /bin/bash appuser \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder
 COPY --from=builder /root/.local /home/appuser/.local

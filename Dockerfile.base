@@ -3,41 +3,46 @@
 # Source code will be mounted as volumes for zero-rebuild deployments
 
 # Stage 1: Builder stage for dependencies
-FROM python:3.10-alpine as builder
+FROM python:3.10-slim as builder
 
 WORKDIR /build
 
-# Install build dependencies
-RUN apk add --no-cache --virtual .build-deps \
+# Install build dependencies for Debian
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    musl-dev \
+    g++ \
+    build-essential \
     libffi-dev \
-    openssl-dev \
-    python3-dev \
-    build-base \
-    linux-headers
+    libssl-dev \
+    && pip install --no-cache-dir pip-tools \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python packages
-COPY requirements.txt .
+# Copy requirements and compile/install Python packages
+COPY requirements.in .
+
+# Install PyTorch CPU version first (smaller and more compatible)
+RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
+
+# Compile and install remaining requirements
+RUN pip-compile requirements.in --output-file=requirements.txt --pip-args "--timeout=60"
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Stage 2: Runtime image
-FROM python:3.10-alpine
+FROM python:3.10-slim
 
 LABEL maintainer="TRON Trading System"
 LABEL description="Base image for TRON trading services with all dependencies"
 LABEL version="1.0"
 
 # Install runtime dependencies only
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    tzdata \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S tron && \
-    adduser -u 1001 -S tron -G tron -h /app -s /bin/sh
+RUN groupadd -g 1001 tron && \
+    useradd -u 1001 -g tron -d /app -s /bin/bash tron
 
 # Set up directory structure
 WORKDIR /app
