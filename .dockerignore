@@ -1,44 +1,84 @@
-node_modules
-logs
-*.log
+# Git and development files
 .git
 .gitignore
 README.md
-docs
-frontend/node_modules
-frontend/.next
-frontend/build
-tests
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+*.md
+docs/
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-env
+env/
+venv/
+.venv/
 pip-log.txt
 pip-delete-this-directory.txt
-.tox
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.venv
-venv
-.DS_Store
+*.egg-info/
+dist/
+build/
+
+# IDE and editor files
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
-.pytest_cache
-.idea
-.vscode
-*.egg-info
-dist
-build
-.mypy_cache
+
+# Test files and coverage
+tests/
+test_*.py
+*_test.py
 .coverage
-htmlcov
-.cache
-.pytest_cache
+.coverage.*
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+htmlcov/
+.cache/
+.mypy_cache/
+
+# Logs and temporary files
+*.log
+logs/
+backups/
+deployment.log
+
+# Node.js (for frontend)  
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/build/
+frontend/out/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Kubernetes and deployment
+k8s/
+archive/
+deprecated/
+deployment-scripts/
+
+# Large data files and backups
+data/
+backups/
+*.db
+*.sqlite3
+
+# Secrets and keys
+*.key
+*.pem
+gpt-runner-sa-key.json
+.env*
+
+# Temporary files
+tmp/
+temp/
+.DS_Store
+Thumbs.db

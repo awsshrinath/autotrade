@@ -1,0 +1,276 @@
+# TRON Trading System - Volume Mount Configuration
+# Storage-optimized deployment using base image + volume mounts
+# Reduces storage from 26GB+ to ~2GB total
+
+services:
+  # Main Trading Runner - Combined multi-asset trading bot
+  main-runner:
+    image: tron-base:latest
+    container_name: tron-main-runner
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=runner/main_runner.py
+      - SERVICE_PORT=8080
+      - PYTHONPATH=/app
+    volumes:
+      # Source code mounts (read-only for production)
+      - ./runner:/app/runner:ro
+      - ./strategies:/app/strategies:ro
+      - ./utils:/app/utils:ro
+      - ./services:/app/services:ro
+      - ./config:/app/config:ro
+      - ./mcp:/app/mcp:ro
+      - ./main.py:/app/main.py:ro
+      # Data and logs (read-write)
+      - ./logs:/app/logs
+      - ./data:/app/data
+      # Secrets and configs
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8080:8080"
+    working_dir: /app
+    command: ["python", "runner/main_runner.py"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Stock Trading Bot
+  stock-trader:
+    image: tron-base:latest
+    container_name: tron-stock-trader
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=stock_trading/stock_runner.py
+      - SERVICE_PORT=8081
+      - PYTHONPATH=/app
+    volumes:
+      # Source code mounts
+      - ./stock_trading:/app/stock_trading:ro
+      - ./runner:/app/runner:ro
+      - ./strategies:/app/strategies:ro
+      - ./utils:/app/utils:ro
+      - ./services:/app/services:ro
+      - ./config:/app/config:ro
+      - ./mcp:/app/mcp:ro
+      # Data and logs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8081:8081"
+    working_dir: /app
+    command: ["python", "stock_trading/stock_runner.py"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Options Trading Bot
+  options-trader:
+    image: tron-base:latest
+    container_name: tron-options-trader
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=options_trading/options_runner.py
+      - SERVICE_PORT=8082
+      - PYTHONPATH=/app
+    volumes:
+      # Source code mounts
+      - ./options_trading:/app/options_trading:ro
+      - ./runner:/app/runner:ro
+      - ./strategies:/app/strategies:ro
+      - ./utils:/app/utils:ro
+      - ./services:/app/services:ro
+      - ./config:/app/config:ro
+      - ./mcp:/app/mcp:ro
+      # Data and logs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8082:8082"
+    working_dir: /app
+    command: ["python", "options_trading/options_runner.py"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Futures Trading Bot
+  futures-trader:
+    image: tron-base:latest
+    container_name: tron-futures-trader
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=futures_trading/futures_runner.py
+      - SERVICE_PORT=8083
+      - PYTHONPATH=/app
+    volumes:
+      # Source code mounts
+      - ./futures_trading:/app/futures_trading:ro
+      - ./runner:/app/runner:ro
+      - ./strategies:/app/strategies:ro
+      - ./utils:/app/utils:ro
+      - ./services:/app/services:ro
+      - ./config:/app/config:ro
+      - ./mcp:/app/mcp:ro
+      # Data and logs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8083:8083"
+    working_dir: /app
+    command: ["python", "futures_trading/futures_runner.py"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Dashboard API Backend
+  dashboard-api:
+    image: tron-base:latest
+    container_name: tron-dashboard-api
+    env_file:
+      - .env.docker
+    environment:
+      - API_PORT=8090
+      - PYTHONPATH=/app
+    volumes:
+      # Source code mounts
+      - ./dashboard_api:/app/dashboard_api:ro
+      - ./runner:/app/runner:ro
+      - ./utils:/app/utils:ro
+      - ./services:/app/services:ro
+      - ./config:/app/config:ro
+      # Data and logs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8090:8090"
+    working_dir: /app/dashboard_api
+    command: ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Frontend Dashboard (keeps separate build for Node.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tron-frontend
+    env_file:
+      - .env.docker
+    environment:
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dashboard-api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: tron-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - frontend
+      - dashboard-api
+      - main-runner
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+  # Log Aggregator Service
+  log-aggregator:
+    image: tron-base:latest
+    container_name: tron-log-aggregator
+    env_file:
+      - .env.docker
+    environment:
+      - LOG_AGGREGATOR_PORT=8095
+      - PYTHONPATH=/app
+    volumes:
+      # Source code mounts
+      - ./gpt_runner:/app/gpt_runner:ro
+      - ./runner:/app/runner:ro
+      - ./utils:/app/utils:ro
+      - ./config:/app/config:ro
+      # Data and logs
+      - ./logs:/app/logs
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8095:8095"
+    working_dir: /app
+    command: ["python", "-m", "uvicorn", "gpt_runner.log_aggregator.main:app", "--host", "0.0.0.0", "--port", "8095"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8095/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - tron-network
+
+volumes:
+  logs:
+    driver: local
+  data:
+    driver: local
+
+networks:
+  tron-network:
+    driver: bridge
+    name: tron-network

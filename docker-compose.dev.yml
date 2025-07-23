@@ -1,0 +1,225 @@
+# TRON Trading System - Development Environment
+# Volume mounts with hot reload and debugging support
+
+services:
+  # Main Trading Runner - Combined multi-asset trading bot
+  main-runner:
+    image: tron-base:latest
+    container_name: tron-main-runner-dev
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=runner/main_runner.py
+      - SERVICE_PORT=8080
+      - PYTHONPATH=/app
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      # Source code mounts (read-write for development)
+      - ./runner:/app/runner
+      - ./strategies:/app/strategies
+      - ./utils:/app/utils
+      - ./services:/app/services
+      - ./config:/app/config
+      - ./mcp:/app/mcp
+      - ./main.py:/app/main.py
+      # Data and logs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8080:8080"
+      - "5678:5678"  # Debug port
+    working_dir: /app
+    command: ["python", "-u", "runner/main_runner.py"]
+    restart: "no"  # Don't auto-restart in dev mode
+    networks:
+      - tron-network
+
+  # Stock Trading Bot
+  stock-trader:
+    image: tron-base:latest
+    container_name: tron-stock-trader-dev
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=stock_trading/stock_runner.py
+      - SERVICE_PORT=8081
+      - PYTHONPATH=/app
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./stock_trading:/app/stock_trading
+      - ./runner:/app/runner
+      - ./strategies:/app/strategies
+      - ./utils:/app/utils
+      - ./services:/app/services
+      - ./config:/app/config
+      - ./mcp:/app/mcp
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8081:8081"
+      - "5679:5678"  # Debug port
+    working_dir: /app
+    command: ["python", "-u", "stock_trading/stock_runner.py"]
+    restart: "no"
+    networks:
+      - tron-network
+
+  # Options Trading Bot
+  options-trader:
+    image: tron-base:latest
+    container_name: tron-options-trader-dev
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=options_trading/options_runner.py
+      - SERVICE_PORT=8082
+      - PYTHONPATH=/app
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./options_trading:/app/options_trading
+      - ./runner:/app/runner
+      - ./strategies:/app/strategies
+      - ./utils:/app/utils
+      - ./services:/app/services
+      - ./config:/app/config
+      - ./mcp:/app/mcp
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8082:8082"
+      - "5680:5678"  # Debug port
+    working_dir: /app
+    command: ["python", "-u", "options_trading/options_runner.py"]
+    restart: "no"
+    networks:
+      - tron-network
+
+  # Futures Trading Bot
+  futures-trader:
+    image: tron-base:latest
+    container_name: tron-futures-trader-dev
+    env_file:
+      - .env.docker
+    environment:
+      - RUNNER_SCRIPT=futures_trading/futures_runner.py
+      - SERVICE_PORT=8083
+      - PYTHONPATH=/app
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./futures_trading:/app/futures_trading
+      - ./runner:/app/runner
+      - ./strategies:/app/strategies
+      - ./utils:/app/utils
+      - ./services:/app/services
+      - ./config:/app/config
+      - ./mcp:/app/mcp
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8083:8083"
+      - "5681:5678"  # Debug port
+    working_dir: /app
+    command: ["python", "-u", "futures_trading/futures_runner.py"]
+    restart: "no"
+    networks:
+      - tron-network
+
+  # Dashboard API Backend
+  dashboard-api:
+    image: tron-base:latest
+    container_name: tron-dashboard-api-dev
+    env_file:
+      - .env.docker
+    environment:
+      - API_PORT=8090
+      - PYTHONPATH=/app
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./dashboard_api:/app/dashboard_api
+      - ./runner:/app/runner
+      - ./utils:/app/utils
+      - ./services:/app/services
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8090:8090"
+      - "5682:5678"  # Debug port
+    working_dir: /app/dashboard_api
+    command: ["python", "-u", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090", "--reload"]
+    restart: "no"
+    networks:
+      - tron-network
+
+  # Frontend Dashboard (with hot reload)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: builder  # Use development stage if available
+    container_name: tron-frontend-dev
+    env_file:
+      - .env.docker
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+    volumes:
+      - ./frontend/app:/app/app
+      - ./frontend/components:/app/components
+      - ./frontend/lib:/app/lib
+      - ./frontend/public:/app/public
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dashboard-api
+    restart: "no"
+    networks:
+      - tron-network
+
+  # Log Aggregator Service
+  log-aggregator:
+    image: tron-base:latest
+    container_name: tron-log-aggregator-dev
+    env_file:
+      - .env.docker
+    environment:
+      - LOG_AGGREGATOR_PORT=8095
+      - PYTHONPATH=/app
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./gpt_runner:/app/gpt_runner
+      - ./runner:/app/runner
+      - ./utils:/app/utils
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./gpt-runner-sa-key.json:/app/gpt-runner-sa-key.json:ro
+    ports:
+      - "8095:8095"
+      - "5683:5678"  # Debug port
+    working_dir: /app
+    command: ["python", "-u", "-m", "uvicorn", "gpt_runner.log_aggregator.main:app", "--host", "0.0.0.0", "--port", "8095", "--reload"]
+    restart: "no"
+    networks:
+      - tron-network
+
+volumes:
+  logs:
+    driver: local
+  data:
+    driver: local
+
+networks:
+  tron-network:
+    driver: bridge
+    name: tron-network-dev
