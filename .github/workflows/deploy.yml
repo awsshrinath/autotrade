@@ -1,4 +1,4 @@
-name: Deploy Tron System to GKE
+name: Build and Push Tron System Images
 
 on:
   push:
@@ -71,83 +71,4 @@ jobs:
         docker build -t $IMAGE_PREFIX/memory-manager:$TAG -t $IMAGE_PREFIX/memory-manager:latest --build-arg RUNNER_SCRIPT=runner/cognitive_memory.py .
         docker push --all-tags $IMAGE_PREFIX/memory-manager
 
-  deploy-to-gke:
-    name: Deploy to GKE with Helm
-    runs-on: ubuntu-latest
-    needs: build-and-push-images
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Authenticate to Google Cloud
-      uses: 'google-github-actions/auth@v1'
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
-    - name: Set up Cloud SDK
-      uses: 'google-github-actions/setup-gcloud@v1'
-      with:
-        install_components: 'gke-gcloud-auth-plugin'
-
-    - name: Configure kubectl
-      env:
-        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
-        GKE_ZONE: ${{ secrets.GKE_ZONE }}
-      run: |
-        gcloud container clusters get-credentials "${GKE_CLUSTER}" --zone "${GKE_ZONE}" --project "${GCP_PROJECT_ID}"
-
-    - name: Set up Helm
-      uses: azure/setup-helm@v3
-      with:
-        version: 'v3.12.0'
-
-    - name: Create Namespace and Secrets
-      run: |
-        kubectl create namespace gpt --dry-run=client -o yaml | kubectl apply -f -
-        kubectl create secret generic openai-api-key-secret --from-literal=api_key='${{ secrets.OPENAI_API_KEY }}' -n gpt --dry-run=client -o yaml | kubectl apply -f -
-        kubectl create secret generic fastapi-api-key-secret --from-literal=api_key_hash='${{ secrets.API_KEY_HASH }}' -n gpt --dry-run=client -o yaml | kubectl apply -f -
-        echo '${{ secrets.GCP_SA_KEY }}' > /tmp/gcp-sa-key.json
-        kubectl create secret generic gcp-service-account-key --from-file=key.json=/tmp/gcp-sa-key.json -n gpt --dry-run=client -o yaml | kubectl apply -f -
-        rm /tmp/gcp-sa-key.json
-        echo "Namespace and secrets are configured."
-
-    - name: Deploy All Resources
-      run: |
-        echo "Applying Kubernetes manifests to 'gpt' namespace..."
-        # Apply RBAC first
-        kubectl apply -f k8s/rbac/ -n gpt
-        # Apply the ConfigMaps next
-        kubectl apply -f k8s/nginx-configmap.yaml -n gpt
-        # Apply all deployments and services
-        kubectl apply -f k8s/deployments/ -n gpt
-        # Apply the Ingress resource
-        kubectl apply -f k8s/ingress.yaml -n gpt
-        # Apply the scaling CronJobs last
-        kubectl apply -f k8s/scaling/ -n gpt
-        echo "All manifests applied."
-
-    - name: Verify deployment
-      if: always() # Always run verification to see the state of the pods
-      run: |
-        echo "Verifying deployment status..."
-        echo "Waiting for 60 seconds for pods to initialize before checking logs..."
-        sleep 60
-        
-        echo "Pod status:"
-        kubectl get pods -n gpt -o wide
-
-        echo "Describing pods to check for errors:"
-        kubectl describe pods -n gpt
-
-        echo "Fetching logs from all pods:"
-        for pod in $(kubectl get pods -n gpt -o jsonpath='{.items[*].metadata.name}'); do
-          echo "--- Logs for $pod ---"
-          kubectl logs "$pod" -n gpt --tail=100 || echo "Could not retrieve logs for $pod."
-        done
-        
-        echo "Deployment verification completed." 
+ 
