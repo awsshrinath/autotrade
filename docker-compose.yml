@@ -144,8 +144,8 @@ services:
   # Frontend Dashboard
   frontend:
     build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: tron-frontend
     env_file:
       - .env.docker
