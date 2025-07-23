@@ -20,12 +20,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements and compile/install Python packages
 COPY requirements.in .
 
+# Set PATH for pip user installations during build
+ENV PATH="/root/.local/bin:$PATH"
+
 # Install PyTorch CPU version first (smaller and more compatible)
-RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --user --no-warn-script-location torch --index-url https://download.pytorch.org/whl/cpu
 
 # Compile and install remaining requirements
 RUN pip-compile requirements.in --output-file=requirements.txt --pip-args "--timeout=60"
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --user --no-warn-script-location -r requirements.txt
 
 # Stage 2: Runtime image
 FROM python:3.10-slim

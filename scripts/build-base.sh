@@ -108,10 +108,27 @@ verify_base_image() {
     info "Verifying base image functionality..."
     
     # Test that Python and packages are working
-    if docker run --rm "$BASE_IMAGE_NAME:$BASE_IMAGE_TAG" python -c "import fastapi, uvicorn, asyncio; print('Dependencies OK')" &> /dev/null; then
+    info "Testing Python and basic dependencies..."
+    if ! docker run --rm "$BASE_IMAGE_NAME:$BASE_IMAGE_TAG" python -c "import sys; print('Python', sys.version)"; then
+        error_exit "Base image Python test failed"
+    fi
+    
+    info "Testing FastAPI and core dependencies..."
+    IMPORT_TEST=$(docker run --rm "$BASE_IMAGE_NAME:$BASE_IMAGE_TAG" python -c "
+try:
+    import fastapi, uvicorn, asyncio
+    print('Core dependencies OK')
+except ImportError as e:
+    print('Import error:', e)
+    exit(1)
+" 2>&1)
+    
+    if echo "$IMPORT_TEST" | grep -q "Core dependencies OK"; then
         success "Base image verification passed"
     else
-        error_exit "Base image verification failed"
+        warning "Base image verification failed with output:"
+        echo "$IMPORT_TEST"
+        error_exit "Base image verification failed - check dependencies"
     fi
 }
 
@@ -135,7 +152,14 @@ build_base() {
     check_prerequisites
     cleanup_old_images
     build_base_image
-    verify_base_image
+    
+    # Skip verification if --skip-verify flag is passed
+    if [ "$1" != "--skip-verify" ]; then
+        verify_base_image
+    else
+        info "Skipping verification as requested"
+    fi
+    
     show_image_info
     
     success "🎉 Base image build completed successfully!"
@@ -145,7 +169,7 @@ build_base() {
 # Handle command line arguments
 case "${1:-build}" in
     "build"|"")
-        build_base
+        build_base "$2"
         ;;
     "clean")
         info "Cleaning up all TRON base images..."
@@ -161,14 +185,17 @@ case "${1:-build}" in
     "help")
         echo "TRON Base Image Builder"
         echo ""
-        echo "Usage: $0 [command]"
+        echo "Usage: $0 [command] [options]"
         echo ""
         echo "Commands:"
-        echo "  build    - Build the base image (default)"
-        echo "  clean    - Remove all base images"
-        echo "  info     - Show base image information"
-        echo "  verify   - Verify base image functionality"
-        echo "  help     - Show this help message"
+        echo "  build [--skip-verify]  - Build the base image (default)"
+        echo "  clean                  - Remove all base images"
+        echo "  info                   - Show base image information"
+        echo "  verify                 - Verify base image functionality"
+        echo "  help                   - Show this help message"
+        echo ""
+        echo "Options:"
+        echo "  --skip-verify         - Skip verification step during build"
         ;;
     *)
         error_exit "Unknown command: $1. Use '$0 help' for usage information."

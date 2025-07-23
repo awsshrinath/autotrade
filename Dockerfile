@@ -16,14 +16,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy only the requirements input file
 COPY requirements.in .
 
+# Set PATH for pip user installations during build
+ENV PATH="/root/.local/bin:$PATH"
+
 # Install PyTorch CPU version first (smaller and more compatible)
-RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --user --no-warn-script-location torch --index-url https://download.pytorch.org/whl/cpu
 
 # Compile the requirements.txt file
 RUN pip-compile requirements.in --output-file=requirements.txt --pip-args "--timeout=60"
 
 # Install dependencies in builder stage
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --user --no-warn-script-location -r requirements.txt
 
 # Stage 2: The final application image
 FROM python:3.10-slim
