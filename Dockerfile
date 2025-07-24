@@ -13,17 +13,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pip install --no-cache-dir pip-tools \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only the requirements input file
-COPY requirements.in .
+# Copy the pre-compiled requirements file
+COPY requirements.txt .
 
 # Set PATH for pip user installations during build
 ENV PATH="/root/.local/bin:$PATH"
 
 # Install PyTorch CPU version first (smaller and more compatible)
 RUN pip install --no-cache-dir --user --no-warn-script-location torch --index-url https://download.pytorch.org/whl/cpu
-
-# Compile the requirements.txt file
-RUN pip-compile requirements.in --output-file=requirements.txt --pip-args "--timeout=60"
 
 # Install dependencies in builder stage
 RUN pip install --no-cache-dir --user --no-warn-script-location -r requirements.txt
@@ -43,8 +40,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy installed packages from builder
 COPY --from=builder /root/.local /home/appuser/.local
 
+# Copy requirements.txt for reference
+COPY requirements.txt /app/requirements.txt
+
 # Make sure scripts in .local are usable
 ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONPATH=/home/appuser/.local/lib/python3.10/site-packages:$PYTHONPATH
 
 # Copy entrypoint and health check scripts first and make them executable
 COPY entrypoint.sh /app/entrypoint.sh

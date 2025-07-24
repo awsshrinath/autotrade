@@ -5,8 +5,14 @@ Loads configuration from YAML/JSON files instead of environment variables
 
 import os
 import json
-import yaml
 from pathlib import Path
+
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
+    print("WARNING: PyYAML not available, YAML config files will be ignored")
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import logging
@@ -219,7 +225,11 @@ class ConfigManager:
         try:
             with open(filepath, "r") as f:
                 if filename.endswith(".yaml") or filename.endswith(".yml"):
-                    return yaml.safe_load(f)
+                    if YAML_AVAILABLE:
+                        return yaml.safe_load(f)
+                    else:
+                        logging.warning(f"YAML file {filename} found but PyYAML not available, skipping")
+                        return None
                 elif filename.endswith(".json"):
                     return json.load(f)
                 else:
@@ -403,7 +413,11 @@ class ConfigManager:
 
         try:
             with open(filepath, "w") as f:
-                yaml.dump(config_dict, f, default_flow_style=False, indent=2)
+                if YAML_AVAILABLE:
+                    yaml.dump(config_dict, f, default_flow_style=False, indent=2)
+                else:
+                    json.dump(config_dict, f, indent=2)
+                    logging.warning("PyYAML not available, saved as JSON instead")
 
             logging.info(f"Configuration saved to: {filepath}")
             return True

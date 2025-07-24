@@ -955,4 +955,6 @@ async def logs_analysis():
 
 # For running the app directly during development
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import os
+    port = int(os.getenv("API_PORT", "8090"))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

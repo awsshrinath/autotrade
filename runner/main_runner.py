@@ -240,17 +240,15 @@ def main():
         print("👋 Lightweight Runner shutdown complete")
 
 if __name__ == "__main__":
-    def trading_logic():
-        main()
-
     # Start health server in a separate thread
     health_port = int(os.environ.get('SERVICE_PORT', 8080))
     health_thread = threading.Thread(target=start_health_server, args=(health_port,), daemon=True)
     health_thread.start()
     
-    # Run the trading logic with process monitoring
-    run_script_with_monitoring(trading_logic)
-
-    # Keep the main thread alive to allow the health server to run
-    while True:
-        time.sleep(1)
+    # Run the main trading logic directly
+    try:
+        main()
+    except Exception as e:
+        print(f"ERROR: Trading logic failed: {e}")
+        import traceback
+        traceback.print_exc()
